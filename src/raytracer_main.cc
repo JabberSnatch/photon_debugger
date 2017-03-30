@@ -1,4 +1,5 @@
 #include "profiler.h"
+#include "vector.h"
 
 int main()
 {
@@ -11,6 +12,14 @@ int main()
 	}
 
 	auto timers{ gProfiler.timers() };
+
+	maths::Vec3f	vector3_A{};
+	maths::Vec3f	vector3_B{ 1.f, 2.f, 3.f };
+	maths::Vec3f	vector3_C{ 1.f, 0.f, 0.f };
+	maths::Vec3f	vector3_D{ 0.f, 1.f, 0.f };
+
+	maths::Vec3f	vector3_E{ maths::Cross(vector3_C, vector3_D) };
+	float			dot_product{ maths::Dot(vector3_C, vector3_D) };
 
 	return 0;
 }

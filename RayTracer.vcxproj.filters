@@ -21,10 +21,22 @@
     <ClInclude Include="inc\win32_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\film.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cc">
+    <ClCompile Include="src\raytracer_main.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="inc\vector.inl" />
   </ItemGroup>
 </Project>

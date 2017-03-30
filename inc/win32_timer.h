@@ -8,7 +8,7 @@ namespace tools
 {
 
 
-class Timer
+class Timer final
 {
 public:
 	using Duration_t = long long;
@@ -66,7 +66,7 @@ private:
 const Timer::Frequency_t	Timer::kTimerFrequency{ Timer::timer_frequency() };
 
 
-class TimeProbe
+class TimeProbe final
 {
 public:
 	using TimePoint_t = LARGE_INTEGER;

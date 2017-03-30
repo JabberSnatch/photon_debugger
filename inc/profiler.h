@@ -11,7 +11,7 @@
 namespace tools
 {
 
-class Profiler
+class Profiler final
 {
 public:
 	template<typename T>
