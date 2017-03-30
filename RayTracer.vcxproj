@@ -105,6 +105,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -134,10 +135,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\film.cc" />
+    <ClCompile Include="src\profiler.cc" />
     <ClCompile Include="src\raytracer_main.cc" />
+    <ClCompile Include="src\win32_timer.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="inc\assert.h" />
+    <ClInclude Include="inc\maths.h" />
+    <ClInclude Include="inc\ys_assert.h" />
     <ClInclude Include="inc\film.h" />
     <ClInclude Include="inc\profiler.h" />
     <ClInclude Include="inc\vector.h" />

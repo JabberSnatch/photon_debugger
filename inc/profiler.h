@@ -60,6 +60,8 @@ private:
 
 } // namespace tools
 
-thread_local tools::Profiler	gProfiler{};
+extern tools::Profiler	gProfiler;
+
+#define TIMED_SCOPE(name, profiler) tools::TimeProbe name##_probe {profiler.GetTimer(#name)}
 
 #endif // __YS_PROFILER_HPP__

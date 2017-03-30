@@ -63,8 +63,6 @@ private:
 	unsigned long long	call_count_{ 0 };
 };
 
-const Timer::Frequency_t	Timer::kTimerFrequency{ Timer::timer_frequency() };
-
 
 class TimeProbe final
 {

@@ -1,9 +1,15 @@
 #ifndef __YS_VECTOR_INL__
 #define __YS_VECTOR_INL__
 
+#include "maths.h"
+
 
 namespace maths
 {
+
+// ============================================================
+// Vec3f
+// ============================================================
 
 constexpr Vec3f& 
 Vec3f::operator+=(Vec3f const &_rhs)
@@ -66,6 +72,14 @@ Vec3f::length() const
 }
 
 
+constexpr Vec3f
+Clamp(Vec3f const &_v, float _min, float _max)
+{
+	return Vec3f{ clampf(_v.x, _min, _max),
+				  clampf(_v.y, _min, _max),
+				  clampf(_v.z, _min, _max) };
+}
+
 constexpr float
 Dot(Vec3f const &_lhs, Vec3f const &_rhs)
 {
@@ -126,6 +140,96 @@ constexpr Vec3f
 operator/(Vec3f const &_v, float _s)
 {
 	return Vec3f{ _v.x / _s, _v.y / _s, _v.z / _s };
+}
+
+
+// ============================================================
+// Vec2i32
+// ============================================================
+
+constexpr Vec2i32&
+Vec2i32::operator+=(Vec2i32 const &_rhs)
+{
+	x += _rhs.x; y += _rhs.y;
+	return *this;
+}
+
+constexpr Vec2i32&
+Vec2i32::operator-=(Vec2i32 const &_rhs)
+{
+	x -= _rhs.x; y -= _rhs.y;
+	return *this;
+}
+
+constexpr Vec2i32&
+Vec2i32::operator*=(Vec2i32 const &_rhs)
+{
+	x *= _rhs.x; y *= _rhs.y;
+	return *this;
+}
+
+constexpr Vec2i32&
+Vec2i32::operator/=(Vec2i32 const &_rhs)
+{
+	x /= _rhs.x; y /= _rhs.y;
+	return *this;
+}
+
+constexpr Vec2i32&
+Vec2i32::operator*=(int32_t _rhs)
+{
+	x *= _rhs; y *= _rhs;
+	return *this;
+}
+
+constexpr Vec2i32&
+Vec2i32::operator/=(int32_t _rhs)
+{
+	x /= _rhs; y /= _rhs;
+	return *this;
+}
+
+
+constexpr Vec2i32
+operator+(Vec2i32 const &_lhs, Vec2i32 const &_rhs)
+{
+	return Vec2i32{ _lhs.x + _rhs.x, _lhs.y + _rhs.y };
+}
+
+constexpr Vec2i32
+operator-(Vec2i32 const &_lhs, Vec2i32 const &_rhs)
+{
+	return Vec2i32{ _lhs.x - _rhs.x, _lhs.y - _rhs.y };
+}
+
+constexpr Vec2i32
+operator*(Vec2i32 const &_lhs, Vec2i32 const &_rhs)
+{
+	return Vec2i32{ _lhs.x * _rhs.x, _lhs.y * _rhs.y };
+}
+
+constexpr Vec2i32
+operator/(Vec2i32 const &_lhs, Vec2i32 const &_rhs)
+{
+	return Vec2i32{ _lhs.x / _rhs.x, _lhs.y / _rhs.y };
+}
+
+constexpr Vec2i32
+operator*(int32_t _s, Vec2i32 const &_v)
+{
+	return Vec2i32{ _v.x * _s, _v.y * _s };
+}
+
+constexpr Vec2i32
+operator*(Vec2i32 const &_v, int32_t _s)
+{
+	return _s * _v;
+}
+
+constexpr Vec2i32
+operator/(Vec2i32 const &_v, int32_t _s)
+{
+	return Vec2i32{ _v.x / _s, _v.y / _s };
 }
 
 } // namespace maths
