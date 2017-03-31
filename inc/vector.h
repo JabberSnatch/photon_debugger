@@ -7,6 +7,9 @@
 namespace maths
 {
 
+
+/// This class represents column vectors.
+
 template <typename T, uint32_t n>
 struct Vector final
 {
@@ -21,6 +24,31 @@ struct Vector final
 	}
 
 	std::array<T, n>	e;
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+};
+
+
+template <typename T>
+struct Vector<T, 4> final
+{
+	constexpr Vector() :
+		Vector(0)
+	{}
+	explicit constexpr Vector(T _value) {
+		e.fill(_value);
+	}
+	constexpr Vector(T _e0, T _e1, T _e2, T _e3) :
+		x{ _e0 }, y{ _e1 }, z{ _e2 }, w{ _e3 }
+	{}
+
+	union
+	{
+		std::array<T, 4>	e;
+		struct { T	x, y, z, w; };
+		struct { T	r, g, b, a; };
+	};
 
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };

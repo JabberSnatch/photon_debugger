@@ -36,6 +36,9 @@
     <ClInclude Include="inc\globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">
@@ -53,5 +56,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="inc\vector.inl" />
+    <None Include="inc\matrix.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -143,6 +143,7 @@
   <ItemGroup>
     <ClInclude Include="inc\globals.h" />
     <ClInclude Include="inc\maths.h" />
+    <ClInclude Include="inc\matrix.h" />
     <ClInclude Include="inc\ys_assert.h" />
     <ClInclude Include="inc\film.h" />
     <ClInclude Include="inc\profiler.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="inc\win32_timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="inc\matrix.inl" />
     <None Include="inc\vector.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

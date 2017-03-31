@@ -1,5 +1,6 @@
 #include "profiler.h"
 #include "vector.h"
+#include "matrix.h"
 #include "film.h"
 #include "globals.h"
 
@@ -46,12 +47,24 @@ int main()
 	maths::Vector<float, 4> B4{ 1.f, 2.f, 3.f, 4.f };
 	maths::Vector<float, 3> A3{ 1.f, 2.f, 3.f };
 	maths::Vector<float, 3> B3{ 1.f, 2.f, 3.f };
+	maths::Vector<float, 4> C4{ A4 + B4 };
+	maths::Vector<float, 3> C3{ A3 + B3 };
 
 	A4 += B4;
 	A3 += B3;
 
-	//maths::Vector<float, 4> C4{ A4 + B4 };
-	//maths::Vector<float, 3> C3{ A3 + B3 };
+	maths::Matrix<float, 4, 4> A4x4{};
+	A4x4[0][3] = 3;
+	A4x4[1][3] = 2;
+	maths::Vector<float, 4> D4{ 1.f, 0.f, 0.f, 1.f };
+	maths::Vector<float, 4> E4{ A4x4 * D4 };
+
+	maths::Matrix<float, 4, 2> A4x2{};
+	maths::Matrix<float, 2, 4> A2x4{};
+	maths::Matrix<float, 3, 3> A3x3{};
+
+	maths::Matrix<float, 2, 2> A2x2{ A2x4 * A4x2 };
+	maths::Matrix<float, 4, 4> B4x4{ A4x2 * A2x4 };
 
 	return 0;
 }
