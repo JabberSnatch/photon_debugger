@@ -33,6 +33,9 @@
     <ClInclude Include="inc\maths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">
@@ -44,7 +47,7 @@
     <ClCompile Include="src\win32_timer.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\profiler.cc">
+    <ClCompile Include="src\globals.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

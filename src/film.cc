@@ -3,14 +3,14 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "profiler.h"
+#include "globals.h"
 #include "ys_assert.h"
 
 namespace raytracer
 {
 
 Film::Film(int32_t _width, int32_t _height) :
-	pixels_(_width * _height, maths::Vec3f::zero()),
+	pixels_(_width * _height, maths::Vec3f{ 0.f }),
 	size_{ _width, _height }
 {
 	YS_ASSERT(_width > 0 && _height > 0);
@@ -26,9 +26,7 @@ Film::SetPixel(maths::Vec3f &&_value, maths::Vec2i32 &&_pos)
 void
 Film::WriteToFile(std::string const &_path) const
 {
-	//TIMED_SCOPE(WriteToFile, gProfiler);
-	tools::TimeProbe	WriteToFile_probe{ gProfiler.GetTimer("WriteToFile_probe") };
-
+	TIMED_SCOPE(WriteToFile, globals::profiler);
 
 	uint8_t	*buffer = new uint8_t[size_.w * size_.h * 3];
 	
@@ -57,7 +55,7 @@ Film::WriteToFile(std::string const &_path) const
 maths::Vec3f
 Film::MapToLimitedRange(maths::Vec3f const &_color) const
 {
-	return maths::Clamp(_color, 0.f, maths::almost_onef());
+	return maths::vector::Clamp(_color, 0.f, maths::AlmostOne<float>());
 }
 
 } // raytracer

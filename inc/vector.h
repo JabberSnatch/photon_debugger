@@ -1,119 +1,178 @@
 #ifndef __YS_VECTOR_HPP__
 #define __YS_VECTOR_HPP__
 
+#include <array>
+
 
 namespace maths
 {
 
-
-struct Vec3f final
+template <typename T, uint32_t n>
+struct Vector final
 {
-	constexpr Vec3f() :
-		Vec3f{ zero() }
+	constexpr Vector() :
+		Vector(0)
 	{}
-	constexpr Vec3f(float _e0, float _e1, float _e2) :
-		e{ _e0, _e1, _e2 }
+	constexpr Vector(std::initializer_list<T> _args) {
+		std::copy(_args.begin(), _args.end(), e.begin());
+	}
+	explicit constexpr Vector(T _value) {
+		e.fill(_value);
+	}
+
+	std::array<T, n>	e;
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+};
+
+template <typename T>
+struct Vector<T, 3> final
+{
+	constexpr Vector() :
+		Vector(0)
 	{}
-
-	static constexpr Vec3f zero() { return Vec3f{ 0.f, 0.f, 0.f }; }
-	static constexpr Vec3f one() { return Vec3f{ 1.f, 1.f, 1.f }; }
-
-	constexpr const Vec3f& operator+() const { return *this; }
-	constexpr Vec3f operator-() const { return Vec3f{ -x, -y, -z }; }
-	constexpr float operator[](int _i) const { return e[_i]; }
-	constexpr float& operator[](int _i) { return e[_i]; }
-
-	constexpr Vec3f& operator+=(Vec3f const &_rhs);
-	constexpr Vec3f& operator-=(Vec3f const &_rhs);
-	constexpr Vec3f& operator*=(Vec3f const &_rhs);
-	constexpr Vec3f& operator/=(Vec3f const &_rhs);
-	constexpr Vec3f& operator*=(float _rhs);
-	constexpr Vec3f& operator/=(float _rhs);
-
-	constexpr Vec3f normalized() const;
-	constexpr float sqr_length() const;
-	inline float length() const;
+	explicit constexpr Vector(T _value) {
+		e.fill(_value);
+	}
+	constexpr Vector(T _e0, T _e1, T _e2) :
+		x{ _e0 }, y{ _e1 }, z{ _e2 }
+	{}
 
 	union
 	{
-		float	e[3];
-		struct
-		{
-			float x;
-			float y;
-			float z;
-		};
-		struct
-		{
-			float r;
-			float g;
-			float b;
-		};
+		std::array<T, 3>	e;
+		struct { T	x, y, z; };
+		struct { T	r, g, b; };
 	};
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
 };
 
-constexpr Vec3f Clamp(Vec3f const &_v, float _min, float _max);
-constexpr float Dot(Vec3f const &_lhs, Vec3f const &_rhs);
-constexpr Vec3f Cross(Vec3f const &_lhs, Vec3f const &_rhs);
-constexpr Vec3f Reflect(Vec3f const &_v, Vec3f const &_n);
-
-constexpr Vec3f operator+(Vec3f const &_lhs, Vec3f const &_rhs);
-constexpr Vec3f operator-(Vec3f const &_lhs, Vec3f const &_rhs);
-constexpr Vec3f operator*(Vec3f const &_lhs, Vec3f const &_rhs);
-constexpr Vec3f operator/(Vec3f const &_lhs, Vec3f const &_rhs);
-constexpr Vec3f operator*(float _s, Vec3f const &_v);
-constexpr Vec3f operator*(Vec3f const &_v, float _s);
-constexpr Vec3f operator/(Vec3f const &_v, float _s);
-
-
-struct Vec2i32 final
+template <typename T>
+struct Vector<T, 2> final
 {
-	constexpr Vec2i32() :
-		Vec2i32{ zero() }
+	constexpr Vector() :
+		Vector(0)
 	{}
-	constexpr Vec2i32(int32_t _e0, int32_t _e1) :
-		e{ _e0, _e1 }
+	explicit constexpr Vector(T _value) {
+		e.fill(_value);
+	}
+	constexpr Vector(T _e0, T _e1) :
+		x{ _e0 }, y{ _e1 }
 	{}
-
-	static constexpr Vec2i32 zero() { return Vec2i32{ 0, 0 }; }
-	static constexpr Vec2i32 one() { return Vec2i32{ 1, 1 }; }
-
-	constexpr const Vec2i32& operator+() const { return *this; }
-	constexpr Vec2i32 operator-() const { return Vec2i32{ -x, -y }; }
-	constexpr int32_t operator[](int _i) const { return e[_i]; }
-	constexpr int32_t& operator[](int _i) { return e[_i]; }
-
-	constexpr Vec2i32& operator+=(Vec2i32 const &_rhs);
-	constexpr Vec2i32& operator-=(Vec2i32 const &_rhs);
-	constexpr Vec2i32& operator*=(Vec2i32 const &_rhs);
-	constexpr Vec2i32& operator/=(Vec2i32 const &_rhs);
-	constexpr Vec2i32& operator*=(int32_t _rhs);
-	constexpr Vec2i32& operator/=(int32_t _rhs);
 
 	union
 	{
-		int32_t	e[2];
-		struct
-		{
-			int32_t x;
-			int32_t y;
-		};
-		struct
-		{
-			int32_t w;
-			int32_t h;
-		};
+		std::array<T, 2>	e;
+		struct { T	x, y; };
+		struct { T	u, v; };
+		struct { T	w, h; };
 	};
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
 };
 
-constexpr Vec2i32 operator+(Vec2i32 const &_lhs, Vec2i32 const &_rhs);
-constexpr Vec2i32 operator-(Vec2i32 const &_lhs, Vec2i32 const &_rhs);
-constexpr Vec2i32 operator*(Vec2i32 const &_lhs, Vec2i32 const &_rhs);
-constexpr Vec2i32 operator/(Vec2i32 const &_lhs, Vec2i32 const &_rhs);
-constexpr Vec2i32 operator*(int32_t _s, Vec2i32 const &_v);
-constexpr Vec2i32 operator*(Vec2i32 const &_v, int32_t _s);
-constexpr Vec2i32 operator/(Vec2i32 const &_v, int32_t _s);
 
+// ============================================================
+// Vector<typename T, int n> operations
+// ============================================================
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator+=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator-=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator*=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator/=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator+=(Vector<T, n> &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator-=(Vector<T, n> &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator*=(Vector<T, n> &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator/=(Vector<T, n> &_lhs, T _rhs);
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator+(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator-(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator*(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator/(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator+(Vector<T, n> const &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator-(Vector<T, n> const &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator*(Vector<T, n> const &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator/(Vector<T, n> const &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator*(T _lhs, Vector<T, n> const &_rhs);
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator+(Vector<T, n> const &_op);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> operator-(Vector<T, n> const &_op);
+
+
+namespace vector
+{
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n> Clamp(Vector<T, n> const &_v, T _min, T _max);
+
+template <typename T, uint32_t n>
+constexpr T SqrLength(Vector<T, n> const &_v);
+template <typename T, uint32_t n>
+inline T Length(Vector<T, n> const &_v) = delete;
+template <typename T, uint32_t n>
+constexpr Vector<T, n> Normalized(Vector<T, n> const &_v) = delete;
+
+template <typename T, uint32_t n>
+constexpr T FoldProduct(Vector<T, n> const &_v);
+template <typename T, uint32_t n>
+constexpr T FoldSum(Vector<T, n> const &_v);
+
+
+// ============================================================
+// Vector<typename T, 3> operations
+// ============================================================
+
+template <typename T>
+constexpr T Dot(Vector<T, 3> const &_lhs, Vector<T, 3> const & _rhs);
+template <typename T>
+constexpr Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
+template <typename T>
+constexpr Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
+
+// ============================================================
+// Vector<float, uint32_t n> operations
+// ============================================================
+
+template <uint32_t n>
+inline float Length(Vector<float, n> const &_v);
+template <uint32_t n>
+constexpr Vector<float, n> Normalized(Vector<float, n> const &_v);
+
+} // namespace vector
+
+
+template <typename T> using Vector2 = Vector<T, 2>;
+template <typename T> using Vector3 = Vector<T, 3>;
+template <typename T> using Vector4 = Vector<T, 4>;
+
+using Vec3f = Vector3<float>;
+using Vec4f = Vector4<float>;
+using Vec2i32 = Vector2<int32_t>;
 
 } // maths
 

@@ -136,11 +136,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\film.cc" />
-    <ClCompile Include="src\profiler.cc" />
+    <ClCompile Include="src\globals.cc" />
     <ClCompile Include="src\raytracer_main.cc" />
     <ClCompile Include="src\win32_timer.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\globals.h" />
     <ClInclude Include="inc\maths.h" />
     <ClInclude Include="inc\ys_assert.h" />
     <ClInclude Include="inc\film.h" />
