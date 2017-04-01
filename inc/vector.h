@@ -9,6 +9,7 @@ namespace maths
 
 
 /// This class represents column vectors.
+// NOTE: Nice post about vector libraries http://reedbeta.com/blog/on-vector-math-libraries/
 
 template <typename T, uint32_t n>
 struct Vector final

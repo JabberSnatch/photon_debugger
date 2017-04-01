@@ -144,6 +144,7 @@
     <ClInclude Include="inc\globals.h" />
     <ClInclude Include="inc\maths.h" />
     <ClInclude Include="inc\matrix.h" />
+    <ClInclude Include="inc\quaternion.h" />
     <ClInclude Include="inc\ys_assert.h" />
     <ClInclude Include="inc\film.h" />
     <ClInclude Include="inc\profiler.h" />
@@ -152,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="inc\matrix.inl" />
+    <None Include="inc\quaternion.inl" />
     <None Include="inc\vector.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

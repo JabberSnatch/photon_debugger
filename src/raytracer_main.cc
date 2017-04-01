@@ -1,6 +1,7 @@
 #include "profiler.h"
 #include "vector.h"
 #include "matrix.h"
+#include "quaternion.h"
 #include "film.h"
 #include "globals.h"
 
@@ -81,6 +82,9 @@ int main()
 	int Ai = maths::Abs<int>(1);
 
 	float value = maths::zero<float>;
+
+	maths::Quaternion<float>	AQ{};
+	maths::quaternion::Normalized(AQ);
 
 	return 0;
 }

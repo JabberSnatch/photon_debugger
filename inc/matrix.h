@@ -25,7 +25,7 @@ namespace maths
 
 
 template <typename T, uint32_t R, uint32_t C>
-struct Matrix
+struct Matrix final
 {
 	// NOTE: std::array::fill isn't constexpr, so Matrix's ctor won't be either.
 	constexpr Matrix() :
