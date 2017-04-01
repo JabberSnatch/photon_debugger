@@ -59,12 +59,28 @@ int main()
 	maths::Vector<float, 4> D4{ 1.f, 0.f, 0.f, 1.f };
 	maths::Vector<float, 4> E4{ A4x4 * D4 };
 
-	maths::Matrix<float, 4, 2> A4x2{};
+	maths::Matrix<float, 4, 2> A4x2{maths::matrix::Identity<float, 4, 2>()};
 	maths::Matrix<float, 2, 4> A2x4{};
-	maths::Matrix<float, 3, 3> A3x3{};
+	maths::Matrix<float, 3, 3> A3x3( 0.f );
 
 	maths::Matrix<float, 2, 2> A2x2{ A2x4 * A4x2 };
 	maths::Matrix<float, 4, 4> B4x4{ A4x2 * A2x4 };
+
+	A3x3[0][0] = 3;
+	A3x3[0][2] = 2;
+	A3x3[1][0] = 2;
+	A3x3[1][2] = -2;
+	A3x3[2][1] = 1;
+	A3x3[2][2] = 1;
+
+	maths::Matrix<float, 3, 3> A3x3_inv{ maths::matrix::Inverse(A3x3) };
+	maths::Matrix<float, 3, 3> check{ A3x3 * A3x3_inv };
+
+	float Af = maths::Abs<float>(-0.2f);
+	double Ad = maths::Abs<double>(-0.2);
+	int Ai = maths::Abs<int>(1);
+
+	float value = maths::zero<float>;
 
 	return 0;
 }

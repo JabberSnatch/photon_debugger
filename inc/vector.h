@@ -14,13 +14,12 @@ template <typename T, uint32_t n>
 struct Vector final
 {
 	constexpr Vector() :
-		Vector(0)
+		Vector(zero<T>)
 	{}
+	// TODO: Profile a use case when replacing e.fill with a loop.
+	explicit constexpr Vector(T _value) { e.fill(_value); }
 	constexpr Vector(std::initializer_list<T> _args) {
 		std::copy(_args.begin(), _args.end(), e.begin());
-	}
-	explicit constexpr Vector(T _value) {
-		e.fill(_value);
 	}
 
 	std::array<T, n>	e;
@@ -34,11 +33,10 @@ template <typename T>
 struct Vector<T, 4> final
 {
 	constexpr Vector() :
-		Vector(0)
+		Vector(zero<T>)
 	{}
-	explicit constexpr Vector(T _value) {
-		e.fill(_value);
-	}
+	// TODO: Profile a use case when replacing e.fill with a loop.
+	explicit constexpr Vector(T _value) { e.fill(_value); }
 	constexpr Vector(T _e0, T _e1, T _e2, T _e3) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }, w{ _e3 }
 	{}
@@ -58,11 +56,10 @@ template <typename T>
 struct Vector<T, 3> final
 {
 	constexpr Vector() :
-		Vector(0)
+		Vector(zero<T>)
 	{}
-	explicit constexpr Vector(T _value) {
-		e.fill(_value);
-	}
+	// TODO: Profile a use case when replacing e.fill with a loop.
+	explicit constexpr Vector(T _value) { e.fill(_value); }
 	constexpr Vector(T _e0, T _e1, T _e2) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }
 	{}
@@ -82,11 +79,10 @@ template <typename T>
 struct Vector<T, 2> final
 {
 	constexpr Vector() :
-		Vector(0)
+		Vector(zero<T>)
 	{}
-	explicit constexpr Vector(T _value) {
-		e.fill(_value);
-	}
+	// TODO: Profile a use case when replacing e.fill with a loop.
+	explicit constexpr Vector(T _value) { e.fill(_value); }
 	constexpr Vector(T _e0, T _e1) :
 		x{ _e0 }, y{ _e1 }
 	{}

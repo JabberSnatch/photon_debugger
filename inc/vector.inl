@@ -12,7 +12,7 @@ namespace maths
 // Vector<typename T, int n> operations
 // ============================================================
 
-template <typename T, uint32_t n>
+template <typename T, uint32_t n> 
 constexpr Vector<T, n>
 &operator+=(Vector<T, n> &_lhs, Vector<T, n> _rhs)
 {
@@ -195,7 +195,7 @@ template <typename T, uint32_t n>
 constexpr T
 SqrLength(Vector<T, n> const &_v)
 {
-	T result{ 0 };
+	T result{ zero<T> };
 	for (uint32_t i = 0; i < n; ++i)
 		result += _v[i] * _v[i];
 	return result;
@@ -205,7 +205,7 @@ template <typename T, uint32_t n>
 constexpr T
 FoldProduct(Vector<T, n> const &_v)
 {
-	T result{ 0 };
+	T result{ zero<T> };
 	for (uint32_t i = 0; i < n; ++i)
 		result *= _v;
 	return result;
@@ -214,7 +214,7 @@ template <typename T, uint32_t n>
 constexpr T
 FoldSum(Vector<T, n> const &_v)
 {
-	T result{ 0 };
+	T result{ zero<T> };
 	for (uint32_t i = 0; i < n; ++i)
 		result += _v;
 	return result;
@@ -243,7 +243,7 @@ template <typename T>
 constexpr Vector<T, 3>
 Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 {
-	return _v + T{ 2 } * Dot(_v, _n) * _n;
+	return _v + 2 * Dot(_v, _n) * _n;
 }
 
 
@@ -253,7 +253,7 @@ Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 
 template <uint32_t n>
 inline float
-Length<float, n>(Vector<float, n> const &_v)
+Length(Vector<float, n> const &_v)
 {
 	return std::sqrtf(SqrLength(_v));
 }
