@@ -3,6 +3,8 @@
 
 #include <array>
 
+#include "algorithms.h"
+
 
 namespace maths
 {
@@ -17,11 +19,14 @@ struct Vector final
 	constexpr Vector() :
 		Vector(zero<T>)
 	{}
-	// TODO: Profile a use case when replacing e.fill with a loop.
-	explicit constexpr Vector(T _value) { e.fill(_value); }
+	explicit constexpr Vector(T _value) :
+		e{ algo::fill<n>::apply(_value) }
+	{}
 	constexpr Vector(std::initializer_list<T> _args) {
 		std::copy(_args.begin(), _args.end(), e.begin());
 	}
+	constexpr Vector(Vector<T, n - 1> const &_v, T _value)
+	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[n - 1] = _value; }
 
 	std::array<T, n>	e;
 
@@ -29,6 +34,18 @@ struct Vector final
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
 };
 
+template <typename T>
+struct Vector<T, 0> final
+{
+	constexpr Vector(){}
+	explicit constexpr Vector(T _value){}
+	constexpr Vector(std::initializer_list<T> _args){}
+
+	std::array<T, 0>	e;
+
+	constexpr T operator[](uint32_t _i) const { return zero<T>; };
+	constexpr T& operator[](uint32_t _i) { return zero<T>; };
+};
 
 template <typename T>
 struct Vector<T, 4> final
@@ -36,11 +53,14 @@ struct Vector<T, 4> final
 	constexpr Vector() :
 		Vector(zero<T>)
 	{}
-	// TODO: Profile a use case when replacing e.fill with a loop.
-	explicit constexpr Vector(T _value) { e.fill(_value); }
+	explicit constexpr Vector(T _value) :
+		e{ algo::fill<4>::apply(_value) }
+	{}
 	constexpr Vector(T _e0, T _e1, T _e2, T _e3) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }, w{ _e3 }
 	{}
+	constexpr Vector(Vector<T, 3> const &_v, T _value)
+	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[3] = _value; }
 
 	union
 	{
@@ -59,11 +79,14 @@ struct Vector<T, 3> final
 	constexpr Vector() :
 		Vector(zero<T>)
 	{}
-	// TODO: Profile a use case when replacing e.fill with a loop.
-	explicit constexpr Vector(T _value) { e.fill(_value); }
+	explicit constexpr Vector(T _value) :
+		e{ algo::fill<3>::apply(_value) }
+	{}
 	constexpr Vector(T _e0, T _e1, T _e2) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }
 	{}
+	constexpr Vector(Vector<T, 2> const &_v, T _value)
+	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[2] = _value; }
 
 	union
 	{
@@ -82,11 +105,14 @@ struct Vector<T, 2> final
 	constexpr Vector() :
 		Vector(zero<T>)
 	{}
-	// TODO: Profile a use case when replacing e.fill with a loop.
-	explicit constexpr Vector(T _value) { e.fill(_value); }
+	explicit constexpr Vector(T _value) :
+		e{ algo::fill<2>::apply(_value) }
+	{}
 	constexpr Vector(T _e0, T _e1) :
 		x{ _e0 }, y{ _e1 }
 	{}
+	constexpr Vector(Vector<T, 1> const &_v, T _value)
+	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[1] = _value; }
 
 	union
 	{
@@ -105,14 +131,20 @@ struct Vector<T, 2> final
 // Vector<typename T, int n> operations
 // ============================================================
 
+
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator+=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+constexpr bool operator==(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator-=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+constexpr bool operator!=(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator*=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+constexpr Vector<T, n> &operator+=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator/=(Vector<T, n> &_lhs, Vector<T, n> _rhs);
+constexpr Vector<T, n> &operator-=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator*=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> &operator/=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
 
 template <typename T, uint32_t n>
 constexpr Vector<T, n> &operator+=(Vector<T, n> &_lhs, T _rhs);

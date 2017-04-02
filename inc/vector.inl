@@ -12,9 +12,26 @@ namespace maths
 // Vector<typename T, int n> operations
 // ============================================================
 
+template <typename T, uint32_t n>
+constexpr bool
+operator==(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
+{
+	for (uint32_t i = 0; i < n; ++i)
+		if (_lhs[i] != _rhs[i]) return false;
+	return true;
+}
+template <typename T, uint32_t n>
+constexpr bool
+operator!=(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
+{
+	for (uint32_t i = 0; i < n; ++i)
+		if (_lhs[i] != _rhs[i]) return true;
+	return false;
+}
+
 template <typename T, uint32_t n> 
 constexpr Vector<T, n>
-&operator+=(Vector<T, n> &_lhs, Vector<T, n> _rhs)
+&operator+=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] += _rhs[i];
@@ -22,7 +39,7 @@ constexpr Vector<T, n>
 }
 template <typename T, uint32_t n>
 constexpr Vector<T, n>
-&operator-=(Vector<T, n> &_lhs, Vector<T, n> _rhs)
+&operator-=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] -= _rhs[i];
@@ -30,7 +47,7 @@ constexpr Vector<T, n>
 }
 template <typename T, uint32_t n>
 constexpr Vector<T, n>
-&operator*=(Vector<T, n> &_lhs, Vector<T, n> _rhs)
+&operator*=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] *= _rhs[i];
@@ -38,7 +55,7 @@ constexpr Vector<T, n>
 }
 template <typename T, uint32_t n>
 constexpr Vector<T, n>
-&operator/=(Vector<T, n> &_lhs, Vector<T, n> _rhs)
+&operator/=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] /= _rhs[i];
@@ -258,7 +275,7 @@ Length(Vector<float, n> const &_v)
 	return std::sqrtf(SqrLength(_v));
 }
 template <uint32_t n>
-constexpr float
+constexpr Vector<float, n>
 Normalized(Vector<float, n> const &_v)
 {
 	return _v / Length(_v);

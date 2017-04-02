@@ -42,6 +42,12 @@
     <ClInclude Include="inc\quaternion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\algorithms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">
@@ -54,6 +60,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\globals.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\transform.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

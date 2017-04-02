@@ -2,8 +2,10 @@
 #include "vector.h"
 #include "matrix.h"
 #include "quaternion.h"
+#include "transform.h"
 #include "film.h"
 #include "globals.h"
+#include "algorithms.h"
 
 //static tools::Profiler gProfiler{};
 
@@ -36,7 +38,7 @@ int main()
 	{
 		for (int32_t j = 0; j < 100; ++j)
 		{
-			test_film.SetPixel({ i / 50.f, j / 50.f, 0.f }, {i, j});
+			test_film.SetPixel({ i / 50.f, j / 50.f, 0.f }, { i, j });
 		}
 	}
 
@@ -60,9 +62,9 @@ int main()
 	maths::Vector<float, 4> D4{ 1.f, 0.f, 0.f, 1.f };
 	maths::Vector<float, 4> E4{ A4x4 * D4 };
 
-	maths::Matrix<float, 4, 2> A4x2{maths::matrix::Identity<float, 4, 2>()};
+	maths::Matrix<float, 4, 2> A4x2{};
 	maths::Matrix<float, 2, 4> A2x4{};
-	maths::Matrix<float, 3, 3> A3x3( 0.f );
+	maths::Matrix<float, 3, 3> A3x3(0.f);
 
 	maths::Matrix<float, 2, 2> A2x2{ A2x4 * A4x2 };
 	maths::Matrix<float, 4, 4> B4x4{ A4x2 * A2x4 };
@@ -77,6 +79,14 @@ int main()
 	maths::Matrix<float, 3, 3> A3x3_inv{ maths::matrix::Inverse(A3x3) };
 	maths::Matrix<float, 3, 3> check{ A3x3 * A3x3_inv };
 
+	A4x2[0][1] = 4.f;
+	A4x2[2][0] = 7.f;
+
+	maths::Mat4x4f C4x4{ A3x3 };
+	maths::Mat3x3f B3x3{ C4x4 };
+	maths::Matrix<float, 3, 5> A3x5{ A4x2 };
+	maths::Matrix<float, 4, 2> B4x2{ A3x5 };
+
 	float Af = maths::Abs<float>(-0.2f);
 	double Ad = maths::Abs<double>(-0.2);
 	int Ai = maths::Abs<int>(1);
@@ -85,6 +95,13 @@ int main()
 
 	maths::Quaternion<float>	AQ{};
 	maths::quaternion::Normalized(AQ);
+
+	C4x4 = static_cast<maths::Mat4x4f>(B3x3);
+	maths::Transform transformA{ maths::Mat4x4f{B3x3} };
+
+	C4x4.SetColumn(2, maths::Vec4f{ 1.f, 2.f, 3.f, 4.f });
+
+	maths::transform::LookAt({ 0.f, 0.f, 0.f }, { 0.f, 0.f, -1.f }, { 0.f, 1.f, 0.f });
 
 	return 0;
 }

@@ -26,6 +26,11 @@ using Quatf = Quaternion<float>;
 
 
 template <typename T>
+constexpr bool operator==(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
+template <typename T>
+constexpr bool operator!=(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
+
+template <typename T>
 constexpr Quaternion<T> &operator+=(Quaternion<T> &_lhs, Quaternion<T> const &_rhs);
 template <typename T>
 constexpr Quaternion<T> &operator-=(Quaternion<T> &_lhs, Quaternion<T> const &_rhs);
@@ -59,6 +64,8 @@ template <typename T>
 constexpr T Dot(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
 template <typename T>
 constexpr Quaternion<T> Normalized(Quaternion<T> const &_v);
+template <typename T>
+Quaternion<T> Slerp(Quaternion<T> const &_a, Quaternion<T> const &_b, float _t);
 
 } // namespace quaternion
 } // namespace maths

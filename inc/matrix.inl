@@ -7,6 +7,100 @@
 namespace maths
 {
 
+template <typename T, uint32_t R, uint32_t C>
+constexpr
+Matrix<T, R, C>::Matrix() :
+	Matrix(zero<T>)
+{
+	for (uint32_t i = 0; i < Min(R, C); ++i)
+		e[i * C + i] = one<T>;
+}
+
+template <typename T, uint32_t R, uint32_t C>
+constexpr
+Matrix<T, R, C>::Matrix(T _v) :
+	e{ algo::fill<R*C>::apply(_v) }
+{}
+
+template <typename T, uint32_t R, uint32_t C>
+constexpr
+Matrix<T, R, C>::Matrix(std::initializer_list<T> _args)
+{
+	std::copy(_args.begin(), _args.end(), e.begin());
+}
+
+template <typename T, uint32_t R, uint32_t C>
+template <uint32_t sR, uint32_t sC>
+constexpr
+Matrix<T, R, C>::Matrix(Matrix<T, sR, sC> const &_m) :
+	Matrix<T, R, C>::Matrix(zero<T>)
+{
+	for (uint32_t i = 0; i < Min(R, sR); ++i)
+		for (uint32_t j = 0; j < Min(C, sC); ++j)
+			e[i * C + j] = _m[i][j];
+	for (uint32_t i = Min(Min(R, sR), Min(C, sC)); i < Min(R, C); ++i)
+		e[i * C + i] = one<T>;
+}
+
+template <typename T, uint32_t R, uint32_t C>
+template <uint32_t sR, uint32_t sC>
+constexpr Matrix<T, R, C>
+&Matrix<T, R, C>::operator=(Matrix<T, sR, sC> const &_rhs)
+{
+	for (uint32_t i = 0; i < Min(R, sR); ++i)
+		for (uint32_t j = 0; j < Min(C, sC); ++j)
+			e[i * C + j] = _rhs[i][j];
+	for (uint32_t i = Min(Min(R, sR), Min(C, sC)); i < Min(R, C); ++i)
+		e[i * C + i] = one<T>;
+	return *this;
+}
+
+template <typename T, uint32_t R, uint32_t C>
+constexpr void
+Matrix<T, R, C>::SetRow(uint32_t _i, Vector<T, C> const &_v)
+{
+	YS_ASSERT(_i < R);
+	rows[_i] = _v;
+}
+template <typename T, uint32_t R, uint32_t C>
+constexpr void
+Matrix<T, R, C>::SetColumn(uint32_t _i, Vector<T, R> const &_v)
+{
+	YS_ASSERT(_i < C);
+	for (uint32_t i = 0; i < R; ++i)
+		e[i * C + _i] = _v[i];
+}
+
+
+template <typename T, uint32_t R, uint32_t C>
+constexpr bool
+operator==(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs)
+{
+	for (uint32_t i = 0; i < R*C; ++i)
+		if (_lhs.e[i] != _rhs.e[i]) return false;
+	return true;
+}
+template <typename T, uint32_t R, uint32_t C>
+constexpr bool
+operator!=(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs)
+{
+	for (uint32_t i = 0; i < R*C; ++i)
+		if (_lhs.e[i] != _rhs.e[i]) return true;
+	return false;
+}
+
+template <typename T, uint32_t R, uint32_t C>
+constexpr Matrix<T, R, C>
+Matrix<T, R, C>::Identity()
+{
+	Matrix<T, R, C> result(zero<T>);
+	for (uint32_t i = 0; i < Min(R, C); ++i)
+		result.e[i * C + i] = one<T>;
+	return result;
+}
+
+
+
 template <typename T, uint32_t R, uint32_t C, uint32_t common>
 constexpr Matrix<T, R, C>
 operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C> const &_rhs)
@@ -29,16 +123,26 @@ operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs)
 	return result;
 }
 
+
 namespace matrix
 {
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, R, C>
-Identity()
+constexpr Matrix<T, C, R> 
+FromRows(std::array<Vector<T, C>, R> const &_rows)
 {
-	Matrix<T, R, C> result(zero<T>);
-	for (uint32_t i = 0; i < Min(R, C); ++i)
-		result.e[i * C + i] = one<T>;
+	Matrix<T, R, C> result{ zero<T> };
+	for (uint32_t i = 0; i < R; ++i)
+		result.SetRow(i, _rows[i]);
+	return result;
+}
+template <typename T, uint32_t R, uint32_t C>
+constexpr Matrix<T, C, R>
+FromColumns(std::array<Vector<T, R>, C> const &_columns)
+{
+	Matrix<T, R, C> result{ zero<T> };
+	for (uint32_t i = 0; i < C; ++i)
+		result.SetColumn(i, _columns[i]);
 	return result;
 }
 

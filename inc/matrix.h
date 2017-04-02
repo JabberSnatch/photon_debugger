@@ -1,6 +1,7 @@
 #ifndef __YS_MATRIX_HPP__
 #define __YS_MATRIX_HPP__
 
+#include "algorithms.h"
 #include "vector.h"
 #include "maths.h"
 
@@ -23,22 +24,24 @@ namespace maths
 
 // m[i][j] <=> t[i * cols + j]
 
+// Matrices can be cast from size to size. Any new rows and columns are initialized to
+// identity.
 
 template <typename T, uint32_t R, uint32_t C>
 struct Matrix final
 {
-	// NOTE: std::array::fill isn't constexpr, so Matrix's ctor won't be either.
-	constexpr Matrix() :
-		Matrix(zero<T>)
-	{
-		for (uint32_t i = 0; i < Min(R, C); ++i)
-			e[i * C + i] = one<T>;
-	}
-	// TODO: Profile a use case when replacing e.fill with a loop.
-	explicit constexpr Matrix(T _v) { e.fill(_v); }
-	constexpr Matrix(std::initializer_list<T> _args) {
-		std::copy(_args.begin(), _args.end(), e.begin());
-	}
+	constexpr Matrix();
+	constexpr Matrix(std::initializer_list<T> _args);
+
+	explicit constexpr Matrix(T _v);
+
+	template <uint32_t sR, uint32_t sC>
+	explicit constexpr Matrix(Matrix<T, sR, sC> const &_m);
+	template <uint32_t sR, uint32_t sC>
+	constexpr Matrix<T, R, C> &operator=(Matrix<T, sR, sC> const &_rhs);
+
+	constexpr void SetRow(uint32_t _i, Vector<T, C> const &_v);
+	constexpr void SetColumn(uint32_t _i, Vector<T, R> const &_v);
 
 	union
 	{
@@ -48,28 +51,40 @@ struct Matrix final
 
 	constexpr Vector<T, C> &operator[](uint32_t _i) { return rows[_i]; }
 	constexpr Vector<T, C> const &operator[](uint32_t _i) const { return rows[_i]; }
+
+	// Not constexpr unless std::array::operator[] is.
+	static constexpr Matrix<T, R, C> Identity();
 };
+
+
+using Mat3x3f = Matrix<float, 3, 3>;
+using Mat4x4f = Matrix<float, 4, 4>;
 
 
 // These cannot exist if Matrix's ctor is not constexpr.
 //template <typename T, uint32_t R, uint32_t C> 
 //struct Zero<Matrix<T, R, C>> { static constexpr Matrix<T, R, C> value = Matrix<T, R, C>(zero<T>); };
 //template <typename T, uint32_t R, uint32_t C>
-//struct One<Matrix<T, R, C>> { static constexpr Matrix<T, R, C> value = matrix::Identity<T, R, C>(); };
+//struct One<Matrix<T, R, C>> { static constexpr Matrix<T, R, C> value = Matrix<T, R, C>(); };//matrix::Identity<T, R, C>(); };
 
+
+template <typename T, uint32_t R, uint32_t C>
+constexpr bool operator==(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs);
+template <typename T, uint32_t R, uint32_t C>
+constexpr bool operator!=(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs);
 
 template <typename T, uint32_t R, uint32_t C, uint32_t common>
 constexpr Matrix<T, R, C> operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C> const &_rhs);
 template <typename T, uint32_t R, uint32_t C>
 constexpr Vector<T, R> operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs);
 
-
 namespace matrix
 {
 
-// Not constexpr unless Matrix::ctor is.
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, R, C> Identity();
+constexpr Matrix<T, C, R> FromRows(std::array<Vector<T, C>, R> const &_rows);
+template <typename T, uint32_t R, uint32_t C>
+constexpr Matrix<T, C, R> FromColumns(std::array<Vector<T, R>, C> const &_columns);
 
 template <typename T, uint32_t R, uint32_t C>
 constexpr Matrix<T, C, R> Transpose(Matrix<T, R, C> const &_v);
