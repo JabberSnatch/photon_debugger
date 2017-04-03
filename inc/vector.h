@@ -2,7 +2,6 @@
 #define __YS_VECTOR_HPP__
 
 #include <array>
-
 #include "algorithms.h"
 
 
@@ -30,6 +29,12 @@ struct Vector final
 
 	std::array<T, n>	e;
 
+	constexpr bool HasNaNs() {
+		for (uint32_t i = 0; i < n; ++i)
+			if (std::isnan(e[i])) return true;
+		return false;
+	}
+
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
 };
@@ -42,6 +47,8 @@ struct Vector<T, 0> final
 	constexpr Vector(std::initializer_list<T> _args){}
 
 	std::array<T, 0>	e;
+
+	constexpr bool HasNaNs() { return false; }
 
 	constexpr T operator[](uint32_t _i) const { return zero<T>; };
 	constexpr T& operator[](uint32_t _i) { return zero<T>; };
@@ -69,6 +76,8 @@ struct Vector<T, 4> final
 		struct { T	r, g, b, a; };
 	};
 
+	constexpr bool HasNaNs() { return std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w); }
+
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
 };
@@ -94,6 +103,8 @@ struct Vector<T, 3> final
 		struct { T	x, y, z; };
 		struct { T	r, g, b; };
 	};
+
+	constexpr bool HasNaNs() { return std::isnan(x) || std::isnan(y) || std::isnan(z); }
 
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
@@ -121,6 +132,8 @@ struct Vector<T, 2> final
 		struct { T	u, v; };
 		struct { T	w, h; };
 	};
+
+	constexpr bool HasNaNs() { return std::isnan(x) || std::isnan(y); }
 
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
@@ -185,14 +198,21 @@ namespace vector
 {
 
 template <typename T, uint32_t n>
+constexpr bool HasNaNs(Vector<T, n> const &_v);
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n> Min(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr Vector<T, n> Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
 constexpr Vector<T, n> Clamp(Vector<T, n> const &_v, T _min, T _max);
 
 template <typename T, uint32_t n>
 constexpr T SqrLength(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
-inline T Length(Vector<T, n> const &_v) = delete;
+inline T Length(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> Normalized(Vector<T, n> const &_v) = delete;
+constexpr Vector<T, n> Normalized(Vector<T, n> const &_v);
 
 template <typename T, uint32_t n>
 constexpr T FoldProduct(Vector<T, n> const &_v);
@@ -210,15 +230,6 @@ template <typename T>
 constexpr Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
 template <typename T>
 constexpr Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
-
-// ============================================================
-// Vector<float, uint32_t n> operations
-// ============================================================
-
-template <uint32_t n>
-inline float Length(Vector<float, n> const &_v);
-template <uint32_t n>
-constexpr Vector<float, n> Normalized(Vector<float, n> const &_v);
 
 } // namespace vector
 

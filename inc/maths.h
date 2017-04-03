@@ -29,6 +29,7 @@ template <typename T> constexpr T one = One<T>::value;
 template <typename T>
 constexpr T AlmostOne() { return one<T> - std::numeric_limits<T>::epsilon(); }
 
+// NOTE: Maybe a Scalar<T> class could make these functions a little more specific.
 template <typename T>
 constexpr T Min(T _lhs, T _rhs) { return (_lhs < _rhs) ? _lhs : _rhs; }
 template <typename T>
@@ -42,6 +43,8 @@ constexpr T Abs(T _v) { return (_v > zero<T>) ? _v : -_v; }
 
 template <typename T>
 constexpr T Lerp(T _a, T _b, float _t) { return _a*(1.f - _t) + _b*_t; }
+template <typename T>
+constexpr T Lerp(T _a, T _b, double _t) { return _a*(1. - _t) + _b*_t; }
 
 } // namespace maths
 

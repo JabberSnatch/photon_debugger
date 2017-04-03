@@ -35,6 +35,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] += _rhs[i];
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 template <typename T, uint32_t n>
@@ -43,6 +44,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] -= _rhs[i];
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 template <typename T, uint32_t n>
@@ -51,6 +53,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] *= _rhs[i];
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 template <typename T, uint32_t n>
@@ -59,6 +62,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] /= _rhs[i];
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 
@@ -68,6 +72,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] += _rhs;
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 template <typename T, uint32_t n>
@@ -76,6 +81,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] -= _rhs;
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 template <typename T, uint32_t n>
@@ -84,6 +90,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] *= _rhs;
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 template <typename T, uint32_t n>
@@ -92,6 +99,7 @@ constexpr Vector<T, n>
 {
 	for (uint32_t i = 0; i < n; ++i)
 		_lhs[i] /= _rhs;
+	YS_ASSERT(!_lhs.HasNaNs());
 	return _lhs;
 }
 
@@ -102,6 +110,7 @@ operator+(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] + _rhs[i];
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 template <typename T, uint32_t n>
@@ -111,6 +120,7 @@ operator-(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] - _rhs[i];
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 template <typename T, uint32_t n>
@@ -120,6 +130,7 @@ operator*(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] * _rhs[i];
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 template <typename T, uint32_t n>
@@ -129,6 +140,7 @@ operator/(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] / _rhs[i];
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 
@@ -139,6 +151,7 @@ operator+(Vector<T, n> const &_lhs, T _rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] + _rhs;
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 template <typename T, uint32_t n>
@@ -148,6 +161,7 @@ operator-(Vector<T, n> const &_lhs, T _rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] - _rhs;
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 template <typename T, uint32_t n>
@@ -157,6 +171,7 @@ operator*(Vector<T, n> const &_lhs, T _rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] * _rhs;
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 template <typename T, uint32_t n>
@@ -166,6 +181,7 @@ operator/(Vector<T, n> const &_lhs, T _rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] / _rhs;
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 template <typename T, uint32_t n>
@@ -175,6 +191,7 @@ operator*(T _lhs, Vector<T, n> const &_rhs)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = _lhs[i] * _rhs;
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 
@@ -199,12 +216,40 @@ namespace vector
 {
 
 template <typename T, uint32_t n>
+constexpr bool
+HasNaNs(Vector<T, n> const &_v)
+{
+	for (uint32_t i = 0; i < n; ++i)
+		if (std::isnan(_v[i])) return true;
+	return false;
+}
+
+template <typename T, uint32_t n>
+constexpr Vector<T, n>
+Min(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
+{
+	Vector<T, n> result{};
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = Min(_lhs[i], _rhs[i]);
+	return result;
+}
+template <typename T, uint32_t n>
+constexpr Vector<T, n>
+Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
+{
+	Vector<T, n> result{};
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = Max(_lhs[i], _rhs[i]);
+	return result;
+}
+template <typename T, uint32_t n>
 constexpr Vector<T, n>
 Clamp(Vector<T, n> const &_v, T _min, T _max)
 {
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = maths::Clamp<T>(_v[i], _min, _max);
+	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
 
@@ -216,6 +261,18 @@ SqrLength(Vector<T, n> const &_v)
 	for (uint32_t i = 0; i < n; ++i)
 		result += _v[i] * _v[i];
 	return result;
+}
+template <typename T, uint32_t n>
+inline T
+Length(Vector<T, n> const &_v)
+{
+	return std::sqrt(SqrLength(_v));
+}
+template <typename T, uint32_t n>
+constexpr Vector<T, n>
+Normalized(Vector<T, n> const &_v)
+{
+	return _v / Length(_v);
 }
 
 template <typename T, uint32_t n>
@@ -252,34 +309,21 @@ template <typename T>
 constexpr Vector<T, 3>
 Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs)
 {
-	return Vector<T, 3>{ _lhs.y * _rhs.z - _lhs.z * _rhs.y,
+	Vector<T, 3> result{ _lhs.y * _rhs.z - _lhs.z * _rhs.y,
 						 _lhs.z * _rhs.x - _lhs.x * _rhs.z,
 						 _lhs.x * _rhs.y - _lhs.y * _rhs.x };
+	YS_ASSERT(!result.HasNaNs());
+	return result;
 }
 template <typename T>
 constexpr Vector<T, 3>
 Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 {
-	return _v + 2 * Dot(_v, _n) * _n;
+	Vector<T, 3> result = _v + 2 * Dot(_v, _n) * _n;
+	YS_ASSERT(!result.HasNaNs());
+	return result;
 }
 
-
-// ============================================================
-// Vector<float, uint32_t n> operations
-// ============================================================
-
-template <uint32_t n>
-inline float
-Length(Vector<float, n> const &_v)
-{
-	return std::sqrtf(SqrLength(_v));
-}
-template <uint32_t n>
-constexpr Vector<float, n>
-Normalized(Vector<float, n> const &_v)
-{
-	return _v / Length(_v);
-}
 
 } // namespace vector
 } // namespace maths

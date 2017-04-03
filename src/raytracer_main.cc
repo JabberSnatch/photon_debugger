@@ -1,5 +1,6 @@
 #include "profiler.h"
 #include "vector.h"
+#include "point.h"
 #include "matrix.h"
 #include "quaternion.h"
 #include "transform.h"
