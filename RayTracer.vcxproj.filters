@@ -51,7 +51,10 @@
     <ClInclude Include="inc\point.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\normal.h">
+    <ClInclude Include="inc\ray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -81,6 +84,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="inc\point.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="inc\bounds.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

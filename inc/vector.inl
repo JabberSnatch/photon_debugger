@@ -282,7 +282,7 @@ template <typename T, uint32_t n>
 constexpr T
 FoldProduct(Vector<T, n> const &_v)
 {
-	T result{ zero<T> };
+	T result{ one<T> };
 	for (uint32_t i = 0; i < n; ++i)
 		result *= _v;
 	return result;
@@ -294,6 +294,43 @@ FoldSum(Vector<T, n> const &_v)
 	T result{ zero<T> };
 	for (uint32_t i = 0; i < n; ++i)
 		result += _v;
+	return result;
+}
+
+template <typename T, uint32_t n>
+constexpr uint32_t
+MinimumDimension(Vector<T, n> const &_v)
+{
+	uint32_t	result = 0u;
+	T			min = _v[0];
+
+	for (uint32_t i = 1; i < n; ++i)
+	{
+		if (_v[i] < min)
+		{
+			result = i;
+			min = _v[i];
+		}
+	}
+
+	return result;
+}
+template <typename T, uint32_t n>
+constexpr uint32_t
+MaximumDimension(Vector<T, n> const &_v)
+{
+	uint32_t	result = 0u;
+	T			max = _v[0];
+	
+	for (uint32_t i = 1; i < n; ++i)
+	{
+		if (_v[i] > max)
+		{
+			result = i;
+			max = _v[i];
+		}
+	}
+
 	return result;
 }
 

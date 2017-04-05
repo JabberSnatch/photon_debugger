@@ -25,7 +25,7 @@ struct Point final
 
 	std::array<T, n>	e;
 
-	constexpr bool HasNaNs() {
+	constexpr bool HasNaNs() const {
 		for (uint32_t i = 0; i < n; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;
@@ -64,7 +64,7 @@ struct Point<T, 3> final
 		struct { T r, g, b; };
 	};
 
-	constexpr bool HasNaNs() {
+	constexpr bool HasNaNs() const {
 		return std::isnan(x) || std::isnan(y) || std::isnan(z);
 	}
 
@@ -98,7 +98,7 @@ struct Point<T, 2> final
 		struct { T w, h; };
 	};
 
-	constexpr bool HasNaNs() {
+	constexpr bool HasNaNs() const {
 		return std::isnan(x) || std::isnan(y);
 	}
 

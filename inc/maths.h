@@ -2,8 +2,19 @@
 #define __YS_MATHS_HPP__
 
 
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
+
 namespace maths
 {
+
+template <typename T> static constexpr T LowestValue = std::numeric_limits<T>::lowest();
+template <typename T> static constexpr T HighestValue = std::numeric_limits<T>::max();
+template <typename T> static constexpr T Infinity = std::numeric_limits<T>::infinity();
 
 template <typename T> static constexpr T Pi = T( 3.14159235658979323846 );
 

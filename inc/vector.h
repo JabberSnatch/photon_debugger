@@ -34,7 +34,7 @@ struct Vector final
 
 	std::array<T, n>	e;
 
-	constexpr bool HasNaNs() {
+	constexpr bool HasNaNs() const {
 		for (uint32_t i = 0; i < n; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;
@@ -53,7 +53,7 @@ struct Vector<T, 0> final
 
 	std::array<T, 0>	e;
 
-	constexpr bool HasNaNs() { return false; }
+	constexpr bool HasNaNs() const { return false; }
 
 	constexpr T operator[](uint32_t _i) const { return zero<T>; };
 	constexpr T& operator[](uint32_t _i) { return zero<T>; };
@@ -84,7 +84,7 @@ struct Vector<T, 4> final
 		struct { T	r, g, b, a; };
 	};
 
-	constexpr bool HasNaNs() { return std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w); }
+	constexpr bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w); }
 
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
@@ -115,7 +115,7 @@ struct Vector<T, 3> final
 		struct { T	r, g, b; };
 	};
 
-	constexpr bool HasNaNs() { return std::isnan(x) || std::isnan(y) || std::isnan(z); }
+	constexpr bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z); }
 
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
@@ -147,7 +147,7 @@ struct Vector<T, 2> final
 		struct { T	w, h; };
 	};
 
-	constexpr bool HasNaNs() { return std::isnan(x) || std::isnan(y); }
+	constexpr bool HasNaNs() const { return std::isnan(x) || std::isnan(y); }
 
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
@@ -233,6 +233,11 @@ constexpr T FoldProduct(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
 constexpr T FoldSum(Vector<T, n> const &_v);
 
+template <typename T, uint32_t n>
+constexpr uint32_t MinimumDimension(Vector<T, n> const &_v);
+template <typename T, uint32_t n>
+constexpr uint32_t MaximumDimension(Vector<T, n> const &_v);
+
 
 // ============================================================
 // Vector<typename T, 3> operations
@@ -267,7 +272,7 @@ struct Normal final
 
 	std::array<T, n>	e;
 
-	constexpr bool HasNaNs() {
+	constexpr bool HasNaNs() const {
 		for (uint32_t i = 0; i < n; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;
@@ -295,11 +300,11 @@ struct Normal<T, 3> final
 
 	union
 	{
-		std::array<T, n>	e;
+		std::array<T, 3>	e;
 		struct { T x, y, z; };
 	};
 
-	constexpr bool HasNaNs() {
+	constexpr bool HasNaNs() const {
 		for (uint32_t i = 0; i < n; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;

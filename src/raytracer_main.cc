@@ -1,6 +1,7 @@
 #include "profiler.h"
 #include "vector.h"
 #include "point.h"
+#include "bounds.h"
 #include "matrix.h"
 #include "quaternion.h"
 #include "transform.h"
@@ -108,6 +109,16 @@ int main()
 	maths::Vector<int, 3> Vector3iA{ Point3fA };
 	maths::Normal<float, 3> Normal3fA{ 1.f, 2.f, 3.f };
 	maths::Vec3f Vector3fA{ Normal3fA };
+
+	maths::Bounds<float, 3> Bounds3fA{{-1.f, -1.f, -1.f}, {1.f, 1.f, 1.f}};
+	maths::Point3f Corner0{ Bounds3fA.Corner(0) };
+	maths::Point3f Corner4{ Bounds3fA.Corner(4) };
+	maths::Point3f Corner7{ Bounds3fA.Corner(7) };
+
+	maths::Bounds<float, 4> Bounds4fA{ {1.f, -1.f, 1.f, -1.f}, {-1.f, 1.f, -1.f, 1.f} };
+	maths::Point<float, 4> Corner4f0{ Bounds4fA.Corner(0) };
+	maths::Point<float, 4> Corner4f7{ Bounds4fA.Corner(7) };
+	maths::Point<float, 4> Corner4f15{ Bounds4fA.Corner(15) };
 
 	return 0;
 }
