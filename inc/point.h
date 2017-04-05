@@ -31,6 +31,81 @@ struct Point final
 		return false;
 	}
 
+	template <typename U> explicit operator Vector<U, n>() const
+	{
+		Vector<U, n> result(zero<U>);
+		for (uint32_t i = 0; i < n; ++i)
+			result[i] = U(e[i]);
+		return result;
+	}
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+};
+
+
+template <typename T>
+struct Point<T, 3> final
+{
+	constexpr Point() :
+		Point(zero<T>)
+	{}
+	explicit constexpr Point(T _value) :
+		e{ algo::fill<3>::apply(_value) }
+	{}
+	constexpr Point(T _e0, T _e1, T _e2) :
+		x{ _e0 }, y{ _e1 }, z{ _e2 }
+	{}
+
+	union
+	{
+		std::array<T, 3>	e;
+		struct { T x, y, z; };
+		struct { T r, g, b; };
+	};
+
+	constexpr bool HasNaNs() {
+		return std::isnan(x) || std::isnan(y) || std::isnan(z);
+	}
+
+	template <typename U> explicit operator Vector<U, 3>() const {
+		return Vector<U, 3>{U(x), U(y), U(z)};
+	}
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+};
+
+
+template <typename T>
+struct Point<T, 2> final
+{
+	constexpr Point() :
+		Point(zero<T>)
+	{}
+	explicit constexpr Point(T _value) :
+		e{ algo::fill<2>::apply(_value) }
+	{}
+	constexpr Point(T _e0, T _e1) :
+		x{ _e0 }, y{ _e1 }
+	{}
+
+	union
+	{
+		std::array<T, 2>	e;
+		struct { T x, y; };
+		struct { T u, v; };
+		struct { T w, h; };
+	};
+
+	constexpr bool HasNaNs() {
+		return std::isnan(x) || std::isnan(y);
+	}
+
+	template <typename U> explicit operator Vector<U, 2>() const {
+		return Vector<U, 2>{U(x), U(y)};
+	}
+
 	constexpr T operator[](uint32_t _i) const { return e[_i]; };
 	constexpr T& operator[](uint32_t _i) { return e[_i]; };
 };

@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "vector.h"
+#include "point.h"
 
 
 namespace raytracer

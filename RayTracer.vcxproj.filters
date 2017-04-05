@@ -48,6 +48,12 @@
     <ClInclude Include="inc\algorithms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\normal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">
@@ -72,6 +78,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="inc\quaternion.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="inc\point.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

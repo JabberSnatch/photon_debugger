@@ -8,6 +8,8 @@
 namespace maths
 {
 
+template <typename T, uint32_t n> struct Normal;
+
 
 /// This class represents column vectors.
 // NOTE: Nice post about vector libraries http://reedbeta.com/blog/on-vector-math-libraries/
@@ -21,6 +23,9 @@ struct Vector final
 	explicit constexpr Vector(T _value) :
 		e{ algo::fill<n>::apply(_value) }
 	{}
+	explicit constexpr Vector(Normal<T, n> const &_v) {
+		std::copy(_v.e.begin(), _v.e.end(), e.begin());
+	}
 	constexpr Vector(std::initializer_list<T> _args) {
 		std::copy(_args.begin(), _args.end(), e.begin());
 	}
@@ -63,6 +68,9 @@ struct Vector<T, 4> final
 	explicit constexpr Vector(T _value) :
 		e{ algo::fill<4>::apply(_value) }
 	{}
+	explicit constexpr Vector(Normal<T, 4> const &_v) :
+		Vector{ _v[0], _v[1], _v[2], _v[3] }
+	{}
 	constexpr Vector(T _e0, T _e1, T _e2, T _e3) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }, w{ _e3 }
 	{}
@@ -91,6 +99,9 @@ struct Vector<T, 3> final
 	explicit constexpr Vector(T _value) :
 		e{ algo::fill<3>::apply(_value) }
 	{}
+	explicit constexpr Vector(Normal<T, 3> const &_v) :
+		Vector{_v.e[0], _v.e[1], _v.e[2]}
+	{}
 	constexpr Vector(T _e0, T _e1, T _e2) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }
 	{}
@@ -118,6 +129,9 @@ struct Vector<T, 2> final
 	{}
 	explicit constexpr Vector(T _value) :
 		e{ algo::fill<2>::apply(_value) }
+	{}
+	explicit constexpr Vector(Normal<T, 2> const &_v) :
+		Vector{ _v[0], _v[1] }
 	{}
 	constexpr Vector(T _e0, T _e1) :
 		x{ _e0 }, y{ _e1 }
@@ -234,6 +248,122 @@ constexpr Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
 } // namespace vector
 
 
+
+template <typename T, uint32_t n>
+struct Normal final
+{
+	constexpr Normal() :
+		Normal(zero<T>)
+	{}
+	explicit constexpr Normal(T _value) :
+		e{ algo::fill<n>::apply(_value) }
+	{}
+	explicit constexpr Normal(Vector<T, n> const &_v) {
+		std::copy(_v.e.begin(), _v.e.end(), e.begin());
+	}
+	constexpr Normal(std::initializer_list<T> _args) {
+		std::copy(_args.begin(), _args.end(), e.begin());
+	}
+
+	std::array<T, n>	e;
+
+	constexpr bool HasNaNs() {
+		for (uint32_t i = 0; i < n; ++i)
+			if (std::isnan(e[i])) return true;
+		return false;
+	}
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+};
+
+template <typename T>
+struct Normal<T, 3> final
+{
+	constexpr Normal() :
+		Normal(zero<T>)
+	{}
+	explicit constexpr Normal(T _value) :
+		e{ algo::fill<3>::apply(_value) }
+	{}
+	explicit constexpr Normal(Vector<T, 3> const &_v) :
+		Normal(_v[0], _v[1], _v[2])
+	{}
+	constexpr Normal(T _e0, T _e1, T _e2) :
+		x{ _e0 }, y{ _e1 }, z{ _e2 }
+	{}
+
+	union
+	{
+		std::array<T, n>	e;
+		struct { T x, y, z; };
+	};
+
+	constexpr bool HasNaNs() {
+		for (uint32_t i = 0; i < n; ++i)
+			if (std::isnan(e[i])) return true;
+		return false;
+	}
+
+	constexpr T operator[](uint32_t _i) const { return e[_i]; };
+	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+};
+
+
+// ============================================================
+// Normal<typename T, uint32_t n> operations
+// ============================================================
+
+template <typename T, uint32_t n>
+constexpr bool operator==(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr bool operator!=(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+
+template <typename T, uint32_t n>
+constexpr Normal<T, n> &operator+(Normal<T, n> const &_op);
+template <typename T, uint32_t n>
+constexpr Normal<T, n> operator-(Normal<T, n> const &_op);
+
+template <typename T, uint32_t n>
+constexpr Normal<T, n> operator*(Normal<T, n> const &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Normal<T, n> operator*(T _lhs, Normal<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr Normal<T, n> operator/(Normal<T, n> const &_lhs, T _rhs);
+
+template <typename T, uint32_t n>
+constexpr Normal<T, n> &operator*=(Normal<T, n> &_lhs, T _rhs);
+template <typename T, uint32_t n>
+constexpr Normal<T, n> &operator/=(Normal<T, n> &_lhs, T _rhs);
+
+namespace normal
+{
+
+template <typename T, uint32_t n>
+constexpr bool HasNaNs(Normal<T, n> const &_v);
+
+template <typename T, uint32_t n>
+constexpr T SqrLength(Normal<T, n> const &_v);
+template <typename T, uint32_t n>
+inline T Length(Normal<T, n> const &_v);
+template <typename T, uint32_t n>
+constexpr Normal<T, n> Normalized(Normal<T, n> const &_v);
+
+template <typename T, uint32_t n>
+constexpr T Dot(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr T Dot(Normal<T, n> const &_lhs, Vector<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr T Dot(Vector<T, n> const &_lhs, Normal<T, n> const &_rhs);
+
+template <typename T, uint32_t n>
+constexpr Normal<T, n> FaceForward(Normal<T, n> const &_value, Normal<T, n> const &_direction);
+template <typename T, uint32_t n>
+constexpr Normal<T, n> FaceForward(Normal<T, n> const &_value, Vector<T, n> const &_direction);
+
+} // namespace normal
+
+
 template <typename T> using Vector2 = Vector<T, 2>;
 template <typename T> using Vector3 = Vector<T, 3>;
 template <typename T> using Vector4 = Vector<T, 4>;
@@ -241,6 +371,9 @@ template <typename T> using Vector4 = Vector<T, 4>;
 using Vec3f = Vector3<float>;
 using Vec4f = Vector4<float>;
 using Vec2i32 = Vector2<int32_t>;
+
+template <typename T> using Normal3 = Normal<T, 3>;
+using Norm3f = Normal3<float>;
 
 } // maths
 

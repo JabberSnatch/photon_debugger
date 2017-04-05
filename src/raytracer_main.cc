@@ -104,5 +104,10 @@ int main()
 
 	maths::transform::LookAt({ 0.f, 0.f, 0.f }, { 0.f, 0.f, -1.f }, { 0.f, 1.f, 0.f });
 
+	maths::Point<float, 3> Point3fA{ 1.f, 2.f, 3.f };
+	maths::Vector<int, 3> Vector3iA{ Point3fA };
+	maths::Normal<float, 3> Normal3fA{ 1.f, 2.f, 3.f };
+	maths::Vec3f Vector3fA{ Normal3fA };
+
 	return 0;
 }
