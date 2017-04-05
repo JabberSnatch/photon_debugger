@@ -95,6 +95,20 @@ Bounds<T, n>::BoundingSphere(Point<T, n> &_center, T &_radius) const
 }
 
 
+template <typename T, uint32_t n>
+constexpr bool
+operator==(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
+{
+	return _lhs.min == _rhs.min && _lhs.max == _rhs.max;
+}
+template <typename T, uint32_t n>
+constexpr bool
+operator!=(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
+{
+	return _lhs.min != _rhs.min || _lhs.max != _rhs.max;
+}
+
+
 namespace bounds
 {
 

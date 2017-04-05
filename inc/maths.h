@@ -9,6 +9,24 @@
 #undef min
 #endif
 
+
+namespace maths
+{
+
+template <typename T, uint32_t n> struct Vector;
+template <typename T, uint32_t n> struct Normal;
+template <typename T, uint32_t n> struct Point;
+template <typename T, uint32_t n> struct Bounds;
+template <typename T, uint32_t R, uint32_t C> struct Matrix;
+template <typename T> struct Quaternion;
+
+struct Ray;
+
+class Transform;
+
+} // namespace maths
+
+
 namespace maths
 {
 

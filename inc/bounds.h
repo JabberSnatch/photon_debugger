@@ -13,6 +13,9 @@ struct Bounds final
 	constexpr Bounds() :
 		min(LowestValue<T>), max(HighestValue<T>)
 	{}
+	explicit constexpr Bounds(Point<T, n> const &_v) :
+		min{ _v }, max{ _v }
+	{}
 	constexpr Bounds(Point<T, n> const &_a, Point<T, n> const &_b) :
 		min{ point::Min(_a, _b) }, max{ point::Max(_a, _b) }
 	{}
@@ -33,6 +36,12 @@ struct Bounds final
 
 	Point<T, n> min, max;
 };
+
+
+template <typename T, uint32_t n>
+constexpr bool operator==(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs);
+template <typename T, uint32_t n>
+constexpr bool operator!=(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs);
 
 
 namespace bounds
