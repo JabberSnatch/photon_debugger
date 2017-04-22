@@ -231,7 +231,7 @@ Min(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
-		result[i] = Min(_lhs[i], _rhs[i]);
+		result[i] = maths::Min(_lhs[i], _rhs[i]);
 	return result;
 }
 template <typename T, uint32_t n>
@@ -240,7 +240,7 @@ Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
-		result[i] = Max(_lhs[i], _rhs[i]);
+		result[i] = maths::Max(_lhs[i], _rhs[i]);
 	return result;
 }
 template <typename T, uint32_t n>

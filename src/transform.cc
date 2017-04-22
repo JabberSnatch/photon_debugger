@@ -1,5 +1,8 @@
 #include "transform.h"
 
+#include "vector.h"
+
+
 namespace maths
 {
 
@@ -18,8 +21,8 @@ namespace transform
 Transform
 RotateX(float _theta)
 {
-	float sin_theta = std::sin(Radians<float>(_theta));
-	float cos_theta = std::cos(Radians<float>(_theta));
+	float sin_theta = std::sin(Radians(_theta));
+	float cos_theta = std::cos(Radians(_theta));
 	Mat4x4f m {	1.f, 0.f, 0.f, 0.f,
 				0.f, cos_theta, -sin_theta, 0.f,
 				0.f, sin_theta, cos_theta, 0.f,

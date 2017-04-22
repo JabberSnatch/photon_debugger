@@ -55,7 +55,7 @@ Film::WriteToFile(std::string const &_path) const
 maths::Vec3f
 Film::MapToLimitedRange(maths::Vec3f const &_color) const
 {
-	return maths::vector::Clamp(_color, 0.f, maths::AlmostOne<float>());
+	return maths::vector::Clamp(_color, maths::zero<maths::Decimal>, maths::AlmostOne<maths::Decimal>());
 }
 
 } // raytracer

@@ -9,7 +9,7 @@ namespace maths
 {
 
 
-class Transform
+class Transform final
 {
 public:
 	Transform() = delete;
@@ -50,7 +50,7 @@ inline Transform Inverse(Transform const &_v);
 inline Transform Transpose(Transform const &_v);
 
 inline Transform Translate(Vec3f const &_v);
-inline Transform Scale(float _x, float _y, float _z);
+inline Transform Scale(Decimal _x, Decimal _y, Decimal _z);
 
 Transform RotateX(float _theta);
 Transform RotateY(float _theta);
@@ -60,6 +60,23 @@ Transform Rotate(float _theta, Vec3f const &_axis);
 Transform LookAt(Vec3f const &_position, Vec3f const &_target, Vec3f const &_up);
 
 } // namespace transform
+
+
+class AnimatedTransform final
+{
+public:
+	template <typename T> constexpr Point<T, 3> operator()(float _t, Point<T, 3> const &_v) const;
+	template <typename T> constexpr Vector<T, 3> operator()(float _t, Vector<T, 3> const &_v) const;
+	template <typename T> constexpr Vector<T, 4> operator()(float _t, Vector<T, 4> const &_v) const;
+	template <typename T> constexpr Normal<T, 3> operator()(float _t, Normal<T, 3> const &_v) const;
+	template <typename T> constexpr Bounds<T, 3> operator()(float _t, Bounds<T, 3> const &_v) const;
+	inline Ray operator()(Ray const &_v) const;
+
+private:
+	struct DerivativeTerm
+	{
+	};
+};
 } // namespace maths
 
 
@@ -168,16 +185,28 @@ inline Transform
 Translate(Vec3f const &_v)
 {
 	return Transform{
-		{ 1.f, 0.f, 0.f, _v.x, 0.f, 1.f, 0.f, _v.y, 0.f, 0.f, 1.f, _v.z, 0.f, 0.f, 0.f, 1.f },
-		{ 1.f, 0.f, 0.f, -_v.x, 0.f, 1.f, 0.f, -_v.y, 0.f, 0.f, 1.f, -_v.z, 0.f, 0.f, 0.f, 1.f }
+		{	1._d, 0._d, 0._d, _v.x,
+			0._d, 1._d, 0._d, _v.y,
+			0._d, 0._d, 1._d, _v.z,
+			0._d, 0._d, 0._d, 1._d },
+		{	1._d, 0._d, 0._d, -_v.x,
+			0._d, 1._d, 0._d, -_v.y,
+			0._d, 0._d, 1._d, -_v.z,
+			0._d, 0._d, 0._d, 1._d }
 	};
 }
 inline Transform
-Scale(float _x, float _y, float _z)
+Scale(Decimal _x, Decimal _y, Decimal _z)
 {
 	return Transform{
-		{ _x, 0.f, 0.f, 0.f, 0.f, _y, 0.f, 0.f, 0.f, 0.f, _z, 0.f, 0.f, 0.f, 0.f, 1.f },
-		{ 1.f / _x, 0.f, 0.f, 0.f, 1.f / _y, 0.f, 0.f, 0.f, 0.f, 1.f / _z, 0.f, 0.f, 0.f, 0.f, 1.f }
+		{	_x, 0._d, 0._d, 0._d,
+			0._d, _y, 0._d, 0._d,
+			0._d, 0._d, _z, 0._d,
+			0._d, 0._d, 0._d, 1._d },
+		{	1._d / _x, 0._d, 0._d, 0._d,
+			0._d, 1._d / _y, 0._d, 0._d,
+			0._d, 0._d, 1._d / _z, 0._d,
+			0._d, 0._d, 0._d, 1._d }
 	};
 }
 

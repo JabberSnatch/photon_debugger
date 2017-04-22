@@ -11,16 +11,16 @@ namespace maths
 
 struct Ray
 {
-	Ray(Point3f _o, Vec3f _d, float _tMax, float _time) :
+	Ray(Point3f _o, Vec3f _d, Decimal _tMax, Decimal _time) :
 		origin{ _o }, direction{ _d }, tMax{ _tMax }, time{ _time }
 	{}
-	inline Point3f operator()(float _t) const { return origin + direction * _t; }
+	inline Point3f operator()(Decimal _t) const { return origin + direction * _t; }
 	inline bool HasNaNs() const { return origin.HasNaNs() || direction.HasNaNs() || std::isnan(tMax); }
 
 	Point3f			origin;
 	Vec3f			direction;
-	mutable float	tMax;
-	float			time;
+	mutable Decimal	tMax;
+	Decimal			time;
 };
 
 

@@ -1,7 +1,9 @@
 #ifndef __YS_QUATERNION_HPP__
 #define __YS_QUATERNION_HPP__
 
+#include "maths.h"
 #include "matrix.h"
+#include "transform.h"
 
 
 namespace maths
@@ -17,6 +19,9 @@ struct Quaternion
 	constexpr Quaternion(Vector3<T> _v, T _w) :
 		v(_v), w(_w)
 	{}
+
+	explicit Quaternion(Transform const &_v);
+	constexpr explicit operator Transform() const;
 
 	Vector3<T>		v;
 	T				w;
@@ -60,6 +65,12 @@ constexpr Quaternion<T> operator/(Quaternion<T> const &_lhs, T _rhs);
 namespace quaternion
 {
 
+template <typename T>
+constexpr Quaternion<T> Conjugate(Quaternion<T> const &_v);
+template <typename T>
+constexpr Quaternion<T> Inverse(Quaternion<T> const &_v);
+template <typename T>
+constexpr T Norm(Quaternion<T> const &_v);
 template <typename T>
 constexpr T Dot(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
 template <typename T>

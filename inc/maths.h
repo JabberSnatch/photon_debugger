@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __YS_MATHS_HPP__
 #define __YS_MATHS_HPP__
 
@@ -29,6 +30,23 @@ class Transform;
 
 namespace maths
 {
+
+#define YS_DECIMAL_IS_DOUBLE
+#ifdef YS_DECIMAL_IS_DOUBLE
+using Decimal = double;
+#else
+using Decimal = float;
+#endif
+
+} // namespace maths
+
+constexpr maths::Decimal operator "" _d(long double _v) { return maths::Decimal(_v); }
+//inline maths::Decimal operator "" _d(char const *_v) { return maths::Decimal(std::atof(_v)); }
+
+namespace maths
+{
+
+
 
 template <typename T> static constexpr T LowestValue = std::numeric_limits<T>::lowest();
 template <typename T> static constexpr T HighestValue = std::numeric_limits<T>::max();

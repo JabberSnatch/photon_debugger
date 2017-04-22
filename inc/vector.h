@@ -2,6 +2,7 @@
 #define __YS_VECTOR_HPP__
 
 #include <array>
+#include "maths.h"
 #include "algorithms.h"
 
 
@@ -32,6 +33,9 @@ struct Vector final
 	constexpr Vector(Vector<T, n - 1> const &_v, T _value)
 	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[n - 1] = _value; }
 
+	using						value_type = T;
+	static constexpr uint32_t	size{ n };
+
 	std::array<T, n>	e;
 
 	constexpr bool HasNaNs() const {
@@ -50,6 +54,9 @@ struct Vector<T, 0> final
 	constexpr Vector(){}
 	explicit constexpr Vector(T _value){}
 	constexpr Vector(std::initializer_list<T> _args){}
+
+	using						value_type = T;
+	static constexpr uint32_t	size{ 0 };
 
 	std::array<T, 0>	e;
 
@@ -76,6 +83,9 @@ struct Vector<T, 4> final
 	{}
 	constexpr Vector(Vector<T, 3> const &_v, T _value)
 	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[3] = _value; }
+
+	using						value_type = T;
+	static constexpr uint32_t	size{ 4 };
 
 	union
 	{
@@ -108,6 +118,9 @@ struct Vector<T, 3> final
 	constexpr Vector(Vector<T, 2> const &_v, T _value)
 	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[2] = _value; }
 
+	using						value_type = T;
+	static constexpr uint32_t	size{ 3 };
+
 	union
 	{
 		std::array<T, 3>	e;
@@ -138,6 +151,9 @@ struct Vector<T, 2> final
 	{}
 	constexpr Vector(Vector<T, 1> const &_v, T _value)
 	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[1] = _value; }
+
+	using						value_type = T;
+	static constexpr uint32_t	size{ 2 };
 
 	union
 	{
@@ -270,6 +286,9 @@ struct Normal final
 		std::copy(_args.begin(), _args.end(), e.begin());
 	}
 
+	using						value_type = T;
+	static constexpr uint32_t	size{ n };
+
 	std::array<T, n>	e;
 
 	constexpr bool HasNaNs() const {
@@ -297,6 +316,9 @@ struct Normal<T, 3> final
 	constexpr Normal(T _e0, T _e1, T _e2) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }
 	{}
+
+	using						value_type = T;
+	static constexpr uint32_t	size{ 3 };
 
 	union
 	{
@@ -373,12 +395,12 @@ template <typename T> using Vector2 = Vector<T, 2>;
 template <typename T> using Vector3 = Vector<T, 3>;
 template <typename T> using Vector4 = Vector<T, 4>;
 
-using Vec3f = Vector3<float>;
-using Vec4f = Vector4<float>;
+using Vec3f = Vector3<Decimal>;
+using Vec4f = Vector4<Decimal>;
 using Vec2i32 = Vector2<int32_t>;
 
 template <typename T> using Normal3 = Normal<T, 3>;
-using Norm3f = Normal3<float>;
+using Norm3f = Normal3<Decimal>;
 
 } // maths
 

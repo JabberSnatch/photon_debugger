@@ -113,8 +113,8 @@ struct Point<T, 2> final
 
 template <typename T> using Point3 = Point<T, 3>;
 template <typename T> using Point2 = Point<T, 2>;
-using Point3f = Point3<float>;
-using Point2f = Point2<float>;
+using Point3f = Point3<Decimal>;
+using Point2f = Point2<Decimal>;
 
 
 // ============================================================
@@ -166,9 +166,9 @@ template <typename T, uint32_t n>
 constexpr Point<T, n> Abs(Point<T, n> const &_v);
 
 template <typename T, uint32_t n>
-constexpr float Distance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
+constexpr Decimal Distance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr float SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
+constexpr Decimal SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
 
 } // namespace point
 } // namespace maths

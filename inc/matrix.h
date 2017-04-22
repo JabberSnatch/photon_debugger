@@ -57,8 +57,8 @@ struct Matrix final
 };
 
 
-using Mat3x3f = Matrix<float, 3, 3>;
-using Mat4x4f = Matrix<float, 4, 4>;
+using Mat3x3f = Matrix<maths::Decimal, 3, 3>;
+using Mat4x4f = Matrix<maths::Decimal, 4, 4>;
 
 
 // These cannot exist if Matrix's ctor is not constexpr.

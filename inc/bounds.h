@@ -63,6 +63,13 @@ template <typename T, uint32_t n>
 constexpr Bounds<T, n> Expand(Bounds<T, n> const &_v, T _delta);
 
 } // namespace bounds
+
+
+using Bounds2f = Bounds<maths::Decimal, 2>;
+using Bounds3f = Bounds<maths::Decimal, 3>;
+using Bounds4f = Bounds<maths::Decimal, 4>;
+
+
 } // namespace maths
 
 #include "bounds.inl"

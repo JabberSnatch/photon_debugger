@@ -160,13 +160,13 @@ Abs(Point<T, n> const &_v)
 }
 
 template <typename T, uint32_t n>
-constexpr float
+constexpr Decimal
 Distance(Point<T, n> const &_lhs, Point<T, n> const &_rhs)
 {
 	return vector::Length(_lhs - _rhs);
 }
 template <typename T, uint32_t n>
-constexpr float
+constexpr Decimal
 SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs)
 {
 	return vector::SqrLength(_lhs - _rhs);
