@@ -327,7 +327,7 @@ struct Normal<T, 3> final
 	};
 
 	constexpr bool HasNaNs() const {
-		for (uint32_t i = 0; i < n; ++i)
+		for (uint32_t i = 0; i < 3; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;
 	}

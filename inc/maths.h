@@ -3,6 +3,8 @@
 #define __YS_MATHS_HPP__
 
 
+#define YS_DECIMAL_IS_DOUBLE
+
 #ifdef max
 #undef max
 #endif
@@ -30,14 +32,11 @@ class Transform;
 
 namespace maths
 {
-
-#define YS_DECIMAL_IS_DOUBLE
 #ifdef YS_DECIMAL_IS_DOUBLE
 using Decimal = double;
 #else
 using Decimal = float;
 #endif
-
 } // namespace maths
 
 constexpr maths::Decimal operator "" _d(long double _v) { return maths::Decimal(_v); }
@@ -63,13 +62,19 @@ constexpr T Degrees(T _radians) { return (T( 180 ) / Pi<T>) * _radians; }
 template <typename T> struct Zero { static constexpr T value = T::zero ; };
 template <> struct Zero<float> { static constexpr float value = 0.f; };
 template <> struct Zero<double> { static constexpr double value = 0.; };
-template <> struct Zero<int> { static constexpr int value = 0; };
+template <> struct Zero<int32_t> { static constexpr int32_t value = 0; };
+template <> struct Zero<int64_t> { static constexpr int64_t value = 0; };
+template <> struct Zero<uint32_t> { static constexpr uint32_t value = 0u; };
+template <> struct Zero<uint64_t> { static constexpr uint64_t value = 0u; };
 template <typename T> constexpr T zero = Zero<T>::value;
 
 template <typename T> struct One { static constexpr T value = T::one; };
 template <> struct One<float> { static constexpr float value = 1.f; };
 template <> struct One<double> { static constexpr double value = 1.; };
-template <> struct One<int> { static constexpr int value = 1; };
+template <> struct One<int32_t> { static constexpr int32_t value = 1; };
+template <> struct One<int64_t> { static constexpr int64_t value = 1; };
+template <> struct One<uint32_t> { static constexpr uint32_t value = 1u; };
+template <> struct One<uint64_t> { static constexpr uint64_t value = 1u; };
 template <typename T> constexpr T one = One<T>::value;
 
 
@@ -83,6 +88,8 @@ template <typename T>
 constexpr T Max(T _lhs, T _rhs) { return (_lhs > _rhs) ? _lhs : _rhs; }
 template <typename T>
 constexpr T Clamp(T _v, T _min, T _max) { return Min(Max(_v, _min), _max); }
+template <typename T>
+constexpr T SafeClamp(T _v, T _min, T _max) { return Min(Max(_v, Min(_min, _max)), Max(_min, _max)); }
 
 template <typename T>
 constexpr T Abs(T _v) { return (_v > zero<T>) ? _v : -_v; }
