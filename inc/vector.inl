@@ -189,11 +189,7 @@ template <typename T, uint32_t n>
 constexpr Vector<T, n>
 operator*(T _lhs, Vector<T, n> const &_rhs)
 {
-	Vector<T, n> result{};
-	for (uint32_t i = 0; i < n; ++i)
-		result[i] = _lhs[i] * _rhs;
-	YS_ASSERT(!result.HasNaNs());
-	return result;
+	return _rhs * _lhs;
 }
 
 template <typename T, uint32_t n>
@@ -359,7 +355,7 @@ template <typename T>
 constexpr Vector<T, 3>
 Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 {
-	Vector<T, 3> result = _v + 2 * Dot(_v, _n) * _n;
+	Vector<T, 3> result = 2 * Dot(_v, _n) * _n - _v;
 	YS_ASSERT(!result.HasNaNs());
 	return result;
 }

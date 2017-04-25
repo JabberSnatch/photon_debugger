@@ -9,7 +9,7 @@
 #ifdef _DEBUG
 #define YS_ASSERT(statement) assert(statement)
 #else
-#define YS_ASSERT(statement)
+#define YS_ASSERT(statement) {}
 #endif
 
 #endif // _WIN32

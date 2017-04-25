@@ -57,6 +57,9 @@
     <ClInclude Include="inc\bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\redecimal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">
@@ -87,6 +90,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="inc\bounds.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="inc\redecimal.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

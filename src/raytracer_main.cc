@@ -8,6 +8,7 @@
 #include "film.h"
 #include "globals.h"
 #include "algorithms.h"
+#include "redecimal.h"
 
 //static tools::Profiler gProfiler{};
 
@@ -129,5 +130,45 @@ int main()
 	maths::Point<maths::Decimal, 4>	Corner4f7{ Bounds4fA.Corner(7) };
 	maths::Point<maths::Decimal, 4>	Corner4f15{ Bounds4fA.Corner(15) };
 
+	maths::Decimal yolo = 0._d;
+	maths::Decimal next = maths::NextDecimalUp(yolo);
+	maths::Decimal nextnext = maths::NextDecimalUp(yolo, 2);
+	maths::Decimal delta = next - yolo;
+	maths::Decimal nextdelta = nextnext - next;
+
+	int decimal_shift;
+#ifdef YS_DECIMAL_IS_DOUBLE
+	decimal_shift = 53;
+#else
+	decimal_shift = 24;
+#endif
+	/*
+	maths::Decimal nextexp = maths::BitsToDecimal((maths::DecimalBits(1) << decimal_shift) - 1);
+	maths::DecimalBits nextexpbits = maths::DecimalToBits(nextexp);
+	maths::Decimal nextexpnext = maths::NextDecimalUp(nextexp);
+	maths::DecimalBits nextexpnextbits = maths::DecimalToBits(nextexpnext);
+	maths::Decimal nextexpdelta = nextexpnext - nextexp;
+	maths::Decimal nextexpdeltanext = maths::NextDecimalUp(nextexpnext) - nextexpnext;
+	
+	maths::DecimalBits fullexpbits = (((~((maths::DecimalBits(1) << decimal_shift) - 1)) << 1) >> 1);
+	maths::Decimal fullexp = maths::BitsToDecimal(fullexpbits);
+	maths::Decimal fullexpnext = maths::NextDecimalUp(fullexp);
+	maths::Decimal fullexppenult = maths::NextDecimalDown(fullexp);
+	maths::DecimalBits fullexpnextbits = maths::DecimalToBits(fullexpnext);
+	maths::Decimal fullexpdelta = fullexpnext - fullexp;
+
+	maths::Decimal fullexpnextepsilon = fullexpnext * (1._d + maths::machine_epsilon);
+	maths::Decimal fullexpnextmepsilon = fullexpnext * (1._d - maths::machine_epsilon);
+	maths::Decimal fullexpnextepsilondelta = (fullexpnextepsilon - fullexpnextmepsilon);
+
+	maths::DecimalBits epsilonbits = maths::DecimalToBits(fullexpnextepsilon);
+	maths::DecimalBits mepsilonbits = maths::DecimalToBits(fullexpnextmepsilon);
+	maths::DecimalBits epsilondeltabits = maths::DecimalToBits(fullexpnextepsilondelta);
+
+	auto foo = maths::GetDecimalBits(3._d).bits;
+	auto baz = maths::GetDecimalBits(1_db).value;
+	*/
+
+	system("pause");
 	return 0;
 }

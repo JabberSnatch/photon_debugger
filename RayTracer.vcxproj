@@ -153,6 +153,7 @@
     <ClInclude Include="inc\point.h" />
     <ClInclude Include="inc\quaternion.h" />
     <ClInclude Include="inc\ray.h" />
+    <ClInclude Include="inc\redecimal.h" />
     <ClInclude Include="inc\transform.h" />
     <ClInclude Include="inc\ys_assert.h" />
     <ClInclude Include="inc\film.h" />
@@ -165,6 +166,7 @@
     <None Include="inc\matrix.inl" />
     <None Include="inc\point.inl" />
     <None Include="inc\quaternion.inl" />
+    <None Include="inc\redecimal.inl" />
     <None Include="inc\vector.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
