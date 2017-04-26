@@ -66,8 +66,8 @@ struct REDecimal
 };
 
 
-constexpr bool Quadratic(REDecimal const &_a, REDecimal const &_b, REDecimal const &_c,
-						 REDecimal &_t0, REDecimal &_t1);
+bool Quadratic(REDecimal const &_a, REDecimal const &_b, REDecimal const &_c,
+			   REDecimal &_t0, REDecimal &_t1);
 
 } // namespace maths
 

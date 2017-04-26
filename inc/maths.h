@@ -66,18 +66,21 @@ namespace maths
 //		 IEEE754 quadruple is 1 sign, 15 exponent, 113 significand (128bits) (TMYK)
 template <typename T> struct FloatMeta
 {
+	using BitfieldType = uint64_t;
 	static constexpr auto sign_mask = 0Ui64;
 	static constexpr auto exponent_mask = 0Ui64;
 	static constexpr auto significand_mask = 0Ui64;
 };
 template <> struct FloatMeta<float>
 {
+	using BitfieldType = uint32_t;
 	static constexpr auto sign_mask = 0x80000000U;
 	static constexpr auto exponent_mask = 0x7F800000U;
 	static constexpr auto significand_mask = 0x7fffffU;
 };
 template <> struct FloatMeta<double>
 {
+	using BitfieldType = uint64_t;
 	static constexpr auto sign_mask = 0x8000000000000000Ui64;
 	static constexpr auto exponent_mask = 0x7ff0000000000000Ui64;
 	static constexpr auto significand_mask = 0xfffffffffffffUi64;
@@ -171,8 +174,61 @@ constexpr T Lerp(T _a, T _b, float _t) { return _a*(1.f - _t) + _b*_t; }
 template <typename T>
 constexpr T Lerp(T _a, T _b, double _t) { return _a*(1. - _t) + _b*_t; }
 
+constexpr float InvSqrt(float _v)
+{
+	// Lomont (2003) for the constant
+	float half_v = 0.5f * _v;
+	ValueBitsMapper<float, int32_t>	mapper(_v);
+	mapper.bits = 0x5f375a86 - (mapper.bits >> 1);
+	FloatBitsMapper x0{ mapper.value }, x1{ 0.f }, xold{ 0.f };
+	x1.value = x0.value * (1.5f - half_v * x0.value * x0.value);
+	xold.bits = x1.bits + 1;
+	while ((x1.bits - x0.bits) > 1u && xold.bits != x1.bits)
+	{
+		xold = x0;
+		x0 = x1;
+		x1.value = x0.value * (1.5f - half_v * x0.value * x0.value);
+	}
+	if (x1.bits == x0.bits)
+		return x1.value;
+	else
+		return x1.value * 0.5f + x0.value * 0.5f;
+}
 
-constexpr bool Quadratic(Decimal _a, Decimal _b, Decimal _c, Decimal &_t0, Decimal &_t1)
+constexpr double InvSqrt(double _v)
+{
+	double half_v = 0.5 * _v;
+	ValueBitsMapper<double, int64_t>	mapper(_v);
+	mapper.bits = 0x5fe6ec85e7de30da - (mapper.bits >> 1);
+	DoubleBitsMapper x0{ mapper.value }, x1{ 0. }, xold{ 0. };
+	x1.value = x0.value * (1.5 - half_v * x0.value * x0.value);
+	xold.bits = x1.bits + 1;
+	while ((x1.bits - x0.bits) > 1u && xold.bits != x1.bits)
+	{
+		xold = x0;
+		x0 = x1;
+		x1.value = x0.value * (1.5 - half_v * x0.value * x0.value);
+	}
+	if (x1.bits == x0.bits)
+		return x1.value;
+	else
+		return x1.value * 0.5 + x0.value * 0.5;
+}
+
+constexpr float Sqrt(float _v)
+{
+	if (_v <= 0.f || maths::IsInf(_v) || maths::IsNaN(_v)) return _v;
+	return _v * InvSqrt(_v);
+}
+
+constexpr double Sqrt(double _v)
+{
+	if (_v <= 0.0 || maths::IsInf(_v) || maths::IsNaN(_v)) return _v;
+	return _v * InvSqrt(_v);
+}
+
+
+bool Quadratic(Decimal _a, Decimal _b, Decimal _c, Decimal &_t0, Decimal &_t1)
 {
 	_t0 = _t1 = 0.0;
 	double delta = double(_b) * double(_b) - 4.0 * double(_a) * double(_c);

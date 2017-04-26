@@ -179,8 +179,15 @@ REDecimal::Check() const
 }
 
 
-constexpr bool Quadratic(REDecimal const &_a, REDecimal const &_b, REDecimal const &_c,
-						 REDecimal &_t0, REDecimal &_t1);
+bool
+Quadratic(REDecimal const &_a, REDecimal const &_b, REDecimal const &_c, 
+		  REDecimal &_t0, REDecimal &_t1)
+{
+	_t0 = _t1 = REDecimal(0._d);
+	REDecimal delta = _b * _b - REDecimal(4._d) * _a * _c;
+	if (delta.value < 0._d) return false;
+	//REDecimal sqrt_delta = std::sqrt();
+}
 
 } // namespace maths
 
