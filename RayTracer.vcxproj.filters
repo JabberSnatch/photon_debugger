@@ -77,13 +77,16 @@
     <ClCompile Include="src\transform.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\maths.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\quaternion.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="inc\vector.inl" />
     <None Include="inc\matrix.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="inc\quaternion.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="inc\point.inl">

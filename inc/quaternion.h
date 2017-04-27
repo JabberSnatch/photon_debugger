@@ -10,78 +10,54 @@ namespace maths
 {
 
 
-template <typename T>
 struct Quaternion
 {
-	constexpr Quaternion() :
-		v(zero<T>), w{ one<T> }
+	Quaternion() :
+		v(0._d), w{ 0._d }
 	{}
-	constexpr Quaternion(Vector3<T> _v, T _w) :
+	Quaternion(Vector3<Decimal> _v, Decimal _w) :
 		v(_v), w(_w)
 	{}
 
 	explicit Quaternion(Transform const &_v);
-	constexpr explicit operator Transform() const;
+	explicit operator Transform() const;
 
-	Vector3<T>		v;
-	T				w;
+	Vector3<Decimal>	v;
+	Decimal				w;
 };
 
-using Quatf = Quaternion<float>;
 
+bool operator==(Quaternion const &_lhs, Quaternion const &_rhs);
+bool operator!=(Quaternion const &_lhs, Quaternion const &_rhs);
 
-template <typename T>
-constexpr bool operator==(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
-template <typename T>
-constexpr bool operator!=(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
+Quaternion &operator+=(Quaternion &_lhs, Quaternion const &_rhs);
+Quaternion &operator-=(Quaternion &_lhs, Quaternion const &_rhs);
+Quaternion &operator*=(Quaternion &_lhs, Quaternion const &_rhs);
 
-template <typename T>
-constexpr Quaternion<T> &operator+=(Quaternion<T> &_lhs, Quaternion<T> const &_rhs);
-template <typename T>
-constexpr Quaternion<T> &operator-=(Quaternion<T> &_lhs, Quaternion<T> const &_rhs);
-template <typename T>
-constexpr Quaternion<T> &operator*=(Quaternion<T> &_lhs, Quaternion<T> const &_rhs);
+Quaternion operator+(Quaternion const &_lhs, Quaternion const &_rhs);
+Quaternion operator-(Quaternion const &_lhs, Quaternion const &_rhs);
+Quaternion operator*(Quaternion const &_lhs, Quaternion const &_rhs);
 
-template <typename T>
-constexpr Quaternion<T> operator+(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
-template <typename T>
-constexpr Quaternion<T> operator-(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
-template <typename T>
-constexpr Quaternion<T> operator*(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
+Quaternion &operator*=(Quaternion &_lhs, Decimal _rhs);
+Quaternion &operator/=(Quaternion &_lhs, Decimal _rhs);
 
-template <typename T>
-constexpr Quaternion<T> &operator*=(Quaternion<T> &_lhs, T _rhs);
-template <typename T>
-constexpr Quaternion<T> &operator/=(Quaternion<T> &_lhs, T _rhs);
-
-template <typename T>
-constexpr Quaternion<T> operator*(Quaternion<T> const &_lhs, T _rhs);
-template <typename T>
-constexpr Quaternion<T> operator*(T _rhs, Quaternion<T> const &_lhs);
-template <typename T>
-constexpr Quaternion<T> operator/(Quaternion<T> const &_lhs, T _rhs);
+Quaternion operator*(Quaternion const &_lhs, Decimal _rhs);
+Quaternion operator*(Decimal _rhs, Quaternion const &_lhs);
+Quaternion operator/(Quaternion const &_lhs, Decimal _rhs);
 
 
 namespace quaternion
 {
 
-template <typename T>
-constexpr Quaternion<T> Conjugate(Quaternion<T> const &_v);
-template <typename T>
-constexpr Quaternion<T> Inverse(Quaternion<T> const &_v);
-template <typename T>
-constexpr T Norm(Quaternion<T> const &_v);
-template <typename T>
-constexpr T Dot(Quaternion<T> const &_lhs, Quaternion<T> const &_rhs);
-template <typename T>
-constexpr Quaternion<T> Normalized(Quaternion<T> const &_v);
-template <typename T>
-Quaternion<T> Slerp(Quaternion<T> const &_a, Quaternion<T> const &_b, float _t);
+Quaternion Conjugate(Quaternion const &_v);
+Quaternion Inverse(Quaternion const &_v);
+Decimal Norm(Quaternion const &_v);
+Decimal Dot(Quaternion const &_lhs, Quaternion const &_rhs);
+Quaternion Normalized(Quaternion const &_v);
+Quaternion Slerp(Quaternion const &_a, Quaternion const &_b, Decimal _t);
 
 } // namespace quaternion
 } // namespace maths
 
-
-#include "quaternion.inl"
 
 #endif // __YS_QUATERNION_HPP__

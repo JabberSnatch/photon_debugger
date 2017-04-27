@@ -30,18 +30,18 @@ namespace maths
 template <typename T, uint32_t R, uint32_t C>
 struct Matrix final
 {
-	constexpr Matrix();
-	constexpr Matrix(std::initializer_list<T> _args);
+	Matrix();
+	Matrix(std::initializer_list<T> _args);
 
 	explicit constexpr Matrix(T _v);
 
 	template <uint32_t sR, uint32_t sC>
-	explicit constexpr Matrix(Matrix<T, sR, sC> const &_m);
+	explicit Matrix(Matrix<T, sR, sC> const &_m);
 	template <uint32_t sR, uint32_t sC>
-	constexpr Matrix<T, R, C> &operator=(Matrix<T, sR, sC> const &_rhs);
+	Matrix<T, R, C> &operator=(Matrix<T, sR, sC> const &_rhs);
 
-	constexpr void SetRow(uint32_t _i, Vector<T, C> const &_v);
-	constexpr void SetColumn(uint32_t _i, Vector<T, R> const &_v);
+	void SetRow(uint32_t _i, Vector<T, C> const &_v);
+	void SetColumn(uint32_t _i, Vector<T, R> const &_v);
 
 	union
 	{
@@ -49,11 +49,10 @@ struct Matrix final
 		std::array<Vector<T, C>, R>		rows;
 	};
 
-	constexpr Vector<T, C> &operator[](uint32_t _i) { return rows[_i]; }
-	constexpr Vector<T, C> const &operator[](uint32_t _i) const { return rows[_i]; }
+	Vector<T, C> &operator[](uint32_t _i) { return rows[_i]; }
+	Vector<T, C> const &operator[](uint32_t _i) const { return rows[_i]; }
 
-	// Not constexpr unless std::array::operator[] is.
-	static constexpr Matrix<T, R, C> Identity();
+	static Matrix<T, R, C> Identity();
 };
 
 
@@ -69,25 +68,25 @@ using Mat4x4f = Matrix<maths::Decimal, 4, 4>;
 
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr bool operator==(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs);
+bool operator==(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs);
 template <typename T, uint32_t R, uint32_t C>
-constexpr bool operator!=(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs);
+bool operator!=(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs);
 
 template <typename T, uint32_t R, uint32_t C, uint32_t common>
-constexpr Matrix<T, R, C> operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C> const &_rhs);
+Matrix<T, R, C> operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C> const &_rhs);
 template <typename T, uint32_t R, uint32_t C>
-constexpr Vector<T, R> operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs);
+Vector<T, R> operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs);
 
 namespace matrix
 {
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, C, R> FromRows(std::array<Vector<T, C>, R> const &_rows);
+Matrix<T, C, R> FromRows(std::array<Vector<T, C>, R> const &_rows);
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, C, R> FromColumns(std::array<Vector<T, R>, C> const &_columns);
+Matrix<T, C, R> FromColumns(std::array<Vector<T, R>, C> const &_columns);
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, C, R> Transpose(Matrix<T, R, C> const &_v);
+Matrix<T, C, R> Transpose(Matrix<T, R, C> const &_v);
 template <typename T, uint32_t RC>
 Matrix<T, RC, RC> Inverse(Matrix<T, RC, RC> const &_v);
 

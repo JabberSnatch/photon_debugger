@@ -16,7 +16,7 @@ public:
 	Transform(Mat4x4f _m) :
 		m_{ _m }, mInv_{ matrix::Inverse(_m) }
 	{}
-	constexpr Transform(Mat4x4f _m, Mat4x4f _mInv) :
+	Transform(Mat4x4f _m, Mat4x4f _mInv) :
 		m_{ _m }, mInv_{ _mInv }
 	{}
 

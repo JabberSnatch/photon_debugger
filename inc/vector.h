@@ -18,19 +18,19 @@ template <typename T, uint32_t n> struct Normal;
 template <typename T, uint32_t n>
 struct Vector final
 {
-	constexpr Vector() :
+	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit constexpr Vector(T _value) :
+	explicit Vector(T _value) :
 		e{ algo::fill<n>::apply(_value) }
 	{}
-	explicit constexpr Vector(Normal<T, n> const &_v) {
+	explicit Vector(Normal<T, n> const &_v) {
 		std::copy(_v.e.begin(), _v.e.end(), e.begin());
 	}
-	constexpr Vector(std::initializer_list<T> _args) {
+	Vector(std::initializer_list<T> _args) {
 		std::copy(_args.begin(), _args.end(), e.begin());
 	}
-	constexpr Vector(Vector<T, n - 1> const &_v, T _value)
+	Vector(Vector<T, n - 1> const &_v, T _value)
 	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[n - 1] = _value; }
 
 	using						value_type = T;
@@ -38,51 +38,52 @@ struct Vector final
 
 	std::array<T, n>	e;
 
-	constexpr bool HasNaNs() const {
+	bool HasNaNs() const {
 		for (uint32_t i = 0; i < n; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;
 	}
 
-	constexpr T operator[](uint32_t _i) const { return e[_i]; };
-	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+	T operator[](uint32_t _i) const { return e[_i]; };
+	T& operator[](uint32_t _i) { return e[_i]; };
 };
 
 template <typename T>
 struct Vector<T, 0> final
 {
-	constexpr Vector(){}
-	explicit constexpr Vector(T _value){}
-	constexpr Vector(std::initializer_list<T> _args){}
+	Vector(){}
+	explicit Vector(T _value){}
+	Vector(std::initializer_list<T> _args){}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ 0 };
 
 	std::array<T, 0>	e;
 
-	constexpr bool HasNaNs() const { return false; }
+	bool HasNaNs() const { return false; }
 
-	constexpr T operator[](uint32_t _i) const { return zero<T>; };
-	constexpr T& operator[](uint32_t _i) { return zero<T>; };
+	T operator[](uint32_t _i) const { return zero<T>; };
+	T& operator[](uint32_t _i) { return zero<T>; };
 };
 
 template <typename T>
 struct Vector<T, 4> final
 {
-	constexpr Vector() :
+	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit constexpr Vector(T _value) :
+	explicit Vector(T _value) :
 		e{ algo::fill<4>::apply(_value) }
 	{}
-	explicit constexpr Vector(Normal<T, 4> const &_v) :
+	explicit Vector(Normal<T, 4> const &_v) :
 		Vector{ _v[0], _v[1], _v[2], _v[3] }
 	{}
 	constexpr Vector(T _e0, T _e1, T _e2, T _e3) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }, w{ _e3 }
 	{}
-	constexpr Vector(Vector<T, 3> const &_v, T _value)
-	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[3] = _value; }
+	Vector(Vector<T, 3> const &_v, T _value) :
+		Vector{ _v[0], _v[1], _v[2], _value }
+	{}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ 4 };
@@ -94,29 +95,30 @@ struct Vector<T, 4> final
 		struct { T	r, g, b, a; };
 	};
 
-	constexpr bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w); }
+	bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w); }
 
-	constexpr T operator[](uint32_t _i) const { return e[_i]; };
-	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+	T operator[](uint32_t _i) const { return e[_i]; };
+	T& operator[](uint32_t _i) { return e[_i]; };
 };
 
 template <typename T>
 struct Vector<T, 3> final
 {
-	constexpr Vector() :
+	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit constexpr Vector(T _value) :
+	explicit Vector(T _value) :
 		e{ algo::fill<3>::apply(_value) }
 	{}
-	explicit constexpr Vector(Normal<T, 3> const &_v) :
-		Vector{_v.e[0], _v.e[1], _v.e[2]}
+	explicit Vector(Normal<T, 3> const &_v) :
+		Vector{_v.x, _v.y, _v.z}
 	{}
 	constexpr Vector(T _e0, T _e1, T _e2) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }
 	{}
-	constexpr Vector(Vector<T, 2> const &_v, T _value)
-	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[2] = _value; }
+	Vector(Vector<T, 2> const &_v, T _value) :
+		Vector { _v.e[0], _v.e[1], _value }
+	{}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ 3 };
@@ -128,29 +130,30 @@ struct Vector<T, 3> final
 		struct { T	r, g, b; };
 	};
 
-	constexpr bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z); }
+	bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z); }
 
-	constexpr T operator[](uint32_t _i) const { return e[_i]; };
-	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+	T operator[](uint32_t _i) const { return e[_i]; };
+	T& operator[](uint32_t _i) { return e[_i]; };
 };
 
 template <typename T>
 struct Vector<T, 2> final
 {
-	constexpr Vector() :
+	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit constexpr Vector(T _value) :
+	explicit Vector(T _value) :
 		e{ algo::fill<2>::apply(_value) }
 	{}
-	explicit constexpr Vector(Normal<T, 2> const &_v) :
+	explicit Vector(Normal<T, 2> const &_v) :
 		Vector{ _v[0], _v[1] }
 	{}
 	constexpr Vector(T _e0, T _e1) :
 		x{ _e0 }, y{ _e1 }
 	{}
-	constexpr Vector(Vector<T, 1> const &_v, T _value)
-	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[1] = _value; }
+	Vector(Vector<T, 1> const &_v, T _value) :
+		Vector{ _v[0], value }
+	{}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ 2 };
@@ -163,10 +166,10 @@ struct Vector<T, 2> final
 		struct { T	w, h; };
 	};
 
-	constexpr bool HasNaNs() const { return std::isnan(x) || std::isnan(y); }
+	bool HasNaNs() const { return std::isnan(x) || std::isnan(y); }
 
-	constexpr T operator[](uint32_t _i) const { return e[_i]; };
-	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+	T operator[](uint32_t _i) const { return e[_i]; };
+	T& operator[](uint32_t _i) { return e[_i]; };
 };
 
 
@@ -176,83 +179,83 @@ struct Vector<T, 2> final
 
 
 template <typename T, uint32_t n>
-constexpr bool operator==(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+bool operator==(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr bool operator!=(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+bool operator!=(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator+=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> &operator+=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator-=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> &operator-=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator*=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> &operator*=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator/=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> &operator/=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs);
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator+=(Vector<T, n> &_lhs, T _rhs);
+Vector<T, n> &operator+=(Vector<T, n> &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator-=(Vector<T, n> &_lhs, T _rhs);
+Vector<T, n> &operator-=(Vector<T, n> &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator*=(Vector<T, n> &_lhs, T _rhs);
+Vector<T, n> &operator*=(Vector<T, n> &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator/=(Vector<T, n> &_lhs, T _rhs);
+Vector<T, n> &operator/=(Vector<T, n> &_lhs, T _rhs);
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator+(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> operator+(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator-(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> operator-(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator*(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> operator*(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator/(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> operator/(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator+(Vector<T, n> const &_lhs, T _rhs);
+Vector<T, n> operator+(Vector<T, n> const &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator-(Vector<T, n> const &_lhs, T _rhs);
+Vector<T, n> operator-(Vector<T, n> const &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator*(Vector<T, n> const &_lhs, T _rhs);
+Vector<T, n> operator*(Vector<T, n> const &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator/(Vector<T, n> const &_lhs, T _rhs);
+Vector<T, n> operator/(Vector<T, n> const &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator*(T _lhs, Vector<T, n> const &_rhs);
+Vector<T, n> operator*(T _lhs, Vector<T, n> const &_rhs);
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n> &operator+(Vector<T, n> const &_op);
+Vector<T, n> &operator+(Vector<T, n> const &_op);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> operator-(Vector<T, n> const &_op);
+Vector<T, n> operator-(Vector<T, n> const &_op);
 
 
 namespace vector
 {
 
 template <typename T, uint32_t n>
-constexpr bool HasNaNs(Vector<T, n> const &_v);
+bool HasNaNs(Vector<T, n> const &_v);
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n> Min(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> Min(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+Vector<T, n> Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> Clamp(Vector<T, n> const &_v, T _min, T _max);
+Vector<T, n> Clamp(Vector<T, n> const &_v, T _min, T _max);
 
 template <typename T, uint32_t n>
-constexpr T SqrLength(Vector<T, n> const &_v);
+T SqrLength(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
-inline T Length(Vector<T, n> const &_v);
+T Length(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
-constexpr Vector<T, n> Normalized(Vector<T, n> const &_v);
+Vector<T, n> Normalized(Vector<T, n> const &_v);
 
 template <typename T, uint32_t n>
-constexpr T FoldProduct(Vector<T, n> const &_v);
+T FoldProduct(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
-constexpr T FoldSum(Vector<T, n> const &_v);
+T FoldSum(Vector<T, n> const &_v);
 
 template <typename T, uint32_t n>
-constexpr uint32_t MinimumDimension(Vector<T, n> const &_v);
+uint32_t MinimumDimension(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
-constexpr uint32_t MaximumDimension(Vector<T, n> const &_v);
+uint32_t MaximumDimension(Vector<T, n> const &_v);
 
 
 // ============================================================
@@ -262,9 +265,9 @@ constexpr uint32_t MaximumDimension(Vector<T, n> const &_v);
 template <typename T>
 constexpr T Dot(Vector<T, 3> const &_lhs, Vector<T, 3> const & _rhs);
 template <typename T>
-constexpr Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
+Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
 template <typename T>
-constexpr Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
+Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
 
 } // namespace vector
 
@@ -273,16 +276,16 @@ constexpr Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
 template <typename T, uint32_t n>
 struct Normal final
 {
-	constexpr Normal() :
+	Normal() :
 		Normal(zero<T>)
 	{}
-	explicit constexpr Normal(T _value) :
+	explicit Normal(T _value) :
 		e{ algo::fill<n>::apply(_value) }
 	{}
-	explicit constexpr Normal(Vector<T, n> const &_v) {
+	explicit Normal(Vector<T, n> const &_v) {
 		std::copy(_v.e.begin(), _v.e.end(), e.begin());
 	}
-	constexpr Normal(std::initializer_list<T> _args) {
+	Normal(std::initializer_list<T> _args) {
 		std::copy(_args.begin(), _args.end(), e.begin());
 	}
 
@@ -291,26 +294,26 @@ struct Normal final
 
 	std::array<T, n>	e;
 
-	constexpr bool HasNaNs() const {
+	bool HasNaNs() const {
 		for (uint32_t i = 0; i < n; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;
 	}
 
-	constexpr T operator[](uint32_t _i) const { return e[_i]; };
-	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+	T operator[](uint32_t _i) const { return e[_i]; };
+	T& operator[](uint32_t _i) { return e[_i]; };
 };
 
 template <typename T>
 struct Normal<T, 3> final
 {
-	constexpr Normal() :
+	Normal() :
 		Normal(zero<T>)
 	{}
-	explicit constexpr Normal(T _value) :
+	explicit Normal(T _value) :
 		e{ algo::fill<3>::apply(_value) }
 	{}
-	explicit constexpr Normal(Vector<T, 3> const &_v) :
+	explicit Normal(Vector<T, 3> const &_v) :
 		Normal(_v[0], _v[1], _v[2])
 	{}
 	constexpr Normal(T _e0, T _e1, T _e2) :
@@ -326,14 +329,14 @@ struct Normal<T, 3> final
 		struct { T x, y, z; };
 	};
 
-	constexpr bool HasNaNs() const {
+	bool HasNaNs() const {
 		for (uint32_t i = 0; i < 3; ++i)
 			if (std::isnan(e[i])) return true;
 		return false;
 	}
 
-	constexpr T operator[](uint32_t _i) const { return e[_i]; };
-	constexpr T& operator[](uint32_t _i) { return e[_i]; };
+	T operator[](uint32_t _i) const { return e[_i]; };
+	T& operator[](uint32_t _i) { return e[_i]; };
 };
 
 
@@ -342,51 +345,51 @@ struct Normal<T, 3> final
 // ============================================================
 
 template <typename T, uint32_t n>
-constexpr bool operator==(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+bool operator==(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr bool operator!=(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+bool operator!=(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
 
 template <typename T, uint32_t n>
-constexpr Normal<T, n> &operator+(Normal<T, n> const &_op);
+Normal<T, n> &operator+(Normal<T, n> const &_op);
 template <typename T, uint32_t n>
-constexpr Normal<T, n> operator-(Normal<T, n> const &_op);
+Normal<T, n> operator-(Normal<T, n> const &_op);
 
 template <typename T, uint32_t n>
-constexpr Normal<T, n> operator*(Normal<T, n> const &_lhs, T _rhs);
+Normal<T, n> operator*(Normal<T, n> const &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Normal<T, n> operator*(T _lhs, Normal<T, n> const &_rhs);
+Normal<T, n> operator*(T _lhs, Normal<T, n> const &_rhs);
 template <typename T, uint32_t n>
-constexpr Normal<T, n> operator/(Normal<T, n> const &_lhs, T _rhs);
+Normal<T, n> operator/(Normal<T, n> const &_lhs, T _rhs);
 
 template <typename T, uint32_t n>
-constexpr Normal<T, n> &operator*=(Normal<T, n> &_lhs, T _rhs);
+Normal<T, n> &operator*=(Normal<T, n> &_lhs, T _rhs);
 template <typename T, uint32_t n>
-constexpr Normal<T, n> &operator/=(Normal<T, n> &_lhs, T _rhs);
+Normal<T, n> &operator/=(Normal<T, n> &_lhs, T _rhs);
 
 namespace normal
 {
 
 template <typename T, uint32_t n>
-constexpr bool HasNaNs(Normal<T, n> const &_v);
+bool HasNaNs(Normal<T, n> const &_v);
 
 template <typename T, uint32_t n>
-constexpr T SqrLength(Normal<T, n> const &_v);
+T SqrLength(Normal<T, n> const &_v);
 template <typename T, uint32_t n>
-inline T Length(Normal<T, n> const &_v);
+T Length(Normal<T, n> const &_v);
 template <typename T, uint32_t n>
-constexpr Normal<T, n> Normalized(Normal<T, n> const &_v);
+Normal<T, n> Normalized(Normal<T, n> const &_v);
 
 template <typename T, uint32_t n>
-constexpr T Dot(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+Normal<T, n> FaceForward(Normal<T, n> const &_value, Normal<T, n> const &_direction);
 template <typename T, uint32_t n>
-constexpr T Dot(Normal<T, n> const &_lhs, Vector<T, n> const &_rhs);
-template <typename T, uint32_t n>
-constexpr T Dot(Vector<T, n> const &_lhs, Normal<T, n> const &_rhs);
+Normal<T, n> FaceForward(Normal<T, n> const &_value, Vector<T, n> const &_direction);
 
-template <typename T, uint32_t n>
-constexpr Normal<T, n> FaceForward(Normal<T, n> const &_value, Normal<T, n> const &_direction);
-template <typename T, uint32_t n>
-constexpr Normal<T, n> FaceForward(Normal<T, n> const &_value, Vector<T, n> const &_direction);
+template <typename T>
+constexpr T Dot(Normal<T, 3> const &_lhs, Normal<T, 3> const &_rhs);
+template <typename T>
+constexpr T Dot(Normal<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
+template <typename T>
+constexpr T Dot(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs);
 
 } // namespace normal
 

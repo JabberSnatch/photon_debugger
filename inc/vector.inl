@@ -8,13 +8,12 @@
 namespace maths
 {
 
-
 // ============================================================
 // Vector<typename T, int n> operations
 // ============================================================
 
 template <typename T, uint32_t n>
-constexpr bool
+bool
 operator==(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -22,7 +21,7 @@ operator==(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	return true;
 }
 template <typename T, uint32_t n>
-constexpr bool
+bool
 operator!=(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -31,7 +30,7 @@ operator!=(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 }
 
 template <typename T, uint32_t n> 
-constexpr Vector<T, n>
+Vector<T, n>
 &operator+=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -40,7 +39,7 @@ constexpr Vector<T, n>
 	return _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator-=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -49,7 +48,7 @@ constexpr Vector<T, n>
 	return _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator*=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -58,7 +57,7 @@ constexpr Vector<T, n>
 	return _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator/=(Vector<T, n> &_lhs, Vector<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -68,7 +67,7 @@ constexpr Vector<T, n>
 }
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator+=(Vector<T, n> &_lhs, T _rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -77,7 +76,7 @@ constexpr Vector<T, n>
 	return _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator-=(Vector<T, n> &_lhs, T _rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -86,7 +85,7 @@ constexpr Vector<T, n>
 	return _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator*=(Vector<T, n> &_lhs, T _rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -95,7 +94,7 @@ constexpr Vector<T, n>
 	return _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator/=(Vector<T, n> &_lhs, T _rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -105,7 +104,7 @@ constexpr Vector<T, n>
 }
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator+(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
@@ -115,7 +114,7 @@ operator+(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator-(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
@@ -125,7 +124,7 @@ operator-(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator*(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
@@ -135,7 +134,7 @@ operator*(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator/(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
@@ -146,7 +145,7 @@ operator/(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 }
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator+(Vector<T, n> const &_lhs, T _rhs)
 {
 	Vector<T, n> result{};
@@ -156,7 +155,7 @@ operator+(Vector<T, n> const &_lhs, T _rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator-(Vector<T, n> const &_lhs, T _rhs)
 {
 	Vector<T, n> result{};
@@ -166,7 +165,7 @@ operator-(Vector<T, n> const &_lhs, T _rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator*(Vector<T, n> const &_lhs, T _rhs)
 {
 	Vector<T, n> result{};
@@ -176,7 +175,7 @@ operator*(Vector<T, n> const &_lhs, T _rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator/(Vector<T, n> const &_lhs, T _rhs)
 {
 	Vector<T, n> result{};
@@ -186,20 +185,20 @@ operator/(Vector<T, n> const &_lhs, T _rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator*(T _lhs, Vector<T, n> const &_rhs)
 {
 	return _rhs * _lhs;
 }
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 &operator+(Vector<T, n> const &_op)
 {
 	return _op;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 operator-(Vector<T, n> const &_op)
 {
 	Vector<T, n> result{};
@@ -213,7 +212,7 @@ namespace vector
 {
 
 template <typename T, uint32_t n>
-constexpr bool
+bool
 HasNaNs(Vector<T, n> const &_v)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -222,7 +221,7 @@ HasNaNs(Vector<T, n> const &_v)
 }
 
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 Min(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
@@ -231,7 +230,7 @@ Min(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 {
 	Vector<T, n> result{};
@@ -240,7 +239,7 @@ Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 Clamp(Vector<T, n> const &_v, T _min, T _max)
 {
 	Vector<T, n> result{};
@@ -251,7 +250,7 @@ Clamp(Vector<T, n> const &_v, T _min, T _max)
 }
 
 template <typename T, uint32_t n>
-constexpr T
+T
 SqrLength(Vector<T, n> const &_v)
 {
 	T result{ zero<T> };
@@ -260,13 +259,13 @@ SqrLength(Vector<T, n> const &_v)
 	return result;
 }
 template <typename T, uint32_t n>
-inline T
+T
 Length(Vector<T, n> const &_v)
 {
 	return std::sqrt(SqrLength(_v));
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 Normalized(Vector<T, n> const &_v)
 {
 	Vector<T, n> result{ _v / Length(_v) };
@@ -275,26 +274,26 @@ Normalized(Vector<T, n> const &_v)
 }
 
 template <typename T, uint32_t n>
-constexpr T
+T
 FoldProduct(Vector<T, n> const &_v)
 {
 	T result{ one<T> };
 	for (uint32_t i = 0; i < n; ++i)
-		result *= _v;
+		result *= _v[i];
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr T
+T
 FoldSum(Vector<T, n> const &_v)
 {
 	T result{ zero<T> };
 	for (uint32_t i = 0; i < n; ++i)
-		result += _v;
+		result += _v[i];
 	return result;
 }
 
 template <typename T, uint32_t n>
-constexpr uint32_t
+uint32_t
 MinimumDimension(Vector<T, n> const &_v)
 {
 	uint32_t	result = 0u;
@@ -312,7 +311,7 @@ MinimumDimension(Vector<T, n> const &_v)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr uint32_t
+uint32_t
 MaximumDimension(Vector<T, n> const &_v)
 {
 	uint32_t	result = 0u;
@@ -342,7 +341,7 @@ Dot(Vector<T, 3> const &_lhs, Vector<T, 3> const & _rhs)
 	return _lhs.x * _rhs.x + _lhs.y * _rhs.y + _lhs.z * _rhs.z;
 }
 template <typename T>
-constexpr Vector<T, 3>
+Vector<T, 3>
 Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs)
 {
 	Vector<T, 3> result{ _lhs.y * _rhs.z - _lhs.z * _rhs.y,
@@ -352,7 +351,7 @@ Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs)
 	return result;
 }
 template <typename T>
-constexpr Vector<T, 3>
+Vector<T, 3>
 Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 {
 	Vector<T, 3> result = 2 * Dot(_v, _n) * _n - _v;
@@ -369,7 +368,7 @@ Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 // ============================================================
 
 template <typename T, uint32_t n>
-constexpr bool
+bool
 operator==(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -377,7 +376,7 @@ operator==(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs)
 	return true;
 }
 template <typename T, uint32_t n>
-constexpr bool
+bool
 operator!=(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -386,13 +385,13 @@ operator!=(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs)
 }
 
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 &operator+(Normal<T, n> const &_op)
 {
 	return _op;
 }
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 operator-(Normal<T, n> const &_op)
 {
 	Normal<T, n> result{};
@@ -403,7 +402,7 @@ operator-(Normal<T, n> const &_op)
 }
 
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 operator*(Normal<T, n> const &_lhs, T _rhs)
 {
 	Normal<T, n> result{};
@@ -413,13 +412,13 @@ operator*(Normal<T, n> const &_lhs, T _rhs)
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 operator*(T _lhs, Normal<T, n> const &_rhs)
 {
 	return _rhs * _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 operator/(Normal<T, n> const &_lhs, T _rhs)
 {
 	Normal<T, n> result{};
@@ -430,7 +429,7 @@ operator/(Normal<T, n> const &_lhs, T _rhs)
 }
 
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 &operator*=(Normal<T, n> &_lhs, T _rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -439,7 +438,7 @@ constexpr Normal<T, n>
 	return _lhs;
 }
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 &operator/=(Normal<T, n> &_lhs, T _rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -453,7 +452,7 @@ namespace normal
 {
 
 template <typename T, uint32_t n>
-constexpr bool
+bool
 HasNaNs(Normal<T, n> const &_v)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -462,7 +461,7 @@ HasNaNs(Normal<T, n> const &_v)
 }
 
 template <typename T, uint32_t n>
-constexpr T
+T
 SqrLength(Normal<T, n> const &_v)
 {
 	T result{ zero<T> };
@@ -471,13 +470,13 @@ SqrLength(Normal<T, n> const &_v)
 	return result;
 }
 template <typename T, uint32_t n>
-inline T
+T
 Length(Normal<T, n> const &_v)
 {
 	return std::sqrt(SqrLength(_v));
 }
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 Normalized(Normal<T, n> const &_v)
 {
 	Normal<T, n> result{ _v / Length(_v) };
@@ -486,44 +485,33 @@ Normalized(Normal<T, n> const &_v)
 }
 
 template <typename T, uint32_t n>
-constexpr T
-Dot(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs)
-{
-	T result{ zero<T> };
-	for (uint32_t i = 0; i < n; ++i)
-		result += _lhs[i] * _rhs[i];
-	return result;
-}
-template <typename T, uint32_t n>
-constexpr T
-Dot(Normal<T, n> const &_lhs, Vector<T, n> const &_rhs)
-{
-	T result{ zero<T> };
-	for (uint32_t i = 0; i < n; ++i)
-		result += _lhs[i] * _rhs[i];
-	return result;
-}
-template <typename T, uint32_t n>
-constexpr T
-Dot(Vector<T, n> const &_lhs, Normal<T, n> const &_rhs)
-{
-	T result{ zero<T> };
-	for (uint32_t i = 0; i < n; ++i)
-		result += _lhs[i] * _rhs[i];
-	return result;
-}
-
-template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 FaceForward(Normal<T, n> const &_value, Normal<T, n> const &_direction)
 {
 	return (Dot(_value, _direction) > zero<T>) ? _value : -_value;
 }
 template <typename T, uint32_t n>
-constexpr Normal<T, n>
+Normal<T, n>
 FaceForward(Normal<T, n> const &_value, Vector<T, n> const &_direction)
 {
 	return (Dot(_value, _direction) > zero<T>) ? _value : -_value;
+}
+
+template <typename T>
+constexpr T Dot(Normal<T, 3> const &_lhs, Normal<T, 3> const &_rhs)
+{
+	return _lhs.x * _rhs.x + _lhs.y * _rhs.y + _lhs.z * _rhs.z;
+}
+template <typename T>
+constexpr T Dot(Normal<T, 3> const &_lhs, Vector<T, 3> const &_rhs)
+{
+	return _lhs.x * _rhs.x + _lhs.y * _rhs.y + _lhs.z * _rhs.z;
+}
+template <typename T>
+constexpr T
+Dot(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs)
+{
+	return _lhs.x * _rhs.x + _lhs.y * _rhs.y + _lhs.z * _rhs.z;
 }
 
 } // namespace normal

@@ -8,7 +8,6 @@ namespace maths
 {
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr
 Matrix<T, R, C>::Matrix() :
 	Matrix(zero<T>)
 {
@@ -23,7 +22,6 @@ Matrix<T, R, C>::Matrix(T _v) :
 {}
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr
 Matrix<T, R, C>::Matrix(std::initializer_list<T> _args)
 {
 	std::copy(_args.begin(), _args.end(), e.begin());
@@ -31,7 +29,6 @@ Matrix<T, R, C>::Matrix(std::initializer_list<T> _args)
 
 template <typename T, uint32_t R, uint32_t C>
 template <uint32_t sR, uint32_t sC>
-constexpr
 Matrix<T, R, C>::Matrix(Matrix<T, sR, sC> const &_m) :
 	Matrix<T, R, C>::Matrix(zero<T>)
 {
@@ -44,7 +41,7 @@ Matrix<T, R, C>::Matrix(Matrix<T, sR, sC> const &_m) :
 
 template <typename T, uint32_t R, uint32_t C>
 template <uint32_t sR, uint32_t sC>
-constexpr Matrix<T, R, C>
+Matrix<T, R, C>
 &Matrix<T, R, C>::operator=(Matrix<T, sR, sC> const &_rhs)
 {
 	for (uint32_t i = 0; i < Min(R, sR); ++i)
@@ -56,14 +53,14 @@ constexpr Matrix<T, R, C>
 }
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr void
+void
 Matrix<T, R, C>::SetRow(uint32_t _i, Vector<T, C> const &_v)
 {
 	YS_ASSERT(_i < R);
 	rows[_i] = _v;
 }
 template <typename T, uint32_t R, uint32_t C>
-constexpr void
+void
 Matrix<T, R, C>::SetColumn(uint32_t _i, Vector<T, R> const &_v)
 {
 	YS_ASSERT(_i < C);
@@ -73,7 +70,7 @@ Matrix<T, R, C>::SetColumn(uint32_t _i, Vector<T, R> const &_v)
 
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr bool
+bool
 operator==(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs)
 {
 	for (uint32_t i = 0; i < R*C; ++i)
@@ -81,7 +78,7 @@ operator==(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs)
 	return true;
 }
 template <typename T, uint32_t R, uint32_t C>
-constexpr bool
+bool
 operator!=(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs)
 {
 	for (uint32_t i = 0; i < R*C; ++i)
@@ -90,7 +87,7 @@ operator!=(Matrix<T, R, C> const &_lhs, Matrix<T, R, C> const &_rhs)
 }
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, R, C>
+Matrix<T, R, C>
 Matrix<T, R, C>::Identity()
 {
 	Matrix<T, R, C> result(zero<T>);
@@ -102,7 +99,7 @@ Matrix<T, R, C>::Identity()
 
 
 template <typename T, uint32_t R, uint32_t C, uint32_t common>
-constexpr Matrix<T, R, C>
+Matrix<T, R, C>
 operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C> const &_rhs)
 {
 	Matrix<T, R, C> result(zero<T>);
@@ -113,7 +110,7 @@ operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C> const &_rhs)
 	return result;
 }
 template <typename T, uint32_t R, uint32_t C>
-constexpr Vector<T, R>
+Vector<T, R>
 operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs)
 {
 	Vector<T, C> result{};
@@ -128,7 +125,7 @@ namespace matrix
 {
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, C, R> 
+Matrix<T, C, R> 
 FromRows(std::array<Vector<T, C>, R> const &_rows)
 {
 	Matrix<T, R, C> result{ zero<T> };
@@ -137,7 +134,7 @@ FromRows(std::array<Vector<T, C>, R> const &_rows)
 	return result;
 }
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, C, R>
+Matrix<T, C, R>
 FromColumns(std::array<Vector<T, R>, C> const &_columns)
 {
 	Matrix<T, R, C> result{ zero<T> };
@@ -147,7 +144,7 @@ FromColumns(std::array<Vector<T, R>, C> const &_columns)
 }
 
 template <typename T, uint32_t R, uint32_t C>
-constexpr Matrix<T, C, R>
+Matrix<T, C, R>
 Transpose(Matrix<T, R, C> const &_v)
 {
 	Matrix<T, C, R> result( zero<T> );
@@ -162,7 +159,7 @@ Matrix<T, RC, RC>
 Inverse(Matrix<T, RC, RC> const &_v)
 {
 	// Source is pbrt. Implementation devised in "Numerical Recipes in C", 2.1
-	// sample can be found at http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c2-1.pdf
+	// Snippet can be found at http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c2-1.pdf
 	Matrix<T, RC, RC>	inv{ _v };
 
 	Vector<uint32_t, RC>	pivot(0), indexc(0), indexr(0);

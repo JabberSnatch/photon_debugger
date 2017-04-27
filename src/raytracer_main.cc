@@ -16,6 +16,51 @@
 
 int main()
 {
+	constexpr std::array<float, 5> arr_A{ algo::fill<5>::apply(0.4f) };
+
+	maths::Vec3f								v3_default_ctor{};
+	maths::Vec3f								v3_fill_ctor(0.4_d);
+	constexpr maths::Vec3f						v3_initlist_ctor{ 1._d, 2._d, 3._d };
+	maths::Decimal								v3_bracket{ v3_initlist_ctor[0] };
+	maths::Vector<maths::Decimal, 2>			v2_fill_ctor(1._d);
+	constexpr maths::Vector<maths::Decimal, 2>	v2_initlist_ctor{ 1._d, 2._d };
+	maths::Vec3f								v3_extension_ctor(v2_initlist_ctor, 3._d);
+	bool										v3_hasnans = v3_initlist_ctor.HasNaNs();
+	bool										v3_equal = maths::Vec3f{ 1._d, 2._d, 3._d } == v3_initlist_ctor;
+	maths::Vector<maths::Decimal, 5>			vn_fill_ctor(0.4_d);
+
+	constexpr maths::Norm3f						n3_initlist_ctor{ 1._d, 2._d, 3._d };
+	constexpr maths::Decimal					v3_n3_dot = maths::normal::Dot(v3_initlist_ctor, n3_initlist_ctor);
+
+	constexpr uint32_t	vn_size{ maths::Vector<float, 5>::size };
+
+	maths::Mat4x4f								m44_default_ctor{};
+	constexpr maths::Mat4x4f					m44_fill_ctor(0.4_d);
+
+	maths::Point3f								p3_default_ctor{};
+	maths::Point3f								p3_fill_ctor(0.4_d);
+	constexpr maths::Point3f					p3_initlist_ctor{ 1._d, 2._d, 3._d };
+	constexpr maths::Vec3f						v3_p3_conversion{ (maths::Vec3f)p3_initlist_ctor };
+
+	maths::Quaternion							quat_angleaxis_ctor(v3_p3_conversion, 0.4_d);
+	maths::Transform							transf_fromquat((maths::Transform)quat_angleaxis_ctor);
+
+	constexpr maths::Decimal					decim_lowest{ maths::lowest_value<maths::Decimal> };
+	maths::Bounds3f								b3_default_ctor{};
+	constexpr maths::Bounds3f					b3_point_ctor{ p3_initlist_ctor };
+	maths::Bounds3f								b3_points_ctor{ p3_initlist_ctor, p3_initlist_ctor };
+	maths::Point3f								p3_b3brackets{ b3_point_ctor[1] };
+
+	maths::REDecimal							redecim_value_ctor{ 0.4_d };
+
+	maths::Decimal	muc = maths::NextDecimalDown(0._d);
+	maths::REDecimal redecim_a{ 2._d }, redecim_b{ 4.3_d }, redecim_c{ -7.8_d }, redecim_t0, redecim_t1;
+	if (maths::Quadratic(redecim_a, redecim_b, redecim_c, redecim_t0, redecim_t1))
+		int i = 0;
+	maths::Decimal	decim_t0, decim_t1;
+	if (maths::Quadratic(2._d, 4.3_d, -7.8_d, decim_t0, decim_t1))
+		int i = 0;
+
 	maths::Decimal	a = 1.1_d;
 	float			b = 1.1f;
 	double			c = 1.1;
@@ -105,7 +150,7 @@ int main()
 
 	float value = maths::zero<float>;
 
-	maths::Quaternion<float>	AQ{};
+	maths::Quaternion				AQ{ {1._d, 2._d, 3._d}, 5._d };
 	maths::quaternion::Normalized(AQ);
 
 	C4x4 = static_cast<maths::Mat4x4f>(B3x3);
@@ -135,39 +180,6 @@ int main()
 	maths::Decimal nextnext = maths::NextDecimalUp(yolo, 2);
 	maths::Decimal delta = next - yolo;
 	maths::Decimal nextdelta = nextnext - next;
-
-	int decimal_shift;
-#ifdef YS_DECIMAL_IS_DOUBLE
-	decimal_shift = 53;
-#else
-	decimal_shift = 24;
-#endif
-	/*
-	maths::Decimal nextexp = maths::BitsToDecimal((maths::DecimalBits(1) << decimal_shift) - 1);
-	maths::DecimalBits nextexpbits = maths::DecimalToBits(nextexp);
-	maths::Decimal nextexpnext = maths::NextDecimalUp(nextexp);
-	maths::DecimalBits nextexpnextbits = maths::DecimalToBits(nextexpnext);
-	maths::Decimal nextexpdelta = nextexpnext - nextexp;
-	maths::Decimal nextexpdeltanext = maths::NextDecimalUp(nextexpnext) - nextexpnext;
-	
-	maths::DecimalBits fullexpbits = (((~((maths::DecimalBits(1) << decimal_shift) - 1)) << 1) >> 1);
-	maths::Decimal fullexp = maths::BitsToDecimal(fullexpbits);
-	maths::Decimal fullexpnext = maths::NextDecimalUp(fullexp);
-	maths::Decimal fullexppenult = maths::NextDecimalDown(fullexp);
-	maths::DecimalBits fullexpnextbits = maths::DecimalToBits(fullexpnext);
-	maths::Decimal fullexpdelta = fullexpnext - fullexp;
-
-	maths::Decimal fullexpnextepsilon = fullexpnext * (1._d + maths::machine_epsilon);
-	maths::Decimal fullexpnextmepsilon = fullexpnext * (1._d - maths::machine_epsilon);
-	maths::Decimal fullexpnextepsilondelta = (fullexpnextepsilon - fullexpnextmepsilon);
-
-	maths::DecimalBits epsilonbits = maths::DecimalToBits(fullexpnextepsilon);
-	maths::DecimalBits mepsilonbits = maths::DecimalToBits(fullexpnextmepsilon);
-	maths::DecimalBits epsilondeltabits = maths::DecimalToBits(fullexpnextepsilondelta);
-
-	auto foo = maths::GetDecimalBits(3._d).bits;
-	auto baz = maths::GetDecimalBits(1_db).value;
-	*/
 
 	system("pause");
 	return 0;

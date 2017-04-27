@@ -8,16 +8,16 @@ namespace maths
 {
 
 template <typename T, uint32_t n>
-constexpr Point<T, n> const
-&Bounds<T, n>::operator[](uint32_t _i) const
+Point<T, n> const&
+Bounds<T, n>::operator[](uint32_t _i) const
 {
 	YS_ASSERT(_i < 2);
 	if (_i == 0) return min;
 	else return max;
 }
 template <typename T, uint32_t n>
-constexpr Point<T, n>
-&Bounds<T, n>::operator[] (uint32_t _i)
+Point<T, n>&
+Bounds<T, n>::operator[] (uint32_t _i)
 {
 	YS_ASSERT(_i < 2);
 	if (_i == 0) return min;
@@ -25,7 +25,7 @@ constexpr Point<T, n>
 }
 
 template <typename T, uint32_t n>
-constexpr Point<T, n>
+Point<T, n>
 Bounds<T, n>::Corner(uint32_t _index) const
 {
 	YS_ASSERT(_index < (1 << n)); // Bounds have 2^n corners.
@@ -35,13 +35,13 @@ Bounds<T, n>::Corner(uint32_t _index) const
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 Bounds<T, n>::Diagonal() const
 {
 	return max - min;
 }
 template <typename T, uint32_t n>
-constexpr T
+T
 Bounds<T, n>::SurfaceArea() const
 {
 	Vector<T, n> d{ Diagonal() };
@@ -52,20 +52,20 @@ Bounds<T, n>::SurfaceArea() const
 	return result * T{ 2 };
 }
 template <typename T, uint32_t n>
-constexpr T
+T
 Bounds<T, n>::Volume() const
 {
 	return vector::FoldProduct(Diagonal());
 }
 template <typename T, uint32_t n>
-constexpr uint32_t
+uint32_t
 Bounds<T, n>::MaximumExtent() const
 {
 	return vector::MaximumDimension(Diagonal());
 }
 
 template <typename T, uint32_t n>
-constexpr Point<T, n>
+Point<T, n>
 Bounds<T, n>::Lerp(Point<float, n> const &_t) const
 {
 	Point<T, n> result{};
@@ -74,7 +74,7 @@ Bounds<T, n>::Lerp(Point<float, n> const &_t) const
 	return result;
 }
 template <typename T, uint32_t n>
-constexpr Vector<T, n>
+Vector<T, n>
 Bounds<T, n>::Offset(Point<T, n> const &_p) const
 {
 	Vector<T, n> result = _p - min;
@@ -87,7 +87,7 @@ Bounds<T, n>::Offset(Point<T, n> const &_p) const
 }
 
 template <typename T, uint32_t n>
-constexpr void
+void
 Bounds<T, n>::BoundingSphere(Point<T, n> &_center, T &_radius) const
 {
 	_center = (min + max) / T{ 2 };
@@ -96,13 +96,13 @@ Bounds<T, n>::BoundingSphere(Point<T, n> &_center, T &_radius) const
 
 
 template <typename T, uint32_t n>
-constexpr bool
+bool
 operator==(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 {
 	return _lhs.min == _rhs.min && _lhs.max == _rhs.max;
 }
 template <typename T, uint32_t n>
-constexpr bool
+bool
 operator!=(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 {
 	return _lhs.min != _rhs.min || _lhs.max != _rhs.max;
@@ -113,7 +113,7 @@ namespace bounds
 {
 
 template <typename T, uint32_t n>
-constexpr Bounds<T, n>
+Bounds<T, n>
 Union(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs)
 {
 	Point<T, n> min, max;
@@ -125,7 +125,7 @@ Union(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs)
 	return Bounds<T, n>{min, max};
 }
 template <typename T, uint32_t n>
-constexpr Bounds<T, n>
+Bounds<T, n>
 Union(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 {
 	Point<T, n> min, max;
@@ -137,7 +137,7 @@ Union(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 	return Bounds<T, n>{min, max};
 }
 template <typename T, uint32_t n>
-constexpr Bounds<T, n>
+Bounds<T, n>
 Intersect(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 {
 	Point<T, n> min, max;
@@ -149,7 +149,7 @@ Intersect(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 	return Bounds<T, n>{min, max};
 }
 template <typename T, uint32_t n>
-constexpr bool
+bool
 Overlap(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -158,7 +158,7 @@ Overlap(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 	return true;
 }
 template <typename T, uint32_t n>
-constexpr bool
+bool
 Inside(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -167,7 +167,7 @@ Inside(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs)
 	return true;
 }
 template <typename T, uint32_t n>
-constexpr bool
+bool
 InsideExclusive(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs)
 {
 	for (uint32_t i = 0; i < n; ++i)
@@ -176,7 +176,7 @@ InsideExclusive(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs)
 	return true;
 }
 template <typename T, uint32_t n>
-constexpr Bounds<T, n>
+Bounds<T, n>
 Expand(Bounds<T, n> const &_v, T _delta)
 {
 	return Bounds<T, n>{min - Vector<T, n>(_delta), max + Vector<T, n>(_delta)};
