@@ -9,13 +9,46 @@
 #include "globals.h"
 #include "algorithms.h"
 #include "redecimal.h"
+#include "surface_interaction.h"
+#include "camera.h"
+#include "shapes/sphere.h"
 
 //static tools::Profiler gProfiler{};
 
 #include <typeinfo>
+#include <iostream>
 
 int main()
 {
+	raytracer::Film		film_35mm{ 480, 270, 0.035_d };
+	raytracer::Camera	camera{
+		film_35mm,
+		{0._d, -5._d, .5_d}, {0._d, 1._d, .5_d}, {0._d, 0._d, 1._d},
+		60._d
+	};
+	maths::Transform	little_sphere_transform = maths::Translate({ 0._d, 1._d, .5_d });
+	raytracer::Sphere	little_sphere{ little_sphere_transform, false, .5_d, -5._d, 5._d, 360._d };
+	maths::Transform	big_sphere_transform = maths::Translate({ 0._d, 1._d, -500._d });
+	raytracer::Sphere	big_sphere{ big_sphere_transform, false, 500._d, -500._d, 500._d, 360._d };
+
+	raytracer::Shape const &sphereA = little_sphere;
+	raytracer::Shape const &sphereB = big_sphere;
+	raytracer::Camera::Scene	scene = { std::ref(sphereA), std::ref(sphereB) };
+
+	camera.Expose(scene, 0._d);
+	camera.film.WriteToFile("big_little_sphere.png");
+
+
+	maths::FloatBitsMapper start{ 34.23f };
+	maths::FloatBitsMapper end{ maths::NextDecimalUp(start.value) };
+	maths::FloatBitsMapper delta{ end.value - start.value };
+	maths::FloatBitsMapper epsilon_machine{ 0x33800000u };	// 2^-24
+	maths::FloatBitsMapper epsilon{ 0x34000000u };			// 2^-23
+	maths::FloatBitsMapper verif{ start.value * epsilon.value };
+	maths::FloatBitsMapper verif2{ start.value * (1.f + epsilon_machine.value) };
+	maths::FloatBitsMapper verif3{ start.value * (1.f - epsilon_machine.value) };
+	maths::FloatBitsMapper one_eps{ 1.f + epsilon.value };
+
 	constexpr std::array<float, 5> arr_A{ algo::fill<5>::apply(0.4f) };
 
 	maths::Vec3f								v3_default_ctor{};
@@ -30,7 +63,7 @@ int main()
 	maths::Vector<maths::Decimal, 5>			vn_fill_ctor(0.4_d);
 
 	constexpr maths::Norm3f						n3_initlist_ctor{ 1._d, 2._d, 3._d };
-	constexpr maths::Decimal					v3_n3_dot = maths::normal::Dot(v3_initlist_ctor, n3_initlist_ctor);
+	constexpr maths::Decimal					v3_n3_dot = maths::Dot(v3_initlist_ctor, n3_initlist_ctor);
 
 	constexpr uint32_t	vn_size{ maths::Vector<float, 5>::size };
 
@@ -67,28 +100,20 @@ int main()
 	bool			is_double = typeid(maths::Decimal) == typeid(double);
 	bool			is_float = typeid(maths::Decimal) == typeid(float);
 
-	for (int j = 0; j < 10; ++j)
-	{
-		tools::TimeProbe	probe{ globals::profiler.GetTimer("TEST") };
-		for (int i = 0; i < 1000; ++i)
-		{
-		}
-	}
-
 	maths::Vec3f	vector3_A{};
 	maths::Vec3f	vector3_B{ 1._d, 2._d, 3._d };
 	maths::Vec3f	vector3_C{ 1._d, 0._d, 0._d };
 	maths::Vec3f	vector3_D{ 0._d, 1._d, 0._d };
 
-	maths::Vec3f	vector3_E{ maths::vector::Cross(vector3_C, vector3_D) };
+	maths::Vec3f	vector3_E{ maths::Cross(vector3_C, vector3_D) };
 	maths::Vec3f	vector3_F{ vector3_B / 2._d };
 	maths::Vec3f	vector3_G{ vector3_B * 2._d };
 	maths::Vec3f	vector3_H{ vector3_B * vector3_C };
 	maths::Vec3f	vector3_I{ vector3_B * vector3_D };
 	maths::Vec3f	vector3_J{ vector3_B * vector3_E };
-	maths::Decimal	dot_product{ maths::vector::Dot(vector3_C, vector3_D) };
+	maths::Decimal	dot_product{ maths::Dot(vector3_C, vector3_D) };
 
-	raytracer::Film	test_film{ 100, 100 };
+	raytracer::Film	test_film{ 100, 100, 0.035_d };
 
 	for (int32_t i = 0; i < 100; ++i)
 	{
@@ -99,8 +124,6 @@ int main()
 	}
 
 	test_film.WriteToFile("YOLO.png");
-
-	auto timers{ globals::profiler.timers() };
 
 	maths::Vec4f A4{ 1._d, 2._d, 3._d, 4._d };
 	maths::Vec4f B4{ 1._d, 2._d, 3._d, 4._d };
@@ -132,7 +155,7 @@ int main()
 	A3x3[2][1] = 1;
 	A3x3[2][2] = 1;
 
-	maths::Matrix<maths::Decimal, 3, 3> A3x3_inv{ maths::matrix::Inverse(A3x3) };
+	maths::Matrix<maths::Decimal, 3, 3> A3x3_inv{ maths::Inverse(A3x3) };
 	maths::Matrix<maths::Decimal, 3, 3> check{ A3x3 * A3x3_inv };
 
 	A4x2[0][1] = 4._d;
@@ -151,14 +174,14 @@ int main()
 	float value = maths::zero<float>;
 
 	maths::Quaternion				AQ{ {1._d, 2._d, 3._d}, 5._d };
-	maths::quaternion::Normalized(AQ);
+	maths::Normalized(AQ);
 
 	C4x4 = static_cast<maths::Mat4x4f>(B3x3);
 	maths::Transform transformA{ maths::Mat4x4f{B3x3} };
 
 	C4x4.SetColumn(2, maths::Vec4f{ 1._d, 2._d, 3._d, 4._d });
 
-	maths::transform::LookAt({ 0._d, 0._d, 0._d }, { 0._d, 0._d, -1._d }, { 0._d, 1._d, 0._d });
+	maths::LookAt({ 0._d, 0._d, 0._d }, { 0._d, 0._d, -1._d }, { 0._d, 1._d, 0._d });
 
 	maths::Point3f			Point3fA{ 1._d, 2._d, 3._d };
 	maths::Vector<int, 3>	Vector3iA{ Point3fA };
@@ -175,11 +198,27 @@ int main()
 	maths::Point<maths::Decimal, 4>	Corner4f7{ Bounds4fA.Corner(7) };
 	maths::Point<maths::Decimal, 4>	Corner4f15{ Bounds4fA.Corner(15) };
 
-	maths::Decimal yolo = 0._d;
-	maths::Decimal next = maths::NextDecimalUp(yolo);
-	maths::Decimal nextnext = maths::NextDecimalUp(yolo, 2);
-	maths::Decimal delta = next - yolo;
-	maths::Decimal nextdelta = nextnext - next;
+	//maths::Decimal yolo = 0._d;
+	//maths::Decimal next = maths::NextDecimalUp(yolo);
+	//maths::Decimal nextnext = maths::NextDecimalUp(yolo, 2);
+	//maths::Decimal delta = next - yolo;
+	//maths::Decimal nextdelta = nextnext - next;
+
+
+	tools::Profiler::TimerTable_t timers = globals::profiler.timers();
+	for (auto it = timers.begin(); it != timers.end(); ++it)
+	{
+		tools::Timer const &timer = it->second;
+		char const *call_string = (timer.call_count() > 1) ? " calls. " : " call. ";
+		std::cout <<
+			timer.name() << " : " <<
+			timer.call_count() << call_string << std::endl <<
+			timer.total_time() << " seconds, " <<
+			timer.best_time() << " seconds at least, " <<
+			timer.total_cycles() << " cycles, " <<
+			timer.best_cycles() << " cycles as least" <<
+		std::endl;
+	}
 
 	system("pause");
 	return 0;

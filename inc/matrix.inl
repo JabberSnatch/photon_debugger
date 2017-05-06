@@ -121,9 +121,6 @@ operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs)
 }
 
 
-namespace matrix
-{
-
 template <typename T, uint32_t R, uint32_t C>
 Matrix<T, C, R> 
 FromRows(std::array<Vector<T, C>, R> const &_rows)
@@ -225,7 +222,6 @@ Inverse(Matrix<T, RC, RC> const &_v)
 	return inv;
 }
 
-} // namespace matrix
 } // namespace maths
 
 

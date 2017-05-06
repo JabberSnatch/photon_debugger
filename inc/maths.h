@@ -6,33 +6,7 @@
 #include <limits>
 #include <algorithm>
 
-#define YS_DECIMAL_IS_DOUBLE
-
-#ifdef max
-#undef max
-#endif
-#ifdef min
-#undef min
-#endif
-
-
-namespace maths
-{
-
-template <typename T, uint32_t n> struct Vector;
-template <typename T, uint32_t n> struct Normal;
-template <typename T, uint32_t n> struct Point;
-template <typename T, uint32_t n> struct Bounds;
-template <typename T, uint32_t R, uint32_t C> struct Matrix;
-
-struct Ray;
-
-class Transform;
-struct Quaternion;
-
-struct REDecimal;
-
-} // namespace maths
+//#define YS_DECIMAL_IS_DOUBLE
 
 
 namespace maths
@@ -123,6 +97,7 @@ double	NextDecimalDown(double _v, uint64_t _delta = 1);
 float	NextDecimalUp(float _v, uint32_t _delta = 1);
 float	NextDecimalDown(float _v, uint32_t _delta = 1);
 
+bool	Quadratic(Decimal _a, Decimal _b, Decimal _c, Decimal &_t0, Decimal &_t1);
 } // namespace maths
 constexpr maths::Decimal operator "" _d(long double _v) { return maths::Decimal(_v); }
 constexpr maths::DecimalBits operator "" _db(unsigned long long _v) { return maths::DecimalBits(_v); }
@@ -131,8 +106,6 @@ constexpr maths::DecimalBits operator "" _db(unsigned long long _v) { return mat
 
 namespace maths
 {
-
-bool	Quadratic(Decimal _a, Decimal _b, Decimal _c, Decimal &_t0, Decimal &_t1);
 
 template <typename T> static constexpr T lowest_value = std::numeric_limits<T>::lowest();
 template <typename T> static constexpr T highest_value = std::numeric_limits<T>::max();
@@ -144,9 +117,13 @@ template <typename T> static constexpr T pi = T( 3.14159235658979323846 );
 template <typename T> constexpr T Radians(T _degrees) { return (pi<T> / T( 180 )) * _degrees; }
 template <typename T> constexpr T Degrees(T _radians) { return (T( 180 ) / pi<T>) * _radians; }
 
+
 // NOTE: Maybe a Scalar<T> class could make these functions a little more specific.
-template <typename T> constexpr T Min(T _lhs, T _rhs) { return (_lhs < _rhs) ? _lhs : _rhs; }
-template <typename T> constexpr T Max(T _lhs, T _rhs) { return (_lhs > _rhs) ? _lhs : _rhs; }
+
+// If one component is NaN, returns _lhs
+template <typename T> constexpr T Min(T _lhs, T _rhs) { return (_lhs > _rhs) ? _rhs : _lhs; }
+// If one component is NaN, returns _lhs
+template <typename T> constexpr T Max(T _lhs, T _rhs) { return (_lhs < _rhs) ? _rhs : _lhs; }
 template <typename T> constexpr T Clamp(T _v, T _min, T _max) { return Min(Max(_v, _min), _max); }
 template <typename T> constexpr T SafeClamp(T _v, T _a, T _b) { return Min(Max(_v, Min(_a, _b)), Max(_a, _b)); }
 
@@ -154,6 +131,46 @@ template <typename T> constexpr T Abs(T _v) { return (_v > zero<T>) ? _v : -_v; 
 
 template <typename T> constexpr T Lerp(T _a, T _b, float _t) { return _a*(1.f - _t) + _b*_t; }
 template <typename T> constexpr T Lerp(T _a, T _b, double _t) { return _a*(1. - _t) + _b*_t; }
+
+} // namespace maths
+
+
+namespace maths
+{
+
+template <typename T, uint32_t n> struct Vector;
+template <typename T, uint32_t n> struct Normal;
+template <typename T, uint32_t n> struct Point;
+template <typename T, uint32_t n> struct Bounds;
+template <typename T, uint32_t R, uint32_t C> struct Matrix;
+
+struct Ray;
+
+class Transform;
+struct Quaternion;
+
+struct REDecimal;
+
+template <typename T> using Vector2 = Vector<T, 2>;
+template <typename T> using Vector3 = Vector<T, 3>;
+template <typename T> using Vector4 = Vector<T, 4>;
+
+using Vec2f = Vector2<Decimal>;
+using Vec3f = Vector3<Decimal>;
+using Vec4f = Vector4<Decimal>;
+using Vec2i32 = Vector2<int32_t>;
+
+template <typename T> using Normal3 = Normal<T, 3>;
+using Norm3f = Normal3<Decimal>;
+
+template <typename T> using Point3 = Point<T, 3>;
+template <typename T> using Point2 = Point<T, 2>;
+using Point3f = Point3<Decimal>;
+using Point2f = Point2<Decimal>;
+
+using Bounds2f = Bounds<maths::Decimal, 2>;
+using Bounds3f = Bounds<maths::Decimal, 3>;
+using Bounds4f = Bounds<maths::Decimal, 4>;
 
 } // namespace maths
 

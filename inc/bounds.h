@@ -17,7 +17,7 @@ struct Bounds final
 		min{ _v }, max{ _v }
 	{}
 	Bounds(Point<T, n> const &_a, Point<T, n> const &_b) :
-		min{ point::Min(_a, _b) }, max{ point::Max(_a, _b) }
+		min{ Min(_a, _b) }, max{ Max(_a, _b) }
 	{}
 
 	// NOTE: These would be contexpr without assertion.
@@ -45,9 +45,6 @@ template <typename T, uint32_t n>
 bool operator!=(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs);
 
 
-namespace bounds
-{
-
 template <typename T, uint32_t n>
 Bounds<T, n> Union(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs);
 template <typename T, uint32_t n>
@@ -62,8 +59,6 @@ template <typename T, uint32_t n>
 bool InsideExclusive(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs);
 template <typename T, uint32_t n>
 Bounds<T, n> Expand(Bounds<T, n> const &_v, T _delta);
-
-} // namespace bounds
 
 
 using Bounds2f = Bounds<maths::Decimal, 2>;

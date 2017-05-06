@@ -2,10 +2,9 @@
 #define __YS_FILM_HPP__
 
 #include <vector>
-#include <cstdint>
 
+#include "maths.h"
 #include "vector.h"
-#include "point.h"
 
 
 namespace raytracer
@@ -19,10 +18,14 @@ class Film
 {
 public:
 	Film() = delete;
-	Film(int32_t _width, int32_t _height);
+	Film(int32_t _width, int32_t _height, maths::Decimal _side);
 
-	void	SetPixel(maths::Vec3f &&_value, maths::Vec2i32 &&_pos);
+	void	SetPixel(maths::Vec3f const &_value, maths::Vec2i32 const &_pos);
 	void	WriteToFile(std::string const &_path) const;
+
+	maths::Vec2i32 const	&resolution() const { return resolution_; }
+	maths::Vec2f const		&dimensions() const { return dimensions_; }
+	maths::Decimal			aspect() const { return aspect_; }
 
 	// NOTE: Even though this function could be static, it is intended to define an interface for
 	//		 different kinds of films, as they could use different tonemapping functions.
@@ -30,7 +33,9 @@ public:
 
 private:
 	std::vector<maths::Vec3f>	pixels_;
-	maths::Vec2i32				size_;
+	maths::Vec2i32				resolution_;
+	maths::Decimal				aspect_;
+	maths::Vec2f				dimensions_;
 };
 
 

@@ -40,6 +40,14 @@ struct REDecimal
 		, precise{ _value }
 #endif
 	{ Check(); }
+	REDecimal(Decimal _value, Decimal _low_bound, Decimal _high_bound) :
+		value{ _value },
+		low_bound{ _low_bound },
+		high_bound{ _high_bound }
+#if YS_REDECIMAL_HAS_PRECISE
+		, precise{ _value }
+#endif
+	{ Check(); }
 
 	explicit operator Decimal() const { return value; }
 
@@ -50,6 +58,8 @@ struct REDecimal
 	Decimal AbsoluteError() const { return high_bound - low_bound; }
 	Decimal UpperBound() const { return high_bound; }
 	Decimal LowerBound() const { return low_bound; }
+
+	inline bool operator==(REDecimal const &_rhs) const { return value == _rhs.value; }
 
 	REDecimal operator+(REDecimal const &_rhs) const;
 	REDecimal operator-(REDecimal const &_rhs) const;
@@ -63,6 +73,11 @@ struct REDecimal
 
 	REDecimal &operator+();
 	REDecimal operator-() const;
+
+	// Return true only if the whole error interval is below _rhs
+	bool	operator < (Decimal _rhs) const;
+	// Return true only if the whole error interval is above _rhs
+	bool	operator > (Decimal _rhs) const;
 
 	void Check() const;
 
@@ -78,6 +93,6 @@ bool Quadratic(REDecimal const &_a, REDecimal const &_b, REDecimal const &_c,
 
 } // namespace maths
 
-#include "redecimal.inl"
+//#include "redecimal.inl"
 
 #endif // __YS_REDECIMAL_HPP__

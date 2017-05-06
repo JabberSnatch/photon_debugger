@@ -60,6 +60,6 @@ private:
 
 } // namespace tools
 
-#define TIMED_SCOPE(name, profiler) tools::TimeProbe name##_probe {profiler.GetTimer(#name)}
+#define TIMED_SCOPE_FULL(name, profiler) tools::TimeProbe name##_probe {profiler.GetTimer(#name)}
 
 #endif // __YS_PROFILER_HPP__

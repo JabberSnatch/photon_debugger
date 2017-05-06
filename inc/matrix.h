@@ -77,9 +77,6 @@ Matrix<T, R, C> operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C>
 template <typename T, uint32_t R, uint32_t C>
 Vector<T, R> operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs);
 
-namespace matrix
-{
-
 template <typename T, uint32_t R, uint32_t C>
 Matrix<T, C, R> FromRows(std::array<Vector<T, C>, R> const &_rows);
 template <typename T, uint32_t R, uint32_t C>
@@ -90,7 +87,6 @@ Matrix<T, C, R> Transpose(Matrix<T, R, C> const &_v);
 template <typename T, uint32_t RC>
 Matrix<T, RC, RC> Inverse(Matrix<T, RC, RC> const &_v);
 
-} // namespace matrix
 } // namespace maths
 
 

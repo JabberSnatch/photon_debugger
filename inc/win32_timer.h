@@ -39,6 +39,10 @@ public:
 	static const Frequency_t		kTimerFrequency;
 
 
+	inline char const *
+	name() const { return name_; }
+	inline unsigned long long
+	call_count() const { return call_count_; }
 	inline double
 	total_time() const { return total_time_ / (double)kTimerFrequency.QuadPart; }
 	inline double

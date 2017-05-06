@@ -2,6 +2,7 @@
 #define __YS_POINT_HPP__
 
 #include <array>
+#include "maths.h"
 #include "algorithms.h"
 #include "vector.h"
 
@@ -145,8 +146,6 @@ Point<T, n> operator/(Point<T, n> const &_lhs, T _rhs);
 template <typename T, uint32_t n>
 Point<T, n> &operator/=(Point<T, n> &_lhs, T _rhs);
 
-namespace point
-{
 
 template <typename T, uint32_t n>
 bool HasNaNs(Point<T, n> const &_v);
@@ -170,7 +169,6 @@ Decimal Distance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
 template <typename T, uint32_t n>
 Decimal SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
 
-} // namespace point
 } // namespace maths
 
 #include "point.inl"

@@ -55,7 +55,7 @@ Quaternion::operator Transform() const
 	result[2][1] = 2 * (yz - xw);
 	result[2][2] = 1._d - 2 * (xx + yy);
 
-	return Transform{ matrix::Transpose(result), result };
+	return Transform{ Transpose(result), result };
 }
 
 
@@ -105,8 +105,8 @@ Quaternion
 operator*(Quaternion const &_lhs, Quaternion const &_rhs)
 {
 	return Quaternion{
-		vector::Cross(_lhs.v, _rhs.v) + _lhs.v * _rhs.w + _rhs.v * _lhs.w,
-		_lhs.w * _rhs.w + vector::Dot(_lhs.v, _rhs.v)
+		Cross(_lhs.v, _rhs.v) + _lhs.v * _rhs.w + _rhs.v * _lhs.w,
+		_lhs.w * _rhs.w + Dot(_lhs.v, _rhs.v)
 	};
 }
 
@@ -142,9 +142,6 @@ operator/(Quaternion const &_lhs, Decimal _rhs)
 }
 
 
-namespace quaternion
-{
-
 Quaternion
 Conjugate(Quaternion const &_v)
 {
@@ -163,7 +160,7 @@ Norm(Quaternion const &_v)
 Decimal
 Dot(Quaternion const &_lhs, Quaternion const &_rhs)
 {
-	return vector::Dot(_lhs.v, _rhs.v) + _lhs.w * _rhs.w;
+	return Dot(_lhs.v, _rhs.v) + _lhs.w * _rhs.w;
 }
 Quaternion
 Normalized(Quaternion const &_v)
@@ -186,6 +183,5 @@ Slerp(Quaternion const &_a, Quaternion const &_b, Decimal _t)
 	}
 }
 
-} // namespace quaternion
 } // namespace maths
 

@@ -91,9 +91,6 @@ Point<T, n>
 	return _lhs;
 }
 
-namespace point
-{
-
 template <typename T, uint32_t n>
 bool
 HasNaNs(Point<T, n> const &_v)
@@ -172,7 +169,6 @@ SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs)
 	return vector::SqrLength(_lhs - _rhs);
 }
 
-} // namespace point
 } // namespace maths
 
 #endif // __YS_POINT_INL__

@@ -109,9 +109,6 @@ operator!=(Bounds<T, n> const &_lhs, Bounds<T, n> const &_rhs)
 }
 
 
-namespace bounds
-{
-
 template <typename T, uint32_t n>
 Bounds<T, n>
 Union(Bounds<T, n> const &_lhs, Point<T, n> const &_rhs)
@@ -182,7 +179,6 @@ Expand(Bounds<T, n> const &_v, T _delta)
 	return Bounds<T, n>{min - Vector<T, n>(_delta), max + Vector<T, n>(_delta)};
 }
 
-} // namespace bounds
 } // namespace maths
 
 

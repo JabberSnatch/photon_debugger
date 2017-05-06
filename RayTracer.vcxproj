@@ -98,7 +98,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -108,7 +108,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -120,7 +120,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -136,7 +136,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -146,24 +146,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\camera.cc" />
     <ClCompile Include="src\film.cc" />
     <ClCompile Include="src\globals.cc" />
     <ClCompile Include="src\maths.cc" />
     <ClCompile Include="src\quaternion.cc" />
     <ClCompile Include="src\raytracer_main.cc" />
+    <ClCompile Include="src\redecimal.cc" />
+    <ClCompile Include="src\shape.cc" />
+    <ClCompile Include="src\shapes\sphere.cc" />
     <ClCompile Include="src\transform.cc" />
     <ClCompile Include="src\win32_timer.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\algorithms.h" />
     <ClInclude Include="inc\bounds.h" />
+    <ClInclude Include="inc\camera.h" />
     <ClInclude Include="inc\globals.h" />
     <ClInclude Include="inc\maths.h" />
     <ClInclude Include="inc\matrix.h" />
     <ClInclude Include="inc\point.h" />
     <ClInclude Include="inc\quaternion.h" />
     <ClInclude Include="inc\ray.h" />
+    <ClInclude Include="inc\raytracer.h" />
     <ClInclude Include="inc\redecimal.h" />
+    <ClInclude Include="inc\shape.h" />
+    <ClInclude Include="inc\shapes\sphere.h" />
+    <ClInclude Include="inc\surface_interaction.h" />
     <ClInclude Include="inc\transform.h" />
     <ClInclude Include="inc\ys_assert.h" />
     <ClInclude Include="inc\film.h" />

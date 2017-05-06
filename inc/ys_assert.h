@@ -3,7 +3,6 @@
 
 #include <cassert>
 
-
 #ifdef _WIN32
 
 #ifdef _DEBUG

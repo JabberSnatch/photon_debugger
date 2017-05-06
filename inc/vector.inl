@@ -208,9 +208,6 @@ operator-(Vector<T, n> const &_op)
 }
 
 
-namespace vector
-{
-
 template <typename T, uint32_t n>
 bool
 HasNaNs(Vector<T, n> const &_v)
@@ -245,6 +242,16 @@ Clamp(Vector<T, n> const &_v, T _min, T _max)
 	Vector<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = maths::Clamp<T>(_v[i], _min, _max);
+	YS_ASSERT(!result.HasNaNs());
+	return result;
+}
+template <typename T, uint32_t n>
+Vector<T, n>
+Abs(Vector<T, n> const &_v)
+{
+	Vector<T, n> result{};
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = maths::Abs<T>(_v[i]);
 	YS_ASSERT(!result.HasNaNs());
 	return result;
 }
@@ -360,8 +367,6 @@ Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 }
 
 
-} // namespace vector
-
 
 // ============================================================
 // Normal<typename T, uint32_t n> operations
@@ -448,9 +453,6 @@ Normal<T, n>
 }
 
 
-namespace normal
-{
-
 template <typename T, uint32_t n>
 bool
 HasNaNs(Normal<T, n> const &_v)
@@ -514,7 +516,6 @@ Dot(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs)
 	return _lhs.x * _rhs.x + _lhs.y * _rhs.y + _lhs.z * _rhs.z;
 }
 
-} // namespace normal
 } // namespace maths
 
 

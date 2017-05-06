@@ -46,9 +46,6 @@ Quaternion operator*(Decimal _rhs, Quaternion const &_lhs);
 Quaternion operator/(Quaternion const &_lhs, Decimal _rhs);
 
 
-namespace quaternion
-{
-
 Quaternion Conjugate(Quaternion const &_v);
 Quaternion Inverse(Quaternion const &_v);
 Decimal Norm(Quaternion const &_v);
@@ -56,7 +53,6 @@ Decimal Dot(Quaternion const &_lhs, Quaternion const &_rhs);
 Quaternion Normalized(Quaternion const &_v);
 Quaternion Slerp(Quaternion const &_a, Quaternion const &_b, Decimal _t);
 
-} // namespace quaternion
 } // namespace maths
 
 

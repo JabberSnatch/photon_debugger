@@ -32,6 +32,13 @@ struct Vector final
 	}
 	Vector(Vector<T, n - 1> const &_v, T _value)
 	{ std::copy(_v.e.begin(), _v.e.end(), e.begin()); e[n - 1] = _value; }
+	
+	template<typename U>
+	explicit Vector(Vector<U, n> const &_v)
+	{
+		for (uint32_t i = 0; i < size; ++i)
+			e[i] = (T)_v[i];
+	}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ n };
@@ -84,6 +91,12 @@ struct Vector<T, 4> final
 	Vector(Vector<T, 3> const &_v, T _value) :
 		Vector{ _v[0], _v[1], _v[2], _value }
 	{}
+	template<typename U>
+	explicit Vector(Vector<U, 4> const &_v)
+	{
+		for (uint32_t i = 0; i < size; ++i)
+			e[i] = (T)_v[i];
+	}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ 4 };
@@ -119,6 +132,12 @@ struct Vector<T, 3> final
 	Vector(Vector<T, 2> const &_v, T _value) :
 		Vector { _v.e[0], _v.e[1], _value }
 	{}
+	template<typename U>
+	explicit Vector(Vector<U, 3> const &_v)
+	{
+		for (uint32_t i = 0; i < size; ++i)
+			e[i] = (T)_v[i];
+	}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ 3 };
@@ -154,6 +173,12 @@ struct Vector<T, 2> final
 	Vector(Vector<T, 1> const &_v, T _value) :
 		Vector{ _v[0], value }
 	{}
+	template<typename U>
+	explicit Vector(Vector<U, 2> const &_v)
+	{
+		for (uint32_t i = 0; i < size; ++i)
+			e[i] = (T)_v[i];
+	}
 
 	using						value_type = T;
 	static constexpr uint32_t	size{ 2 };
@@ -227,9 +252,6 @@ template <typename T, uint32_t n>
 Vector<T, n> operator-(Vector<T, n> const &_op);
 
 
-namespace vector
-{
-
 template <typename T, uint32_t n>
 bool HasNaNs(Vector<T, n> const &_v);
 
@@ -239,6 +261,8 @@ template <typename T, uint32_t n>
 Vector<T, n> Max(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
 template <typename T, uint32_t n>
 Vector<T, n> Clamp(Vector<T, n> const &_v, T _min, T _max);
+template <typename T, uint32_t n>
+Vector<T, n> Abs(Vector<T, n> const &_v);
 
 template <typename T, uint32_t n>
 T SqrLength(Vector<T, n> const &_v);
@@ -268,8 +292,6 @@ template <typename T>
 Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
 template <typename T>
 Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
-
-} // namespace vector
 
 
 
@@ -366,8 +388,6 @@ Normal<T, n> &operator*=(Normal<T, n> &_lhs, T _rhs);
 template <typename T, uint32_t n>
 Normal<T, n> &operator/=(Normal<T, n> &_lhs, T _rhs);
 
-namespace normal
-{
 
 template <typename T, uint32_t n>
 bool HasNaNs(Normal<T, n> const &_v);
@@ -390,8 +410,6 @@ template <typename T>
 constexpr T Dot(Normal<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
 template <typename T>
 constexpr T Dot(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs);
-
-} // namespace normal
 
 
 template <typename T> using Vector2 = Vector<T, 2>;
