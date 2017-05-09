@@ -31,6 +31,8 @@ public:
 	//		 different kinds of films, as they could use different tonemapping functions.
 	maths::Vec3f	MapToLimitedRange(maths::Vec3f const &_color) const;
 
+	bool						image_is_flipped = false;
+
 private:
 	std::vector<maths::Vec3f>	pixels_;
 	maths::Vec2i32				resolution_;

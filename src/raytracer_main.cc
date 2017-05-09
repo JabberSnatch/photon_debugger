@@ -13,14 +13,48 @@
 #include "camera.h"
 #include "shapes/sphere.h"
 
-//static tools::Profiler gProfiler{};
-
 #include <typeinfo>
 #include <iostream>
 
+// Camera, Film, Shape
+// Scene : list of shapes
+// Shape -> Transform + flip_normals + individual properties
+// For instance : Sphere{Transform, flip_normals, radius, min_z, max_z, max_phi}
+// Each parameter can have default value.
+// Specifying that we just want a sphere would be fine.
+// Values should be assigned explicitly
+//
+// scope_id [ value ] et ref[ id ] last
+//
+// Film scope_id [ default_film ] { resolution [ 1920 1080 ] }
+// Camera {
+// position [ 0 -5 5 ] lookat [ 0 1 .5 ]
+// up [ 0 0 1 ]
+// fov [ 60 ]
+// film ref[ default_film ]
+// } 
+// Translate 10 0 0
+// Rotate 30 0 0
+// Shape sphere {
+// radius [ 5 ]
+// min_z [ -10 ]
+// max_z [ 10 ]
+// max_phi [ 360 ]
+// flip_normals
+// Translate 5 0 0
+// Rotate 25 0 25
+// Scale 3 3 1
+// }
+// Shape sphere {
+// radius [ 5 ]
+// min_z [ -3 ]
+// max_z [ 4 ]
+// max_phi [ 360 ]
+// }
+
 int main()
 {
-	raytracer::Film		film_35mm{ 480, 270, 0.035_d };
+	raytracer::Film		film_35mm{ 1920, 1080, 0.035_d };
 	raytracer::Camera	camera{
 		film_35mm,
 		{0._d, -5._d, .5_d}, {0._d, 1._d, .5_d}, {0._d, 0._d, 1._d},

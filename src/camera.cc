@@ -56,6 +56,12 @@ Camera::Expose(Scene const &_shapes, maths::Decimal _t)
 {
 	TIMED_SCOPE(CameraExpose);
 
+	// NOTE: Because our ray is computed as if it originated from a real camera
+	//		 (object -> focus point -> sensor), our picture is reversed on both dimensions.
+	//		 It needs an additional "development" step, where it is reversed again.
+	//		 This process is deferred to the film through the image_is_flipped bool.
+	film.image_is_flipped = true;
+
 	for (int32_t y = 0; y < film.resolution().h; ++y)
 	{
 		for (int32_t x = 0; x < film.resolution().w; ++x)
@@ -88,13 +94,8 @@ Camera::Expose(Scene const &_shapes, maths::Decimal _t)
 			else
 				color = maths::Lerp(down_color, up_color, .5_d * maths::Normalized(ray.direction).z + .5_d);
 
-			// NOTE: Because our ray is computed as if it originated from a real camera
-			//		 (object -> focus point -> sensor), our picture is reversed on both dimensions.
-			//		 It needs an additional "development" step, where it is reversed again.
-			//		 For now, it is done here, where every relevant data is present, but it should
-			//		 definitelty be either removed altogether by changing the way rays are computed
-			//		 or moved to an appropriate procedure whether in Film or Camera.
-			film.SetPixel(color, { film.resolution().w - 1 - x, film.resolution().h - 1 - y });
+			//film.SetPixel(color, { film.resolution().w - 1 - x, film.resolution().h - 1 - y });
+			film.SetPixel(color, { x, y });
 		}
 	}
 }

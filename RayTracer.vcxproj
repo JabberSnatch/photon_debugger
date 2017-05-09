@@ -163,6 +163,7 @@
     <ClInclude Include="inc\bounds.h" />
     <ClInclude Include="inc\camera.h" />
     <ClInclude Include="inc\globals.h" />
+    <ClInclude Include="inc\logger.h" />
     <ClInclude Include="inc\maths.h" />
     <ClInclude Include="inc\matrix.h" />
     <ClInclude Include="inc\point.h" />
