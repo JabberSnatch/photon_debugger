@@ -2,7 +2,6 @@
 #define __YS_VECTOR_INL__
 
 #include "maths.h"
-#include "ys_assert.h"
 
 
 namespace maths

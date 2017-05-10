@@ -4,7 +4,6 @@
 #include "stb_image_write.h"
 
 #include "globals.h"
-#include "ys_assert.h"
 #include "vector.h"
 
 namespace raytracer

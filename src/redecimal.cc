@@ -1,6 +1,5 @@
 #include "redecimal.h"
 
-
 namespace maths
 {
 
@@ -8,7 +7,7 @@ REDecimal
 REDecimal::operator+(REDecimal const &_rhs) const
 {
 	REDecimal result;
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	result.precise = _rhs.precise + precise;
 #endif
 	result.value = _rhs.value + value;
@@ -21,7 +20,7 @@ REDecimal
 REDecimal::operator-(REDecimal const &_rhs) const
 {
 	REDecimal result;
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	result.precise = precise - _rhs.precise;
 #endif
 	result.value = value - _rhs.value;
@@ -34,7 +33,7 @@ REDecimal
 REDecimal::operator*(REDecimal const &_rhs) const
 {
 	REDecimal result;
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	result.precise = _rhs.precise * precise;
 #endif
 	result.value = _rhs.value * value;
@@ -51,7 +50,7 @@ REDecimal
 REDecimal::operator/(REDecimal const &_rhs) const
 {
 	REDecimal result;
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	result.precise = precise / _rhs.precise;
 #endif
 	result.value = value / _rhs.value;
@@ -76,7 +75,7 @@ REDecimal::operator/(REDecimal const &_rhs) const
 REDecimal&
 REDecimal::operator+=(REDecimal const &_rhs)
 {
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	precise += _rhs.precise;
 #endif
 	value += _rhs.value;
@@ -88,7 +87,7 @@ REDecimal::operator+=(REDecimal const &_rhs)
 REDecimal&
 REDecimal::operator-=(REDecimal const &_rhs)
 {
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	precise -= _rhs.precise;
 #endif
 	value -= _rhs.value;
@@ -100,7 +99,7 @@ REDecimal::operator-=(REDecimal const &_rhs)
 REDecimal&
 REDecimal::operator*=(REDecimal const &_rhs)
 {
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	precise *= _rhs.precise;
 #endif
 	value *= _rhs.value;
@@ -118,7 +117,7 @@ REDecimal::operator*=(REDecimal const &_rhs)
 REDecimal&
 REDecimal::operator/=(REDecimal const &_rhs)
 {
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	precise /= _rhs.precise;
 #endif
 	value /= _rhs.value;
@@ -151,7 +150,7 @@ REDecimal
 REDecimal::operator-() const
 {
 	REDecimal result;
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	result.precise = -precise;
 #endif
 	result.value = -value;
@@ -180,7 +179,7 @@ REDecimal::Check() const
 	if (!std::isinf(low_bound) && !std::isinf(high_bound))
 		YS_ASSERT(low_bound <= high_bound);
 
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	YS_ASSERT(!std::isnan(precise));
 	if (!std::isinf(precise))
 		YS_ASSERT(low_bound <= precise && high_bound >= precise);
@@ -195,7 +194,7 @@ Sqrt(REDecimal const &_v)
 	result.value = std::sqrt(_v.value);
 	result.low_bound = NextDecimalDown(result.value - std::sqrt(_v.value - _v.low_bound));
 	result.high_bound = NextDecimalUp(result.value + std::sqrt(_v.high_bound - _v.value));
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	result.precise = std::sqrt(_v.precise);
 #endif
 	result.Check();
@@ -212,12 +211,11 @@ Quadratic(REDecimal const &_a, REDecimal const &_b, REDecimal const &_c,
 	//		 I guess REDecimal Quadratic makes the most sense when error is measured across the
 	//		 whole process, but it tends to be a bit over-conservative.
 	//		 Do we really want to discard results just to be safe ?
-//#define QUADRATIC_RUNNING_ERROR_ON_DISCRIMINANT
 
 #ifdef QUADRATIC_RUNNING_ERROR_ON_DISCRIMINANT
 	REDecimal delta = _b * _b - REDecimal(4._d) * _a * _c;
 	if (delta.value < 0._d) return false;
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	if (delta.precise < 0.) return false;
 #endif
 	REDecimal sqrt_delta = Sqrt(delta);

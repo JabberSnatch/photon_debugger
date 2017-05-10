@@ -1,4 +1,3 @@
-#include "profiler.h"
 #include "vector.h"
 #include "point.h"
 #include "bounds.h"
@@ -54,6 +53,8 @@
 
 int main()
 {
+	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
+
 	raytracer::Film		film_35mm{ 1920, 1080, 0.035_d };
 	raytracer::Camera	camera{
 		film_35mm,

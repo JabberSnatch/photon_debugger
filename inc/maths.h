@@ -5,8 +5,7 @@
 #include <cstdint>
 #include <limits>
 #include <algorithm>
-
-//#define YS_DECIMAL_IS_DOUBLE
+#include "common_macros.h"
 
 
 namespace maths

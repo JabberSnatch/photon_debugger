@@ -1,7 +1,6 @@
 #include "camera.h"
 
 #include "globals.h"
-#include "ys_assert.h"
 #include "ray.h"
 #include "shape.h"
 #include "surface_interaction.h"
@@ -39,7 +38,7 @@ Camera::Camera(Film const &_film, maths::Point3f const &_position, maths::Point3
 		//YS_ASSERT(ulp_offset < 10);
 		//YS_ASSERT(maths::Abs(std_cos - dot_cos) < std::numeric_limits<maths::Decimal>::epsilon());
 		if (ulp_offset > 4)
-			LOG("A camera has fov error greater or equal than 5 ulp on cos(half_fov)");
+			LOG_WARNING(tools::kChannelGeneral, "A camera has fov error greater or equal than 5 ulp on cos(half_fov)");
 
 		maths::Vec3f		left_ray = maths::Normalized(Ray(0._d, 0.5_d, 0._d).direction);
 		maths::Vec3f		right_ray = maths::Normalized(Ray(1._d, 0.5_d, 0._d).direction);

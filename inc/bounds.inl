@@ -1,8 +1,6 @@
 #ifndef __YS_BOUNDS_INL__
 #define __YS_BOUNDS_INL__
 
-#include "ys_assert.h"
-
 
 namespace maths
 {

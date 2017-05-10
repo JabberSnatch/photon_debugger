@@ -1,9 +1,11 @@
 #ifndef __YS_PROFILER_HPP__
 #define __YS_PROFILER_HPP__
 
-#ifdef _WIN32
+#include "common_macros.h"
+
+#ifdef YS_WINDOWS
 #include "win32_timer.h"
-#endif // _WIN32
+#endif // YS_WINDOWS
 
 #include <cstdint>
 #include <unordered_map>

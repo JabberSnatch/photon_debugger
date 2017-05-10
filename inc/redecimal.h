@@ -2,14 +2,10 @@
 #ifndef __YS_REDECIMAL_HPP__
 #define __YS_REDECIMAL_HPP__
 
-#include "ys_assert.h"
 #include "maths.h"
+#include "common_macros.h"
 
-#ifdef _DEBUG
-#ifndef YS_DECIMAL_IS_DOUBLE
-#define YS_REDECIMAL_HAS_PRECISE 1
-#endif
-#endif
+
 
 namespace maths
 {
@@ -28,7 +24,7 @@ struct REDecimal
 	{}
 	REDecimal(Decimal _value) :
 		value{ _value }, low_bound{ NextDecimalDown(_value) }, high_bound{ NextDecimalUp(_value) }
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 		, precise{ _value }
 #endif
 	{ Check(); }
@@ -36,7 +32,7 @@ struct REDecimal
 		value{ _value },
 		low_bound{ NextDecimalDown(_value - _error) },
 		high_bound{ NextDecimalUp(_value + _error) }
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 		, precise{ _value }
 #endif
 	{ Check(); }
@@ -44,7 +40,7 @@ struct REDecimal
 		value{ _value },
 		low_bound{ _low_bound },
 		high_bound{ _high_bound }
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 		, precise{ _value }
 #endif
 	{ Check(); }
@@ -81,7 +77,7 @@ struct REDecimal
 
 	void Check() const;
 
-#if YS_REDECIMAL_HAS_PRECISE
+#ifdef YS_REDECIMAL_HAS_PRECISE
 	double		precise;
 #endif
 };

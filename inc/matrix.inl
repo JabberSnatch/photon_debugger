@@ -1,7 +1,6 @@
 #ifndef __YS_MATRIX_INL__
 #define __YS_MATRIX_INL__
 
-#include "ys_assert.h"
 
 
 namespace maths
