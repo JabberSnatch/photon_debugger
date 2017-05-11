@@ -5,6 +5,7 @@
 #include "transform.h"
 #include "redecimal.h"
 #include "surface_interaction.h"
+#include "profiler.h"
 
 namespace raytracer {
 

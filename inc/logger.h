@@ -6,7 +6,6 @@
 #include <string>
 #include <array>
 #include <chrono>
-#include <atomic>
 #include <map>
 #include <set>
 #include <vector>
@@ -16,23 +15,14 @@
 
 #include "algorithms.h"
 #include "common_macros.h"
-
+#include "spinlock.h"
+#include "globals.h"
+#include "profiler.h"
 
 namespace tools {
 
 enum LogChannel { kChannelGeneral = 0, kChannelProfiling, kChannelCount, kChannelStdOut };
 enum LogLevel { kLevelDebug = 0, kLevelInfo, kLevelWarning, kLevelError, kLevelCount };
-
-class AtomicSpinLock final
-{
-public:
-	inline void Acquire() { uint32_t value = 1u; while (value == 1u) value = atomic_.exchange(1u); }
-	inline void Wait() const { uint32_t value = 1u; while (value == 1u) value = atomic_.load(); }
-	inline void Release() { atomic_.exchange(0u); }
-	inline bool is_locked()	const { return atomic_.load() > 0u; }
-private:
-	std::atomic_uint32_t	atomic_{ 0u };
-};
 
 // One instance of FileLogger manages an array of stringstreams.
 // When a buffer exceeds a certain size, it is written back to disk and cleared.
@@ -115,8 +105,6 @@ public:
 	static constexpr size_t		kInvalidThreadIndex = std::numeric_limits<size_t>::max();
 	thread_local static size_t	thread_index;
 
-	~Logger();
-
 	// Allocates necessary resources for parallel logging. This is called once by a main thread.
 	// Remember to set thread_index on each client thread.
 	void	AllowMultipleThreads(size_t _thread_count);
@@ -125,6 +113,7 @@ public:
 	void	Log(LogChannel _channel, LogLevel _level, std::string const &_message);
 	void	Merge(LogChannel _channel, EntryBuffer_t &_buffer, size_t &_entry_count);
 	void	Flush(LogChannel _channel, bool _release_merge_lock = false);
+	void	FlushAll();
 
 	void	BindPath(LogChannel _channel, std::string const &_path, bool _clear_file = true);
 	void	UnbindPath(LogChannel _channel, std::string const &_path);
@@ -162,7 +151,6 @@ private:
 
 } // namespace tools
 
-#define LOG_FULL(channel, level, message, logger) logger.Log(channel, level, message)
 
 // IMPLEMENTATION
 namespace tools {
@@ -171,6 +159,8 @@ template <size_t hs, size_t bs> thread_local size_t Logger<hs, bs>::thread_index
 
 inline std::ostream &operator<<(std::ostream &_stream, LogEntry const &_entry)
 {
+	TIMED_SCOPE(LogEntry_StreamOperator);
+
 	std::string level_string;
 	switch (_entry.level) {
 	case kLevelDebug:
@@ -186,7 +176,7 @@ inline std::ostream &operator<<(std::ostream &_stream, LogEntry const &_entry)
 		level_string = "WARNING";
 		break;
 	}
-	_stream << std::to_string(_entry.date.count()) << " [" << level_string << "] : " << _entry.message;
+	_stream << _entry.date.count() << " [" << level_string << "] : " << _entry.message;
 	return _stream;
 }
 
@@ -221,12 +211,6 @@ LogBuffer<hs, bs>::Log(LogChannel _channel, LogLevel _level, std::string const &
 
 
 
-template <size_t hs, size_t bs>
-Logger<hs, bs>::~Logger()
-{
-	for (int i = 0; i < kChannelCount; ++i)
-		Flush(LogChannel(i));
-}
 template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::AllowMultipleThreads(size_t _thread_count)
@@ -335,6 +319,13 @@ Logger<hs, bs>::Flush(LogChannel _channel, bool _release_merge_lock)
 	//debug_history_lock_[_channel].Release();
 
 	write_lock_[_channel].Release();
+}
+template <size_t hs, size_t bs>
+void
+Logger<hs, bs>::FlushAll()
+{
+	for (int i = 0; i < kChannelCount; ++i)
+		Flush(LogChannel(i));
 }
 
 template <size_t hs, size_t bs>

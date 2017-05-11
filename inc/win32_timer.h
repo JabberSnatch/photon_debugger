@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <intrin.h>
+#include "maths.h"
 
 namespace tools
 {
@@ -24,9 +25,21 @@ public:
 	{
 		total_time_ += _time;
 		if (_time < best_time_) best_time_ = _time;
+		if (_time > worst_time_) worst_time_ = _time;
 		total_cycles_ += _cycles;
 		if (_cycles < best_cycles_) best_cycles_ = _cycles;
+		if (_cycles > worst_cycles_) worst_cycles_ = _cycles;
 		++call_count_;
+	}
+
+	inline void
+	Add(Timer const &_other)
+	{
+		total_time_ += _other.total_time_;
+		best_time_ = maths::Min(best_time_, _other.best_time_);
+		total_cycles_ += _other.total_cycles_;
+		best_cycles_ = maths::Min(best_cycles_, _other.best_cycles_);
+		call_count_ += _other.call_count_;
 	}
 
 	static inline Frequency_t
@@ -47,10 +60,18 @@ public:
 	total_time() const { return total_time_ / (double)kTimerFrequency.QuadPart; }
 	inline double
 	best_time() const { return best_time_ / (double)kTimerFrequency.QuadPart; }
+	inline double
+	worst_time() const { return worst_time_ / (double)kTimerFrequency.QuadPart; }
+	inline double
+	average_time() const { return total_time() / call_count_; }
 	inline CycleCount_t
 	total_cycles() const { return total_cycles_; }
 	inline CycleCount_t
 	best_cycles() const { return best_cycles_; }
+	inline CycleCount_t
+	worst_cycles() const { return worst_cycles_; }
+	inline CycleCount_t
+	average_cycles() const { return total_cycles() / call_count_; }
 	inline Duration_t
 	total_ticks() const { return total_time_; }
 	inline Duration_t
@@ -62,8 +83,10 @@ private:
 	char const			*name_{};
 	Duration_t			total_time_{ 0 };
 	Duration_t			best_time_{ _I64_MAX };
+	Duration_t			worst_time_{ 0 };
 	CycleCount_t		total_cycles_{ 0 };
 	CycleCount_t		best_cycles_{ _I64_MAX };
+	CycleCount_t		worst_cycles_{ 0 };
 	unsigned long long	call_count_{ 0 };
 };
 

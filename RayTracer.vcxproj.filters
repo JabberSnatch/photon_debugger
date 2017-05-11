@@ -78,6 +78,9 @@
     <ClInclude Include="inc\common_macros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\spinlock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">

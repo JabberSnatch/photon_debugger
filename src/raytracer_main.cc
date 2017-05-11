@@ -11,6 +11,8 @@
 #include "surface_interaction.h"
 #include "camera.h"
 #include "shapes/sphere.h"
+#include "logger.h"
+#include "profiler.h"
 
 #include <typeinfo>
 #include <iostream>
@@ -57,9 +59,12 @@ void LogIntegrationTests(size_t _thread_index)
 	globals::logger.thread_index = _thread_index;
 	for (size_t i = 0; i < 513; ++i)
 	{
+		TIMED_SCOPE(LogTestIteration);
 		std::string message = "Thread " + std::to_string(_thread_index) + " iter " + std::to_string(i);
 		globals::logger.Log(tools::kChannelGeneral, tools::kLevelInfo, message);
 	}
+
+	globals::profiler_aggregate.GrabTimers(globals::profiler);
 }
 
 #include <thread>
@@ -88,8 +93,11 @@ int main()
 		globals::logger.Log(tools::kChannelGeneral, tools::kLevelInfo, "total execution : " + std::to_string((end - start).count()));
 	}
 
+	globals::logger.FlushAll();
+
+	globals::profiler_aggregate.GrabTimers(globals::profiler);
 	{
-		tools::Profiler::TimerTable_t timers = globals::profiler.timers();
+		tools::Profiler::TimerTable_t timers = globals::profiler_aggregate.timers();
 		for (auto it = timers.begin(); it != timers.end(); ++it)
 		{
 			tools::Timer const &timer = it->second;
@@ -98,15 +106,18 @@ int main()
 			string <<
 				timer.name() << " : " <<
 				timer.call_count() << call_string << std::endl <<
-				timer.total_time() << " seconds, " <<
-				timer.best_time() << " seconds at least, " <<
-				timer.total_cycles() << " cycles, " <<
-				timer.best_cycles() << " cycles as least";
-				//<< std::endl;
+				"real time : [ " << 
+				timer.total_time() << " : " <<  timer.worst_time() << " + " <<
+				timer.average_time() << " - " <<
+				timer.best_time() << " ] cycles : [ " <<
+				timer.total_cycles() << " : " << timer.worst_cycles() << " + " <<
+				timer.average_cycles() << " - " <<
+				timer.best_cycles() << " ]";
 			globals::logger.Log(tools::kChannelProfiling, tools::kLevelInfo, string.str());
 		}
 	}
 
+	globals::logger.FlushAll();
 	return 0;
 	
 	raytracer::Film		film_35mm{ 1920, 1080, 0.035_d };
@@ -292,22 +303,6 @@ int main()
 	//maths::Decimal nextnext = maths::NextDecimalUp(yolo, 2);
 	//maths::Decimal delta = next - yolo;
 	//maths::Decimal nextdelta = nextnext - next;
-
-
-	tools::Profiler::TimerTable_t timers = globals::profiler.timers();
-	for (auto it = timers.begin(); it != timers.end(); ++it)
-	{
-		tools::Timer const &timer = it->second;
-		char const *call_string = (timer.call_count() > 1) ? " calls. " : " call. ";
-		std::cout <<
-			timer.name() << " : " <<
-			timer.call_count() << call_string << std::endl <<
-			timer.total_time() << " seconds, " <<
-			timer.best_time() << " seconds at least, " <<
-			timer.total_cycles() << " cycles, " <<
-			timer.best_cycles() << " cycles as least" <<
-		std::endl;
-	}
 
 	system("pause");
 	return 0;

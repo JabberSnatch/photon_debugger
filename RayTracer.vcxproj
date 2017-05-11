@@ -175,6 +175,7 @@
     <ClInclude Include="inc\redecimal.h" />
     <ClInclude Include="inc\shape.h" />
     <ClInclude Include="inc\shapes\sphere.h" />
+    <ClInclude Include="inc\spinlock.h" />
     <ClInclude Include="inc\surface_interaction.h" />
     <ClInclude Include="inc\transform.h" />
     <ClInclude Include="inc\film.h" />

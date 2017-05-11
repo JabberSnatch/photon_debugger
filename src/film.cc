@@ -5,6 +5,7 @@
 
 #include "globals.h"
 #include "vector.h"
+#include "profiler.h"
 
 namespace raytracer
 {
@@ -29,7 +30,7 @@ void
 Film::WriteToFile(std::string const &_path) const
 {
 	using BmpColor = maths::Vector<uint8_t, 3>;
-	TIMED_SCOPE_FULL(WriteToFile, globals::profiler);
+	TIMED_SCOPE(WriteToFile);
 
 	int blue_count = 0, green_count = 0;
 	uint8_t	*buffer = new uint8_t[resolution_.w * resolution_.h * 3];

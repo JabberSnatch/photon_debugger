@@ -4,6 +4,8 @@
 #include "ray.h"
 #include "shape.h"
 #include "surface_interaction.h"
+#include "logger.h"
+#include "profiler.h"
 
 
 namespace raytracer {

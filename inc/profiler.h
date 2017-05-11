@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include "spinlock.h"
+
 namespace tools
 {
 
@@ -42,6 +44,26 @@ public:
 
 	using TimerTable_t = std::unordered_map<uint64_t, Timer, IdentityHash<uint64_t>>;
 
+	// Merges _other into caller.
+	// NOTE: The whole design is losely protected against race conditions. Keep in mind that
+	//		 you should always start a merge when you are definitely sure that _other won't
+	//		 change during the merge.
+	void GrabTimers(Profiler &_other)
+	{
+		lock_.Acquire();
+
+		for (auto &&pair : _other.timers_)
+		{
+			auto it = timers_.find(pair.first);
+			if (it != timers_.end())
+				it->second.Add(pair.second);
+			else
+				timers_.emplace(pair);
+		}
+
+		lock_.Release();
+	}
+
 	Timer &GetTimer(char const *_key)
 	{
 		uint64_t	hash{ FNV_Hash{}(_key) };
@@ -55,11 +77,11 @@ public:
 
 private:
 	TimerTable_t	timers_{};
+	AtomicSpinLock	lock_;
 
 };
 
 } // namespace tools
 
-#define TIMED_SCOPE_FULL(name, profiler) tools::TimeProbe name##_probe {profiler.GetTimer(#name)}
 
 #endif // __YS_PROFILER_HPP__
