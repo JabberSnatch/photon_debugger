@@ -73,6 +73,11 @@ public:
 		return timers_.emplace(hash, Timer{ _key }).first->second;
 	}
 
+	void Clear()
+	{
+		timers_.clear();
+	}
+
 	TimerTable_t const &timers() const { return timers_; }
 
 private:

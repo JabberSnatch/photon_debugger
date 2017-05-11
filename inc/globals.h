@@ -3,8 +3,6 @@
 #define __YS_GLOBALS_HPP__
 
 #include <iostream>
-//#include "profiler.h"
-//#include "logger.h"
 
 namespace tools {
 class Profiler;
@@ -16,7 +14,7 @@ namespace globals
 
 extern tools::Profiler				profiler_aggregate;
 thread_local extern tools::Profiler	profiler;
-extern tools::Logger<256, 32>		logger;
+extern tools::Logger<4096, 1048>	logger;
 
 } // namespace globals
 

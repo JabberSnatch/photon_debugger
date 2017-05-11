@@ -161,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\algorithms.h" />
+    <ClInclude Include="inc\benchmarks\bench_logger.h" />
     <ClInclude Include="inc\bounds.h" />
     <ClInclude Include="inc\camera.h" />
     <ClInclude Include="inc\common_macros.h" />

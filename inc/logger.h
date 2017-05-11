@@ -231,9 +231,14 @@ template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::Log(LogChannel _channel, LogLevel _level, std::string const &_message)
 {
+	TIMED_SCOPE(Logger_Log);
+
 	if (_level < lowest_active_level) return;
 	if (!is_enabled_[_channel]) return;
 	YS_ASSERT(paths_.find(_channel) != paths_.end());
+
+	if (thread_index != kInvalidThreadIndex)
+		YS_ASSERT(thread_count_ > 0);
 
 	if (thread_count_ > 0 && thread_index != kInvalidThreadIndex)
 	{
@@ -251,6 +256,8 @@ template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::Merge(LogChannel _channel, EntryBuffer_t &_buffer, size_t &_entry_count)
 {
+	TIMED_SCOPE(Logger_Merge);
+
 	merge_lock_[_channel].Acquire();
 	
 	//debug_history_lock_[_channel].Acquire();
@@ -274,6 +281,8 @@ template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::Flush(LogChannel _channel, bool _release_merge_lock)
 {
+	TIMED_SCOPE(Logger_Flush);
+
 	flush_lock_[_channel].Acquire();
 
 	//debug_history_lock_[_channel].Acquire();
@@ -299,7 +308,6 @@ Logger<hs, bs>::Flush(LogChannel _channel, bool _release_merge_lock)
 	write_lock_[_channel].Acquire();
 	if (_release_merge_lock) merge_lock_[_channel].Release();
 
-	static int call_count = 0;
 	for (auto it = paths_.find(_channel); it != paths_.end(); ++it)
 	{
 		if (it->first != _channel)
@@ -307,9 +315,7 @@ Logger<hs, bs>::Flush(LogChannel _channel, bool _release_merge_lock)
 		std::ofstream	file_stream{ it->second, std::ios_base::app | std::ios_base::out };
 		for (auto &&entry : history)
 		{
-			if (_channel == kChannelGeneral)
-				++call_count;
-			file_stream << call_count << "__" << entry << std::endl;
+			file_stream << entry << std::endl;
 		}
 		file_stream.close();
 	}
