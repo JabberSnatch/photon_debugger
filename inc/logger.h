@@ -20,7 +20,7 @@
 
 namespace tools {
 
-enum LogChannel { kChannelGeneral = 0, kChannelMemory, kChannelCount, kChannelStdOut };
+enum LogChannel { kChannelGeneral = 0, kChannelProfiling, kChannelCount, kChannelStdOut };
 enum LogLevel { kLevelDebug = 0, kLevelInfo, kLevelWarning, kLevelError, kLevelCount };
 
 class AtomicSpinLock final
@@ -112,9 +112,9 @@ class Logger final
 public:
 	static constexpr size_t		kHistorySize = hs;
 	static constexpr size_t		kBufferSize = bs;
+	static constexpr size_t		kInvalidThreadIndex = std::numeric_limits<size_t>::max();
 	thread_local static size_t	thread_index;
 
-	explicit Logger() = default;
 	~Logger();
 
 	// Allocates necessary resources for parallel logging. This is called once by a main thread.
@@ -123,7 +123,7 @@ public:
 
 	void	Log(LogChannel _channel, LogLevel _level, char const *_message);
 	void	Log(LogChannel _channel, LogLevel _level, std::string const &_message);
-	void	Merge(LogChannel _channel, EntryBuffer_t &_buffer, size_t _entry_count);
+	void	Merge(LogChannel _channel, EntryBuffer_t &_buffer, size_t &_entry_count);
 	void	Flush(LogChannel _channel, bool _release_merge_lock = false);
 
 	void	BindPath(LogChannel _channel, std::string const &_path, bool _clear_file = true);
@@ -156,6 +156,8 @@ private:
 	logging::ChannelLocks_t						merge_lock_;
 	logging::ChannelLocks_t						flush_lock_;
 	logging::ChannelLocks_t						write_lock_;
+
+	logging::ChannelLocks_t						debug_history_lock_;
 };
 
 } // namespace tools
@@ -165,7 +167,7 @@ private:
 // IMPLEMENTATION
 namespace tools {
 
-template <size_t hs, size_t bs> thread_local size_t Logger<hs, bs>::thread_index = -1;
+template <size_t hs, size_t bs> thread_local size_t Logger<hs, bs>::thread_index = Logger<hs, bs>::kInvalidThreadIndex;
 
 inline std::ostream &operator<<(std::ostream &_stream, LogEntry const &_entry)
 {
@@ -184,7 +186,7 @@ inline std::ostream &operator<<(std::ostream &_stream, LogEntry const &_entry)
 		level_string = "WARNING";
 		break;
 	}
-	_stream << std::to_string(_entry.date.count()) << "[" << level_string << "] : " << _entry.message;
+	_stream << std::to_string(_entry.date.count()) << " [" << level_string << "] : " << _entry.message;
 	return _stream;
 }
 
@@ -202,18 +204,19 @@ LogBuffer<hs, bs>::Log(LogChannel _channel, LogLevel _level, std::string const &
 	log_writer_.WaitFlushEnd(_channel);
 
 	channel_lock_[_channel].Acquire();
-	entry_buffer_[_channel][entry_count_[_channel]] = LogEntry(_channel, _level, _message);
-	size_t entry_count = ++entry_count_[_channel];
+	entry_buffer_[_channel][entry_count_[_channel]++] = LogEntry{ _channel, _level, _message };
+	//size_t entry_count = ++entry_count_[_channel];
+	channel_lock_[_channel].Release();
 
-	if (entry_count >= kBufferSize && !log_writer_.IsFlushing(_channel))
+	if (entry_count_[_channel] >= kBufferSize && !log_writer_.IsFlushing(_channel))
 	{
-		entry_count_[_channel] = 0;
-		EntryBuffer_t	entry_buffer = std::move(entry_buffer_[_channel]);
-		channel_lock_[_channel].Release();
-		log_writer_.Merge(_channel, entry_buffer, entry_count);
+		//entry_count_[_channel] = 0;
+		//EntryBuffer_t	entry_buffer = std::move(entry_buffer_[_channel]);
+		//EntryBuffer_t	entry_buffer = entry_buffer_[_channel];
+		log_writer_.Merge(_channel, entry_buffer_[_channel], entry_count_[_channel]);
 	}
-	else
-		channel_lock_[_channel].Release();
+	//else
+	//	channel_lock_[_channel].Release();
 }
 
 
@@ -248,31 +251,40 @@ Logger<hs, bs>::Log(LogChannel _channel, LogLevel _level, std::string const &_me
 	if (!is_enabled_[_channel]) return;
 	YS_ASSERT(paths_.find(_channel) != paths_.end());
 
-	if (thread_count_ > 0)
+	if (thread_count_ > 0 && thread_index != kInvalidThreadIndex)
 	{
-		YS_ASSERT(thread_index >= 0);
+		YS_ASSERT(thread_index < thread_count_);
 		thread_buffer_[thread_index]->Log(_channel, _level, _message);
 	}
 	else
 	{
-		log_history_[_channel].emplace(LogEntry(_channel, _level, _message));
+		log_history_[_channel].emplace(LogEntry{ _channel, _level, _message });
 		if (log_history_[_channel].size() >= kHistorySize)
 			Flush(_channel);
 	}
 }
 template <size_t hs, size_t bs>
 void
-Logger<hs, bs>::Merge(LogChannel _channel, EntryBuffer_t &_buffer, size_t _entry_count)
+Logger<hs, bs>::Merge(LogChannel _channel, EntryBuffer_t &_buffer, size_t &_entry_count)
 {
 	merge_lock_[_channel].Acquire();
 	
+	//debug_history_lock_[_channel].Acquire();
+	//log_history_[_channel].emplace(LogEntry{ _channel, kLevelDebug, "Thread " + std::to_string(thread_index) + " started merging" });
+	//debug_history_lock_[_channel].Release();
+
 	for (size_t i = 0; i < _entry_count; ++i)
 		log_history_[_channel].emplace(std::move(_buffer[i]));
+	_entry_count = 0;
 
 	if (log_history_[_channel].size() >= kHistorySize && !IsFlushing(_channel))
 		Flush(_channel, true);
 	else
 		merge_lock_[_channel].Release();
+
+	//debug_history_lock_[_channel].Acquire();
+	//log_history_[_channel].emplace(LogEntry{ _channel, kLevelDebug, "Thread " + std::to_string(thread_index) + " finished merging" });
+	//debug_history_lock_[_channel].Release();
 }
 template <size_t hs, size_t bs>
 void
@@ -280,6 +292,11 @@ Logger<hs, bs>::Flush(LogChannel _channel, bool _release_merge_lock)
 {
 	flush_lock_[_channel].Acquire();
 
+	//debug_history_lock_[_channel].Acquire();
+	//log_history_[_channel].emplace(LogEntry{ _channel, kLevelDebug, "Thread " + std::to_string(thread_index) + " started flushing" });
+	//debug_history_lock_[_channel].Release();
+
+	// NOTE: This is the only place where a thread will access another thread's entries
 	for (size_t i = 0; i < thread_count_; ++i)
 	{
 		thread_buffer_[i]->channel_lock_[_channel].Acquire();
@@ -290,23 +307,32 @@ Logger<hs, bs>::Flush(LogChannel _channel, bool _release_merge_lock)
 		thread_buffer_[i]->channel_lock_[_channel].Release();
 	}
 
-	LogHistory_t	history_copy = std::move(log_history_[_channel]);
-	log_history_[_channel].clear();
+	LogHistory_t	history = std::move(log_history_[_channel]);
+	//LogHistory_t	history_copy = log_history_[_channel];
+	//log_history_[_channel].clear();
 	
 	flush_lock_[_channel].Release();
 	write_lock_[_channel].Acquire();
 	if (_release_merge_lock) merge_lock_[_channel].Release();
 
+	static int call_count = 0;
 	for (auto it = paths_.find(_channel); it != paths_.end(); ++it)
 	{
-		static int pair_index = 0;
 		if (it->first != _channel)
 			break;
 		std::ofstream	file_stream{ it->second, std::ios_base::app | std::ios_base::out };
-		for (auto &&entry : history_copy)
-			file_stream << entry << std::endl;
+		for (auto &&entry : history)
+		{
+			if (_channel == kChannelGeneral)
+				++call_count;
+			file_stream << call_count << "__" << entry << std::endl;
+		}
 		file_stream.close();
 	}
+
+	//debug_history_lock_[_channel].Acquire();
+	//log_history_[_channel].emplace(LogEntry{ _channel, kLevelDebug, "Thread " + std::to_string(thread_index) + " finished flushing" });
+	//debug_history_lock_[_channel].Release();
 
 	write_lock_[_channel].Release();
 }

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __YS_GLOBALS_HPP__
 #define __YS_GLOBALS_HPP__
 

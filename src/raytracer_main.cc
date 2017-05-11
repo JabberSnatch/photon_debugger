@@ -14,6 +14,7 @@
 
 #include <typeinfo>
 #include <iostream>
+#include <sstream>
 
 // Camera, Film, Shape
 // Scene : list of shapes
@@ -51,10 +52,63 @@
 // max_phi [ 360 ]
 // }
 
+void LogIntegrationTests(size_t _thread_index)
+{
+	globals::logger.thread_index = _thread_index;
+	for (size_t i = 0; i < 513; ++i)
+	{
+		std::string message = "Thread " + std::to_string(_thread_index) + " iter " + std::to_string(i);
+		globals::logger.Log(tools::kChannelGeneral, tools::kLevelInfo, message);
+	}
+}
+
+#include <thread>
+
 int main()
 {
+	const size_t thread_count = 4;
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
+	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 
+	if (1)
+	{
+		globals::logger.AllowMultipleThreads(thread_count);
+
+		std::thread threads[thread_count];
+		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+		{
+			TIMED_SCOPE(LoggingBench);
+			for (size_t i = 0; i < thread_count; ++i)
+				threads[i] = std::thread{ LogIntegrationTests, i };
+			for (size_t i = 0; i < thread_count; ++i)
+				threads[i].join();
+		}
+		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+
+		globals::logger.Log(tools::kChannelGeneral, tools::kLevelInfo, "total execution : " + std::to_string((end - start).count()));
+	}
+
+	{
+		tools::Profiler::TimerTable_t timers = globals::profiler.timers();
+		for (auto it = timers.begin(); it != timers.end(); ++it)
+		{
+			tools::Timer const &timer = it->second;
+			char const *call_string = (timer.call_count() > 1) ? " calls. " : " call. ";
+			std::stringstream string;
+			string <<
+				timer.name() << " : " <<
+				timer.call_count() << call_string << std::endl <<
+				timer.total_time() << " seconds, " <<
+				timer.best_time() << " seconds at least, " <<
+				timer.total_cycles() << " cycles, " <<
+				timer.best_cycles() << " cycles as least";
+				//<< std::endl;
+			globals::logger.Log(tools::kChannelProfiling, tools::kLevelInfo, string.str());
+		}
+	}
+
+	return 0;
+	
 	raytracer::Film		film_35mm{ 1920, 1080, 0.035_d };
 	raytracer::Camera	camera{
 		film_35mm,

@@ -42,8 +42,7 @@ public:
 
 	using TimerTable_t = std::unordered_map<uint64_t, Timer, IdentityHash<uint64_t>>;
 
-	Timer&
-	GetTimer(char const *_key)
+	Timer &GetTimer(char const *_key)
 	{
 		uint64_t	hash{ FNV_Hash{}(_key) };
 		auto		ite{ timers_.find(hash) };
@@ -52,8 +51,7 @@ public:
 		return timers_.emplace(hash, Timer{ _key }).first->second;
 	}
 
-	TimerTable_t const &
-	timers() const { return timers_; }
+	TimerTable_t const &timers() const { return timers_; }
 
 private:
 	TimerTable_t	timers_{};
