@@ -2,8 +2,13 @@
 #define __YS_VECTOR_HPP__
 
 #include <array>
+#include <vector>
 #include "maths.h"
 #include "algorithms.h"
+
+#ifdef YS_DEBUG
+#include <set>
+#endif
 
 
 namespace maths
@@ -281,6 +286,9 @@ uint32_t MinimumDimension(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
 uint32_t MaximumDimension(Vector<T, n> const &_v);
 
+template <typename T, uint32_t n, typename... Indices>
+Vector<T, n> Swizzle(Vector<T, n> const &_v, Indices... _indices);
+
 
 // ============================================================
 // Vector<typename T, 3> operations
@@ -293,6 +301,8 @@ Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
 template <typename T>
 Vector<T, 3> Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n);
 
+template <typename T>
+void OrthonormalBasis(Vector<T, 3> const &_v0, Vector<T, 3> &_v1, Vector<T, 3> &_v2);
 
 
 template <typename T, uint32_t n>
@@ -377,6 +387,15 @@ template <typename T, uint32_t n>
 Normal<T, n> operator-(Normal<T, n> const &_op);
 
 template <typename T, uint32_t n>
+Normal<T, n> operator+(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+template <typename T, uint32_t n>
+Normal<T, n> &operator+=(Normal<T, n> &_lhs, Normal<T, n> const &_rhs);
+template <typename T, uint32_t n>
+Normal<T, n> operator-(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs);
+template <typename T, uint32_t n>
+Normal<T, n> &operator-=(Normal<T, n> &_lhs, Normal<T, n> const &_rhs);
+
+template <typename T, uint32_t n>
 Normal<T, n> operator*(Normal<T, n> const &_lhs, T _rhs);
 template <typename T, uint32_t n>
 Normal<T, n> operator*(T _lhs, Normal<T, n> const &_rhs);
@@ -404,6 +423,9 @@ Normal<T, n> FaceForward(Normal<T, n> const &_value, Normal<T, n> const &_direct
 template <typename T, uint32_t n>
 Normal<T, n> FaceForward(Normal<T, n> const &_value, Vector<T, n> const &_direction);
 
+template <typename T, uint32_t n, typename... Indices>
+Normal<T, n> Swizzle(Normal<T, n> const &_v, Indices... _indices);
+
 template <typename T>
 constexpr T Dot(Normal<T, 3> const &_lhs, Normal<T, 3> const &_rhs);
 template <typename T>
@@ -411,6 +433,10 @@ constexpr T Dot(Normal<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
 template <typename T>
 constexpr T Dot(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs);
 
+template <typename T>
+Vector<T, 3> Cross(Normal<T, 3> const &_lhs, Vector<T, 3> const &_rhs);
+template <typename T>
+Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs);
 
 template <typename T> using Vector2 = Vector<T, 2>;
 template <typename T> using Vector3 = Vector<T, 3>;

@@ -2,10 +2,15 @@
 #define __YS_POINT_HPP__
 
 #include <array>
+#include <vector>
+
 #include "maths.h"
 #include "algorithms.h"
 #include "vector.h"
 
+#ifdef YS_DEBUG
+#include <set>
+#endif
 
 namespace maths
 {
@@ -168,6 +173,9 @@ template <typename T, uint32_t n>
 Decimal Distance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
 template <typename T, uint32_t n>
 Decimal SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
+
+template <typename T, uint32_t n, typename... Indices>
+Point<T, n> Swizzle(Point<T, n> const &_v, Indices... _indices);
 
 } // namespace maths
 

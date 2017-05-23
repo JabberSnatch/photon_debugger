@@ -7,6 +7,8 @@
 #include "logger.h"
 #include "profiler.h"
 
+#include <iostream>
+
 
 namespace raytracer {
 
@@ -65,6 +67,7 @@ Camera::Expose(Scene const &_shapes, maths::Decimal _t)
 
 	for (int32_t y = 0; y < film.resolution().h; ++y)
 	{
+		std::cout << "row " << y << std::endl;
 		for (int32_t x = 0; x < film.resolution().w; ++x)
 		{
 			maths::Decimal	u{ x / maths::Decimal(film.resolution().w - 1) };
@@ -91,7 +94,9 @@ Camera::Expose(Scene const &_shapes, maths::Decimal _t)
 			maths::Vec3f		color{ 0._d, 0._d, 0._d };
 			maths::Vec3f const	up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
 			if (closest_hit != maths::infinity<maths::Decimal>)
-				color = maths::Abs((maths::Vec3f)closest_hit_info.geometry.normal);
+				//color = ((maths::Vec3f)closest_hit_info.shading.normal);
+				//color = maths::Abs((maths::Vec3f)closest_hit_info.shading.normal);
+				color = (maths::Vec3f)closest_hit_info.shading.normal * 0.5_d + maths::Vec3f(0.5_d);
 			else
 				color = maths::Lerp(down_color, up_color, .5_d * maths::Normalized(ray.direction).z + .5_d);
 

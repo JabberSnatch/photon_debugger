@@ -101,6 +101,7 @@
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -111,6 +112,7 @@
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -123,6 +125,7 @@
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -139,6 +142,7 @@
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -149,6 +153,7 @@
     <ClCompile Include="src\camera.cc" />
     <ClCompile Include="src\film.cc" />
     <ClCompile Include="src\globals.cc" />
+    <ClCompile Include="src\input_processor.cc" />
     <ClCompile Include="src\logger.cc" />
     <ClCompile Include="src\maths.cc" />
     <ClCompile Include="src\quaternion.cc" />
@@ -156,7 +161,9 @@
     <ClCompile Include="src\redecimal.cc" />
     <ClCompile Include="src\shape.cc" />
     <ClCompile Include="src\shapes\sphere.cc" />
+    <ClCompile Include="src\shapes\triangle.cc" />
     <ClCompile Include="src\transform.cc" />
+    <ClCompile Include="src\triangle_mesh.cc" />
     <ClCompile Include="src\win32_timer.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +173,7 @@
     <ClInclude Include="inc\camera.h" />
     <ClInclude Include="inc\common_macros.h" />
     <ClInclude Include="inc\globals.h" />
+    <ClInclude Include="inc\input_processor.h" />
     <ClInclude Include="inc\logger.h" />
     <ClInclude Include="inc\maths.h" />
     <ClInclude Include="inc\matrix.h" />
@@ -176,11 +184,13 @@
     <ClInclude Include="inc\redecimal.h" />
     <ClInclude Include="inc\shape.h" />
     <ClInclude Include="inc\shapes\sphere.h" />
+    <ClInclude Include="inc\shapes\triangle.h" />
     <ClInclude Include="inc\spinlock.h" />
     <ClInclude Include="inc\surface_interaction.h" />
     <ClInclude Include="inc\transform.h" />
     <ClInclude Include="inc\film.h" />
     <ClInclude Include="inc\profiler.h" />
+    <ClInclude Include="inc\triangle_mesh.h" />
     <ClInclude Include="inc\vector.h" />
     <ClInclude Include="inc\win32_timer.h" />
   </ItemGroup>

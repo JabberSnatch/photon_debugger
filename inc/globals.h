@@ -18,17 +18,17 @@ extern tools::Logger<4096, 1048>	logger;
 
 } // namespace globals
 
-#define TIMED_SCOPE_FULL(name, profiler) tools::TimeProbe name##_probe {profiler.GetTimer(#name)}
-#define TIMED_SCOPE(name) TIMED_SCOPE_FULL(name, globals::profiler)
+#define TIMED_SCOPE_FULL(name, profiler) ::tools::TimeProbe name##_probe {profiler.GetTimer(#name)}
+#define TIMED_SCOPE(name) TIMED_SCOPE_FULL(name, ::globals::profiler)
 
 
 #define LOG_FULL(channel, level, message, logger) logger.Log(channel, level, message)
 #ifndef YS_NO_LOGS
-#define LOG(channel, level, message) LOG_FULL(channel, level, message, globals::logger)
-#define LOG_DEBUG(channel, message) LOG(channel, tools:kLevelDebug, message)
-#define LOG_INFO(channel, message) LOG(channel, tools::kLevelInfo, message)
-#define LOG_ERROR(channel, message) LOG(channel, tools::kLevelError, message)
-#define LOG_WARNING(channel, message) LOG(channel, tools::kLevelWarning, message)
+#define LOG(channel, level, message) LOG_FULL(channel, level, message, ::globals::logger)
+#define LOG_DEBUG(channel, message) LOG(channel, ::tools:kLevelDebug, message)
+#define LOG_INFO(channel, message) LOG(channel, ::tools::kLevelInfo, message)
+#define LOG_ERROR(channel, message) LOG(channel, ::tools::kLevelError, message)
+#define LOG_WARNING(channel, message) LOG(channel, ::tools::kLevelWarning, message)
 #else
 #define LOG(channel, level, message) {}
 #define LOG_DEBUG(channel, message) {}

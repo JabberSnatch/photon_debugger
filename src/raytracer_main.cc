@@ -11,8 +11,11 @@
 #include "surface_interaction.h"
 #include "camera.h"
 #include "shapes/sphere.h"
+#include "triangle_mesh.h"
+#include "shapes/triangle.h"
 #include "logger.h"
 #include "profiler.h"
+#include "input_processor.h"
 
 #include <typeinfo>
 #include <iostream>
@@ -20,68 +23,45 @@
 
 #include "benchmarks/bench_logger.h"
 
-// Camera, Film, Shape
-// Scene : list of shapes
-// Shape -> Transform + flip_normals + individual properties
-// For instance : Sphere{Transform, flip_normals, radius, min_z, max_z, max_phi}
-// Each parameter can have default value.
-// Specifying that we just want a sphere would be fine.
-// Values should be assigned explicitly
-//
-// scope_id [ value ] et ref[ id ] last
-//
-// Film scope_id [ default_film ] { resolution [ 1920 1080 ] }
-// Camera {
-// position [ 0 -5 5 ] lookat [ 0 1 .5 ]
-// up [ 0 0 1 ]
-// fov [ 60 ]
-// film ref[ default_film ]
-// } 
-// Translate 10 0 0
-// Rotate 30 0 0
-// Shape sphere {
-// radius [ 5 ]
-// min_z [ -10 ]
-// max_z [ 10 ]
-// max_phi [ 360 ]
-// flip_normals
-// Translate 5 0 0
-// Rotate 25 0 25
-// Scale 3 3 1
-// }
-// Shape sphere {
-// radius [ 5 ]
-// min_z [ -3 ]
-// max_z [ 4 ]
-// max_phi [ 360 ]
-// }
-
-
-#include <thread>
-
 int main()
 {
+	//api::ProcessInputFile("TestScene.txt");
+
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 
-	raytracer::Film		film_35mm{ 1920, 1080, 0.035_d };
+	maths::Point3f		swizzle_test{ 1._d, 2._d, 3._d };
+	maths::Point3f		swizzledA{ maths::Swizzle(swizzle_test, 2u, 0u, 1u) };
+
+	raytracer::Film		film_35mm{ 500, 500, 0.035_d };
 	raytracer::Camera	camera{
 		film_35mm,
 		{0._d, -5._d, .5_d}, {0._d, 1._d, .5_d}, {0._d, 0._d, 1._d},
 		60._d
 	};
-	maths::Transform	little_sphere_transform = maths::Translate({ 0._d, 1._d, .5_d });
-	raytracer::Sphere	little_sphere{ little_sphere_transform, false, .5_d, -5._d, 5._d, 360._d };
+	maths::Transform	little_sphere_transform = maths::Translate({ 0._d, 1._d, .0_d });// *maths::RotateZ(90._d);
+	raytracer::Sphere	little_sphere{ little_sphere_transform, false, .5_d, -.5_d, .2_d, 45.3_d };
 	maths::Transform	big_sphere_transform = maths::Translate({ 0._d, 1._d, -500._d });
 	raytracer::Sphere	big_sphere{ big_sphere_transform, false, 500._d, -500._d, 500._d, 360._d };
 
-	raytracer::Shape const &sphereA = little_sphere;
+	std::vector<int32_t>		indices{ 0, 1, 2 };
+	std::vector<maths::Point3f>	vertices{ {0._d, 0._d, 1._d}, {-1._d, 0._d, 0._d}, {1._d, 0._d, 0._d} };
+	std::vector<maths::Norm3f>	normals{ {0._d, -1._d, 0._d}, {.0_d, -1._d, 0._d}, {0._d, -1._d, 0._d} };
+	raytracer::TriangleMesh		test_mesh(little_sphere_transform, 1, indices, vertices, &normals);
+	raytracer::Triangle			test_triangle(little_sphere_transform, false, test_mesh, 0);
+
+	maths::Ray					test_ray{ {0._d, 0._d, .5_d}, {0._d, 1._d, 0._d}, maths::infinity<maths::Decimal>, 0._d };
+	maths::Decimal				t_hit;
+	raytracer::SurfaceInteraction	hit_info;
+	bool result = test_triangle.Intersect(test_ray, t_hit, hit_info);
+	YS_ASSERT(result);
+
+	raytracer::Shape const &sphereA = test_triangle;//little_sphere;
 	raytracer::Shape const &sphereB = big_sphere;
 	raytracer::Camera::Scene	scene = { std::ref(sphereA), std::ref(sphereB) };
 
 	camera.Expose(scene, 0._d);
 	camera.film.WriteToFile("big_little_sphere.png");
-
 
 	maths::FloatBitsMapper start{ 34.23f };
 	maths::FloatBitsMapper end{ maths::NextDecimalUp(start.value) };

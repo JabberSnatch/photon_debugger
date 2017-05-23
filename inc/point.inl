@@ -169,6 +169,26 @@ SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs)
 	return vector::SqrLength(_lhs - _rhs);
 }
 
+template <typename T, uint32_t n, typename... Indices>
+Point<T, n>
+Swizzle(Point<T, n> const &_v, Indices... _indices)
+{
+	static_assert(!(sizeof...(_indices) < (size_t)n), "Not enough swizzle parameters.");
+	static_assert(!(sizeof...(_indices) > (size_t)n), "Too many swizzle parameters.");
+
+	std::vector<uint32_t> const	swizzle{ _indices... };
+#ifdef YS_DEBUG
+	std::set<uint32_t> const	duplicate_check{ _indices... };
+	YS_ASSERT(duplicate_check.size() == n);
+	for (uint32_t i = 0; i < n; ++i)
+		YS_ASSERT(swizzle[i] < n);
+#endif
+	Point<T, n> result;
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = _v[swizzle[i]];
+	return result;
+}
+
 } // namespace maths
 
 #endif // __YS_POINT_INL__

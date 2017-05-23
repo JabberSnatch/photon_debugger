@@ -1,6 +1,7 @@
 #include "shapes/sphere.h"
 
 #include "globals.h"
+#include "logger.h"
 #include "bounds.h"
 #include "transform.h"
 #include "redecimal.h"
@@ -26,7 +27,7 @@ Sphere::Intersect(maths::Ray const &_ray,
 				  maths::Decimal &_tHit,
 				  SurfaceInteraction &_hit_info) const
 {
-	TIMED_SCOPE(SphereIntersect);
+	TIMED_SCOPE(Sphere_Intersect);
 
 	// NOTE: Candidate for error correction (pbr p134)
 	maths::Ray ray = world_transform(_ray, maths::Transform::kInverse);
@@ -136,6 +137,8 @@ Sphere::Intersect(maths::Ray const &_ray,
 bool
 Sphere::DoesIntersect(maths::Ray const &_ray) const
 {
+	LOG_ERROR(tools::kChannelGeneral, "Call to unimplemented Triangle::DoesIntersect. Returning false.");
+	YS_ASSERT(false);
 	return false;
 }
 

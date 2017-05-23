@@ -335,6 +335,26 @@ MaximumDimension(Vector<T, n> const &_v)
 	return result;
 }
 
+template <typename T, uint32_t n, typename... Indices>
+Vector<T, n>
+Swizzle(Vector<T, n> const &_v, Indices... _indices)
+{
+	static_assert(!(sizeof...(_indices) < (size_t)n), "Not enough swizzle parameters.");
+	static_assert(!(sizeof...(_indices) > (size_t)n), "Too many swizzle parameters.");
+
+	std::vector<uint32_t> const	swizzle{ _indices... };
+#ifdef YS_DEBUG
+	std::set<uint32_t> const	duplicate_check{ _indices... };
+	YS_ASSERT(duplicate_check.size() == n);
+	for (uint32_t i = 0; i < n; ++i)
+		YS_ASSERT(swizzle[i] < n);
+#endif
+	Vector<T, n> result;
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = _v[swizzle[i]];
+	return result;
+}
+
 
 // ============================================================
 // Vector<typename T, 3> operations
@@ -365,6 +385,16 @@ Reflect(Vector<T, 3> const &_v, Vector<T, 3> const &_n)
 	return result;
 }
 
+template <typename T>
+void
+OrthonormalBasis(Vector<T, 3> const &_v0, Vector<T, 3> &_v1, Vector<T, 3> &_v2)
+{
+	if (Abs(_v0.x) > Abs(_v0.y))
+		_v1 = maths::Vector<T, 3>{ -_v0.z, 0._d, _v0.x } / std::sqrt(_v0.x * _v0.x + _v0.z * _v0.z);
+	else
+		_v1 = maths::Vector<T, 3>{ 0._d, _v0.z, -_v0.y } / std::sqrt(_v0.y * _v0.y + _v0.z * _v0.z);
+	_v2 = Cross(_v0, _v1);
+}
 
 
 // ============================================================
@@ -403,6 +433,45 @@ operator-(Normal<T, n> const &_op)
 		result[i] = -_op[i];
 	YS_ASSERT(!result.HasNaNs());
 	return result;
+}
+
+template <typename T, uint32_t n>
+Normal<T, n>
+operator+(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs)
+{
+	Normal<T, n> result{};
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = _lhs[i] + _rhs[i];
+	YS_ASSERT(!result.HasNaNs());
+	return result;
+}
+template <typename T, uint32_t n>
+Normal<T, n>&
+operator+=(Normal<T, n> &_lhs, Normal<T, n> const &_rhs)
+{
+	for (uint32_t i = 0; i < n; ++i)
+		_lhs[i] += _rhs[i];
+	YS_ASSERT(!_lhs.HasNaNs());
+	return _lhs;
+}
+template <typename T, uint32_t n>
+Normal<T, n>
+operator-(Normal<T, n> const &_lhs, Normal<T, n> const &_rhs)
+{
+	Normal<T, n> result{};
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = _lhs[i] - _rhs[i];
+	YS_ASSERT(!result.HasNaNs());
+	return result;
+}
+template <typename T, uint32_t n>
+Normal<T, n>&
+operator-=(Normal<T, n> &_lhs, Normal<T, n> const &_rhs)
+{
+	for (uint32_t i = 0; i < n; ++i)
+		_lhs[i] -= _rhs[i];
+	YS_ASSERT(!_lhs.HasNaNs());
+	return _lhs;
 }
 
 template <typename T, uint32_t n>
@@ -498,6 +567,26 @@ FaceForward(Normal<T, n> const &_value, Vector<T, n> const &_direction)
 	return (Dot(_value, _direction) > zero<T>) ? _value : -_value;
 }
 
+template <typename T, uint32_t n, typename... Indices>
+Normal<T, n>
+Swizzle(Normal<T, n> const &_v, Indices... _indices)
+{
+	static_assert(!(sizeof...(_indices) < (size_t)n), "Not enough swizzle parameters.");
+	static_assert(!(sizeof...(_indices) > (size_t)n), "Too many swizzle parameters.");
+
+	std::vector<uint32_t> const	swizzle{ _indices... };
+#ifdef YS_DEBUG
+	std::set<uint32_t> const	duplicate_check{ _indices... };
+	YS_ASSERT(duplicate_check.size() == n);
+	for (uint32_t i = 0; i < n; ++i)
+		YS_ASSERT(swizzle[i] < n);
+#endif
+	Normal<T, n> result;
+	for (uint32_t i = 0; i < n; ++i)
+		result[i] = _v[swizzle[i]];
+	return result;
+}
+
 template <typename T>
 constexpr T Dot(Normal<T, 3> const &_lhs, Normal<T, 3> const &_rhs)
 {
@@ -513,6 +602,27 @@ constexpr T
 Dot(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs)
 {
 	return _lhs.x * _rhs.x + _lhs.y * _rhs.y + _lhs.z * _rhs.z;
+}
+
+template <typename T>
+Vector<T, 3>
+Cross(Normal<T, 3> const &_lhs, Vector<T, 3> const &_rhs)
+{
+	Vector<T, 3> result{ _lhs.y * _rhs.z - _lhs.z * _rhs.y,
+						 _lhs.z * _rhs.x - _lhs.x * _rhs.z, 
+						 _lhs.x * _rhs.y - _lhs.y * _rhs.x };
+	YS_ASSERT(!result.HasNaNs());
+	return result;
+}
+template <typename T>
+Vector<T, 3>
+Cross(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs)
+{
+	Vector<T, 3> result{ _lhs.y * _rhs.z - _lhs.z * _rhs.y,
+						 _lhs.z * _rhs.x - _lhs.x * _rhs.z,
+						 _lhs.x * _rhs.y - _lhs.y * _rhs.x };
+	YS_ASSERT(!result.HasNaNs());
+	return result;
 }
 
 } // namespace maths

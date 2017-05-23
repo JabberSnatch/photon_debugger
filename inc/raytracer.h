@@ -7,9 +7,15 @@ namespace raytracer
 {
 
 class Film;
-class Shape;
-class SurfaceInteraction;
 class Camera;
+
+class SurfaceInteraction;
+
+class Shape;
+class Sphere;
+class Triangle;
+
+struct TriangleMesh;
 
 } // namespace raytracer
 
