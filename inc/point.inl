@@ -1,6 +1,9 @@
 #ifndef __YS_POINT_INL__
 #define __YS_POINT_INL__
 
+#include "globals.h"
+#include "logger.h"
+
 
 namespace maths
 {
@@ -126,6 +129,26 @@ Clamp(Point<T, n> const &_v, T _min, T _max)
 	for (uint32_t i = 0; i < n; ++i)
 		result[i] = maths::Clamp(_lhs[i], _rhs[i]);
 	return result;
+}
+template <typename T, uint32_t n>
+Point<T, n>
+Blend<Point<T, n>>::Do(std::initializer_list<std::pair<Point<T, n> const &, Decimal>> _args)
+{
+	Decimal		summed_weights = 0._d;
+	Point<T, n>	blended_point(0._d);
+	for (auto &&pair : _args)
+	{
+		summed_weights += pair.second;
+		for (uint32_t i = 0; i < n; ++i)
+			blended_point[i] += pair.first[i] * pair.second;
+	}
+	
+	YS_ASSERT(summed_weights == 1._d);
+	if (summed_weights != 1._d)
+		LOG_WARNING(tools::kChannelGeneral,
+					"Point::Blend has been passed a list of weight with a total of " + std::to_string(summed_weights));
+
+	return blended_point;
 }
 
 template <typename T, uint32_t n>

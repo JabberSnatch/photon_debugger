@@ -26,13 +26,18 @@ struct Vector final
 	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit Vector(T _value) :
-		e{ algo::fill<n>::apply(_value) }
+	constexpr explicit Vector(T _value) :
+		e{ std::move(algo::fill<n>::apply(_value)) }
 	{}
 	explicit Vector(Normal<T, n> const &_v) {
 		std::copy(_v.e.begin(), _v.e.end(), e.begin());
 	}
 	Vector(std::initializer_list<T> _args) {
+		// So close to being a constant expression. Can't wait for
+		// constexpr reference std::array::operator[]
+		//size_t args_size = _args.end() - _args.begin();
+		//for (size_t i = 0; i < args_size; ++i)
+		//	e[i] = *(_args.begin() + args_size);
 		std::copy(_args.begin(), _args.end(), e.begin());
 	}
 	Vector(Vector<T, n - 1> const &_v, T _value)
@@ -84,8 +89,8 @@ struct Vector<T, 4> final
 	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit Vector(T _value) :
-		e{ algo::fill<4>::apply(_value) }
+	constexpr explicit Vector(T _value) :
+		e{ std::move(algo::fill<4>::apply(_value)) }
 	{}
 	explicit Vector(Normal<T, 4> const &_v) :
 		Vector{ _v[0], _v[1], _v[2], _v[3] }
@@ -125,8 +130,8 @@ struct Vector<T, 3> final
 	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit Vector(T _value) :
-		e{ algo::fill<3>::apply(_value) }
+	constexpr explicit Vector(T _value) :
+		e{ std::move(algo::fill<3>::apply(_value)) }
 	{}
 	explicit Vector(Normal<T, 3> const &_v) :
 		Vector{_v.x, _v.y, _v.z}
@@ -166,8 +171,8 @@ struct Vector<T, 2> final
 	Vector() :
 		Vector(zero<T>)
 	{}
-	explicit Vector(T _value) :
-		e{ algo::fill<2>::apply(_value) }
+	constexpr explicit Vector(T _value) :
+		e{ std::move(algo::fill<2>::apply(_value)) }
 	{}
 	explicit Vector(Normal<T, 2> const &_v) :
 		Vector{ _v[0], _v[1] }
@@ -312,7 +317,7 @@ struct Normal final
 		Normal(zero<T>)
 	{}
 	explicit Normal(T _value) :
-		e{ algo::fill<n>::apply(_value) }
+		e{ std::move(algo::fill<n>::apply(_value)) }
 	{}
 	explicit Normal(Vector<T, n> const &_v) {
 		std::copy(_v.e.begin(), _v.e.end(), e.begin());
@@ -343,7 +348,7 @@ struct Normal<T, 3> final
 		Normal(zero<T>)
 	{}
 	explicit Normal(T _value) :
-		e{ algo::fill<3>::apply(_value) }
+		e{ std::move(algo::fill<3>::apply(_value)) }
 	{}
 	explicit Normal(Vector<T, 3> const &_v) :
 		Normal(_v[0], _v[1], _v[2])
@@ -448,6 +453,9 @@ using Vec2i32 = Vector2<int32_t>;
 
 template <typename T> using Normal3 = Normal<T, 3>;
 using Norm3f = Normal3<Decimal>;
+
+template <typename T, uint32_t n> struct Zero<Vector<T, n>> { static constexpr Vector<T, n> value = Vector<T, n>(zero<T>); };
+template <typename T, uint32_t n> struct Zero<Normal<T, n>> { static constexpr Normal<T, n> value = Normal<T, n>(zero<T>); };
 
 } // maths
 

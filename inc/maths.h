@@ -109,12 +109,12 @@ namespace maths
 template <typename T> static constexpr T lowest_value = std::numeric_limits<T>::lowest();
 template <typename T> static constexpr T highest_value = std::numeric_limits<T>::max();
 template <typename T> static constexpr T infinity = std::numeric_limits<T>::infinity();
-template <typename T> static constexpr T almost_one = one<T> - std::numeric_limits<T>::epsilon();
+template <typename T> static constexpr T almost_one = one<T> -std::numeric_limits<T>::epsilon();
 
-template <typename T> static constexpr T pi = T( 3.14159235658979323846 );
+template <typename T> static constexpr T pi = T(3.14159235658979323846);
 
-template <typename T> constexpr T Radians(T _degrees) { return (pi<T> / T( 180 )) * _degrees; }
-template <typename T> constexpr T Degrees(T _radians) { return (T( 180 ) / pi<T>) * _radians; }
+template <typename T> constexpr T Radians(T _degrees) { return (pi<T> / T(180)) * _degrees; }
+template <typename T> constexpr T Degrees(T _radians) { return (T(180) / pi<T>) * _radians; }
 
 
 // NOTE: Maybe a Scalar<T> class could make these functions a little more specific.
@@ -130,6 +130,25 @@ template <typename T> constexpr T Abs(T _v) { return (_v > zero<T>) ? _v : -_v; 
 
 template <typename T> constexpr T Lerp(T _a, T _b, float _t) { return _a*(1.f - _t) + _b*_t; }
 template <typename T> constexpr T Lerp(T _a, T _b, double _t) { return _a*(1. - _t) + _b*_t; }
+
+// Ugh.
+template <typename T>
+struct Blend
+{
+	static T Do(std::initializer_list<std::pair<T const &, Decimal>> _args)
+	{
+		Decimal		summed_weights = 0._d;
+		T			blended_result = zero<T>;
+		for (auto &&pair : _args)
+		{
+			summed_weights += pair.second;
+			blended_result += pair.first * pair.second;
+		}
+		YS_ASSERT(summed_weights == 1._d);
+		return blended_result;
+	}
+};
+
 
 } // namespace maths
 

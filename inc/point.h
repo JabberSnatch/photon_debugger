@@ -22,8 +22,8 @@ struct Point final
 	Point() :
 		Point(zero<T>)
 	{}
-	explicit Point(T _value) :
-		e{ algo::fill<n>::apply(_value) }
+	constexpr explicit Point(T _value) :
+		e{ std::move(algo::fill<n>::apply(_value)) }
 	{}
 	Point(std::initializer_list<T> _args) {
 		std::copy(_args.begin(), _args.end(), e.begin());
@@ -56,8 +56,8 @@ struct Point<T, 3> final
 	Point() :
 		Point(zero<T>)
 	{}
-	explicit Point(T _value) :
-		e{ algo::fill<3>::apply(_value) }
+	constexpr explicit Point(T _value) :
+		e{ std::move(algo::fill<3>::apply(_value)) }
 	{}
 	constexpr Point(T _e0, T _e1, T _e2) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }
@@ -89,8 +89,8 @@ struct Point<T, 2> final
 	Point() :
 		Point(zero<T>)
 	{}
-	explicit Point(T _value) :
-		e{ algo::fill<2>::apply(_value) }
+	constexpr explicit Point(T _value) :
+		e{ std::move(algo::fill<2>::apply(_value)) }
 	{}
 	constexpr Point(T _e0, T _e1) :
 		x{ _e0 }, y{ _e1 }
@@ -162,6 +162,13 @@ Point<T, n> Max(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
 template <typename T, uint32_t n>
 Point<T, n> Clamp(Point<T, n> const &_v, T _min, T _max);
 
+// Ew.
+template <typename T, uint32_t n> struct Blend<Point<T, n>> {
+static Point<T, n> Do(std::initializer_list<std::pair<Point<T, n> const &, Decimal>> _args);
+};
+
+
+
 template <typename T, uint32_t n>
 Point<T, n> Floor(Point<T, n> const &_v);
 template <typename T, uint32_t n>
@@ -176,6 +183,9 @@ Decimal SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs);
 
 template <typename T, uint32_t n, typename... Indices>
 Point<T, n> Swizzle(Point<T, n> const &_v, Indices... _indices);
+
+
+template <typename T, uint32_t n> struct Zero<Point<T, n>> { static constexpr Point<T, n> value = Point<T, n>(zero<T>); };
 
 } // namespace maths
 
