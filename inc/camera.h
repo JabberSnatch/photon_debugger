@@ -16,7 +16,7 @@ namespace raytracer {
 class Camera final
 {
 public:
-	using Scene = std::vector<std::reference_wrapper<raytracer::Shape const>>;
+	using Scene = std::vector<std::reference_wrapper<raytracer::Primitive>>;
 
 	Camera() = delete;
 	Camera(Film const &_film, maths::Point3f const &_position, maths::Point3f const &_target,

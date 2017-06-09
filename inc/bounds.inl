@@ -53,13 +53,13 @@ template <typename T, uint32_t n>
 T
 Bounds<T, n>::Volume() const
 {
-	return vector::FoldProduct(Diagonal());
+	return FoldProduct(Diagonal());
 }
 template <typename T, uint32_t n>
 uint32_t
 Bounds<T, n>::MaximumExtent() const
 {
-	return vector::MaximumDimension(Diagonal());
+	return MaximumDimension(Diagonal());
 }
 
 template <typename T, uint32_t n>

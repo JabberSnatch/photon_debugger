@@ -81,8 +81,8 @@ public:
 	TimerTable_t const &timers() const { return timers_; }
 
 private:
-	TimerTable_t	timers_{};
-	AtomicSpinLock	lock_;
+	TimerTable_t			timers_{};
+	core::AtomicSpinLock	lock_;
 
 };
 

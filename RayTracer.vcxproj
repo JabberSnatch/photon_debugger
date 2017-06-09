@@ -102,6 +102,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -113,6 +114,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,6 +128,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -143,6 +146,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -150,12 +154,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\bvh_accelerator.cc" />
     <ClCompile Include="src\camera.cc" />
     <ClCompile Include="src\film.cc" />
     <ClCompile Include="src\globals.cc" />
     <ClCompile Include="src\input_processor.cc" />
     <ClCompile Include="src\logger.cc" />
     <ClCompile Include="src\maths.cc" />
+    <ClCompile Include="src\primitive.cc" />
     <ClCompile Include="src\quaternion.cc" />
     <ClCompile Include="src\raytracer_main.cc" />
     <ClCompile Include="src\redecimal.cc" />
@@ -167,9 +173,12 @@
     <ClCompile Include="src\win32_timer.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\alloc.h" />
+    <ClInclude Include="inc\core.h" />
     <ClInclude Include="inc\algorithms.h" />
     <ClInclude Include="inc\benchmarks\bench_logger.h" />
     <ClInclude Include="inc\bounds.h" />
+    <ClInclude Include="inc\bvh_accelerator.h" />
     <ClInclude Include="inc\camera.h" />
     <ClInclude Include="inc\common_macros.h" />
     <ClInclude Include="inc\globals.h" />
@@ -177,7 +186,9 @@
     <ClInclude Include="inc\logger.h" />
     <ClInclude Include="inc\maths.h" />
     <ClInclude Include="inc\matrix.h" />
+    <ClInclude Include="inc\memory_region.h" />
     <ClInclude Include="inc\point.h" />
+    <ClInclude Include="inc\primitive.h" />
     <ClInclude Include="inc\quaternion.h" />
     <ClInclude Include="inc\ray.h" />
     <ClInclude Include="inc\raytracer.h" />

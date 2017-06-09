@@ -24,12 +24,18 @@
 
 #include <cassert>
 #ifdef YS_WINDOWS
+
 #ifdef YS_DEBUG
 #define YS_ASSERT(statement) assert(statement)
 #else
 #define YS_ASSERT(statement) {}
 #endif
-#endif // _WIN32
+
+#ifdef _M_X64
+#define YS_X64
+#endif
+
+#endif // YS_WINDOWS
 
 
 #endif // __YS_COMMON_MACROS_HPP__

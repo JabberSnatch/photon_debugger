@@ -34,7 +34,8 @@ public:
 			maths::Normalized((maths::Norm3f)maths::Cross(_dpdu, _dpdv)),
 			_dpdu, _dpdv, _dndu, _dndv
 		},
-		shading{ geometry }
+		shading{ geometry },
+		primitive{ nullptr }
 	{
 		if (shape != nullptr)
 			if (shape->flip_normals ^ shape->swaps_handedness)
@@ -72,6 +73,8 @@ public:
 
 	GeometryProperties	geometry;		// True geometry properties
 	GeometryProperties	shading;		// Shading geometry
+
+	Primitive const		*primitive;
 };
 
 

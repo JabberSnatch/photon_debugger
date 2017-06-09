@@ -7,8 +7,7 @@
 #include "bounds.h"
 
 
-namespace maths
-{
+namespace maths {
 
 
 struct Ray
@@ -25,7 +24,7 @@ struct Ray
 	Decimal			time;
 
 	template <typename T>
-	bool IntersectP(Bounds<T, 3> const &_bounds, Decimal &_hit0, Decimal &_hit1) const
+	bool DoesIntersect(Bounds<T, 3> const &_bounds, Decimal &_hit0, Decimal &_hit1) const
 	{
 		// r(t) = o + d * t
 		// r(t).x = _bounds.min.x	<=> (o + d * t).x = _bounds.min.x
@@ -50,7 +49,7 @@ struct Ray
 		return true;
 	}
 	template <typename T>
-	bool IntersectP(Bounds<T, 3> const &_bounds) const
+	bool DoesIntersect(Bounds<T, 3> const &_bounds) const
 	{
 		Decimal t0{ 0._d }, t1{ tMax };
 		for (int i = 0; i < 3; ++i)
@@ -67,12 +66,36 @@ struct Ray
 		}
 		return true;
 	}
+
 	// NOTE: pbrt book provides an optimized IntersectP function for BVH tree traversal (page 128).
 	//		 It will surely be useful later.
+	// Thanks, past self, you're the best.
+	template <typename T>
+	bool DoesIntersect(Bounds<T, 3> const &_bounds, Vec3f const &_direction_inverse,
+					   Vector<int, 3> const &_is_negative) const
+	{
+		Decimal t_min = (_bounds[_is_negative.x].x - origin.x) * _direction_inverse.x;
+		Decimal t_max = (_bounds[1 - _is_negative.x].x - origin.x) * _direction_inverse.x;
+		Decimal const y_min = (_bounds[_is_negative.y].y - origin.y) * _direction_inverse.y;
+		Decimal const y_max = (_bounds[1 - _is_negative.y].y - origin.y) * _direction_inverse.y;
+		if (t_min > y_max || y_min > t_max)
+			return false;
+		t_min = Max(y_min, t_min);
+		t_max = Min(y_max, t_max);
+
+		Decimal const z_min = (_bounds[_is_negative.z].z - origin.z) * _direction_inverse.z;
+		Decimal const z_max = (_bounds[1 - _is_negative.z].z - origin.z) * _direction_inverse.z;
+		if (t_min > z_max || z_min > t_max)
+			return false;
+		t_min = Max(z_min, t_min);
+		t_max = Min(z_max, t_max);
+
+		return (t_min < tMax) && (t_max > 0);// && (t_min <= t_max);
+	}
 };
 
 
-}
+} // namespace maths
 
 
 #endif // __YS_RAY_HPP__

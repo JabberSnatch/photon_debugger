@@ -2,7 +2,8 @@
 
 #include "globals.h"
 #include "ray.h"
-#include "shape.h"
+//#include "shape.h"
+#include "primitive.h"
 #include "surface_interaction.h"
 #include "logger.h"
 #include "profiler.h"
@@ -55,7 +56,7 @@ Camera::Camera(Film const &_film, maths::Point3f const &_position, maths::Point3
 }
 
 void
-Camera::Expose(Scene const &_shapes, maths::Decimal _t)
+Camera::Expose(Scene const &_scene, maths::Decimal _t)
 {
 	TIMED_SCOPE(CameraExpose);
 
@@ -73,32 +74,21 @@ Camera::Expose(Scene const &_shapes, maths::Decimal _t)
 			maths::Decimal	u{ x / maths::Decimal(film.resolution().w - 1) };
 			maths::Decimal	v{ y / maths::Decimal(film.resolution().h - 1) };
 
-			maths::Decimal					closest_hit = maths::infinity<maths::Decimal>;
 			raytracer::SurfaceInteraction	closest_hit_info;
 			maths::Ray	ray = Ray(u, v, _t);
-			
-			for (raytracer::Shape const &shape : _shapes)
-			{
-				raytracer::SurfaceInteraction	hit_info;
-				maths::Decimal					t_hit;
-				if (shape.Intersect(ray, t_hit, hit_info))
-				{
-					if (t_hit < closest_hit)
-					{
-						closest_hit = t_hit;
-						closest_hit_info = hit_info;
-					}
-				}
-			}
 
 			maths::Vec3f		color{ 0._d, 0._d, 0._d };
 			maths::Vec3f const	up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
-			if (closest_hit != maths::infinity<maths::Decimal>)
-				//color = ((maths::Vec3f)closest_hit_info.shading.normal);
-				//color = maths::Abs((maths::Vec3f)closest_hit_info.shading.normal);
+			
+
+			for (raytracer::Primitive const &primitive : _scene)
+				primitive.Intersect(ray, closest_hit_info);
+
+			if (closest_hit_info.primitive != nullptr)
 				color = (maths::Vec3f)closest_hit_info.shading.normal * 0.5_d + maths::Vec3f(0.5_d);
 			else
 				color = maths::Lerp(down_color, up_color, .5_d * maths::Normalized(ray.direction).z + .5_d);
+
 
 			//film.SetPixel(color, { film.resolution().w - 1 - x, film.resolution().h - 1 - y });
 			film.SetPixel(color, { x, y });

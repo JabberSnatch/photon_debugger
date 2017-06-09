@@ -16,6 +16,8 @@
 #include "logger.h"
 #include "profiler.h"
 #include "input_processor.h"
+#include "bvh_accelerator.h"
+#include "primitive.h"
 
 #include <typeinfo>
 #include <iostream>
@@ -58,7 +60,18 @@ int main()
 
 	raytracer::Shape const &sphereA = test_triangle;//little_sphere;
 	raytracer::Shape const &sphereB = big_sphere;
-	raytracer::Camera::Scene	scene = { std::ref(sphereA), std::ref(sphereB) };
+	//raytracer::Camera::Scene	scene = { std::ref(sphereA), std::ref(sphereB) };
+
+	raytracer::GeometryPrimitive	primitiveA{ sphereA };
+	raytracer::GeometryPrimitive	primitiveB{ sphereB };
+	std::vector<std::reference_wrapper<raytracer::Primitive>>	primitives;
+	primitives.emplace_back(primitiveA);
+	primitives.emplace_back(primitiveB);
+
+	raytracer::BvhAccelerator	accelerator{ primitives, 1 };
+	raytracer::Primitive		&primitiveC{ accelerator };
+	raytracer::Camera::Scene	scene = { primitiveC };
+	//raytracer::Camera::Scene	scene = { primitiveA, primitiveB };
 
 	camera.Expose(scene, 0._d);
 	camera.film.WriteToFile("big_little_sphere.png");

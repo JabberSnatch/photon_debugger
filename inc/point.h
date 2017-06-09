@@ -167,8 +167,6 @@ template <typename T, uint32_t n> struct Blend<Point<T, n>> {
 static Point<T, n> Do(std::initializer_list<std::pair<Point<T, n> const &, Decimal>> _args);
 };
 
-
-
 template <typename T, uint32_t n>
 Point<T, n> Floor(Point<T, n> const &_v);
 template <typename T, uint32_t n>
@@ -186,6 +184,7 @@ Point<T, n> Swizzle(Point<T, n> const &_v, Indices... _indices);
 
 
 template <typename T, uint32_t n> struct Zero<Point<T, n>> { static constexpr Point<T, n> value = Point<T, n>(zero<T>); };
+template <typename T, uint32_t n> struct One<Point<T, n>> { static constexpr Point<T, n> value = Point<T, n>(one<T>); };
 
 } // namespace maths
 

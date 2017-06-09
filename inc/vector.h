@@ -455,7 +455,9 @@ template <typename T> using Normal3 = Normal<T, 3>;
 using Norm3f = Normal3<Decimal>;
 
 template <typename T, uint32_t n> struct Zero<Vector<T, n>> { static constexpr Vector<T, n> value = Vector<T, n>(zero<T>); };
+template <typename T, uint32_t n> struct One<Vector<T, n>> { static constexpr Vector<T, n> value = Vector<T, n>(one<T>); };
 template <typename T, uint32_t n> struct Zero<Normal<T, n>> { static constexpr Normal<T, n> value = Normal<T, n>(zero<T>); };
+template <typename T, uint32_t n> struct One<Normal<T, n>> { static constexpr Normal<T, n> value = Normal<T, n>(one<T>); };
 
 } // maths
 

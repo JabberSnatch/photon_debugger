@@ -11,7 +11,7 @@ template <typename T, uint32_t n>
 struct Bounds final
 {
 	Bounds() :
-		min(-highest_value<T>), max(highest_value<T>)
+		min(highest_value<T>), max(-highest_value<T>)
 	{}
 	explicit constexpr Bounds(Point<T, n> const &_v) :
 		min{ _v }, max{ _v }

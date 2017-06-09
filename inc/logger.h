@@ -62,7 +62,7 @@ private:
 };
 
 namespace logging {
-using ChannelLocks_t = std::array<AtomicSpinLock, LogChannel::kChannelCount>;
+using ChannelLocks_t = std::array<core::AtomicSpinLock, LogChannel::kChannelCount>;
 } // namespace logging
 
 template <size_t hs, size_t bs>
@@ -218,7 +218,7 @@ Logger<hs, bs>::AllowMultipleThreads(size_t _thread_count)
 	thread_count_ = _thread_count;
 	thread_buffer_.clear();
 	thread_buffer_.reserve(thread_count_);
-	for (int i = 0; i < thread_count_; ++i)
+	for (size_t i = 0; i < thread_count_; ++i)
 		thread_buffer_.emplace_back(new LogBuffer<hs, bs>(*this));
 }
 template <size_t hs, size_t bs>

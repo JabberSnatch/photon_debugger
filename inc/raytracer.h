@@ -17,6 +17,9 @@ class Triangle;
 
 struct TriangleMesh;
 
+class Primitive;
+class GeometryPrimitive;
+
 } // namespace raytracer
 
 

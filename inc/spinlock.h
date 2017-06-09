@@ -4,7 +4,7 @@
 
 #include <atomic>
 
-namespace tools {
+namespace core {
 
 
 class AtomicSpinLock final
@@ -19,6 +19,6 @@ private:
 };
 
 
-} // namespace tools
+} // namespace core
 
 #endif // __YS_SPINLOCK_HPP__

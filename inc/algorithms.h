@@ -25,6 +25,12 @@ struct fill<1>
 	}
 };
 
+template <typename T>
+constexpr bool IsPowerOfTwo(T _value)
+{
+	return _value && ((_value & (_value - 1)) == 0);
+}
+
 } // namespace algo
 
 
