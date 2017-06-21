@@ -47,7 +47,8 @@ public:
 	void	ReserveBlocks(size_t _count = 1u) override;
 
 	void	*Alloc(size_t _size) override;
-	template <typename T> T *Alloc(size_t _count = 1u, bool _default_constructed = false);
+	template <typename T> T *Alloc(size_t _count, bool _default_constructed);
+	template <typename T> T *Alloc(size_t _count = 1u);
 
 private:
 	BlockList_t		blocks_;
@@ -130,11 +131,25 @@ template <typename T>
 T *
 MemoryRegion<BS, AAlign, BAlign>::Alloc(size_t _count, bool _default_constructed)
 {
-	T *result = reinterpret_cast<T*>(Alloc(sizeof(T) * _count));
 	if (_default_constructed)
-		for (size_t i = 0; i < _count; ++i)
-			new (result + i) T();
-	return result;
+	{
+		T *result = reinterpret_cast<T*>(Alloc(sizeof(T) * _count));
+			for (size_t i = 0; i < _count; ++i)
+				new (result + i) T();
+		return result;
+	}
+	else
+	{
+		return Alloc<T>(_count);
+	}
+}
+
+template <size_t BS, uint64_t AAlign, uint64_t BAlign>
+template <typename T>
+T *
+MemoryRegion<BS, AAlign, BAlign>::Alloc(size_t _count)
+{
+	return reinterpret_cast<T*>(Alloc(sizeof(T) * _count));
 }
 
 } // namespace core

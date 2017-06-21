@@ -81,8 +81,8 @@ Camera::Expose(Scene const &_scene, maths::Decimal _t)
 			maths::Vec3f const	up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
 			
 
-			for (raytracer::Primitive const &primitive : _scene)
-				primitive.Intersect(ray, closest_hit_info);
+			for (raytracer::Primitive const *primitive : _scene)
+				primitive->Intersect(ray, closest_hit_info);
 
 			if (closest_hit_info.primitive != nullptr)
 				color = (maths::Vec3f)closest_hit_info.shading.normal * 0.5_d + maths::Vec3f(0.5_d);

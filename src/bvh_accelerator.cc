@@ -25,7 +25,7 @@ BvhAccelerator::BvhAccelerator(BvhAccelerator::PrimitiveArray_t &_primitives,
 	std::vector<BvhPrimitiveDesc>	primitive_desc;
 	primitive_desc.reserve(primitives_.size());
 	for (size_t i = 0; i < primitives_.size(); ++i)
-		primitive_desc.emplace_back(static_cast<uint32_t>(i), primitives_[i].get().WorldBounds());
+		primitive_desc.emplace_back(static_cast<uint32_t>(i), primitives_[i]->WorldBounds());
 
 	core::MemoryRegion<1024 * 1024>		allocator;
 	int									node_count = 0;
@@ -184,7 +184,7 @@ BvhAccelerator::Intersect(maths::Ray &_ray, SurfaceInteraction &_hit_info) const
 			if (node.primitive_count > 0)
 			{
 				for (uint16_t i = 0; i < node.primitive_count; ++i)
-					hit |= primitives_[node.first_primitive_index + i].get().Intersect(_ray, _hit_info);
+					hit |= primitives_[node.first_primitive_index + i]->Intersect(_ray, _hit_info);
 				if (to_visit_offset == 0) break;
 				current_node_index = nodes_to_visit[--to_visit_offset];
 			}
@@ -231,7 +231,7 @@ BvhAccelerator::DoesIntersect(maths::Ray const &_ray) const
 			if (node.primitive_count > 0)
 			{
 				for (uint16_t i = 0; i < node.primitive_count; ++i)
-					if (primitives_[node.first_primitive_index + i].get().DoesIntersect(_ray))
+					if (primitives_[node.first_primitive_index + i]->DoesIntersect(_ray))
 						return true;
 				if (to_visit_offset == 0) break;
 				current_node_index = nodes_to_visit[--to_visit_offset];
@@ -266,7 +266,7 @@ BvhAccelerator::WorldBounds() const
 {
 	maths::Bounds3f		world_bounds{};
 	for (auto &&primitive : primitives_)
-		world_bounds = maths::Union(world_bounds, primitive.get().WorldBounds());
+		world_bounds = maths::Union(world_bounds, primitive->WorldBounds());
 	return world_bounds;
 }
 

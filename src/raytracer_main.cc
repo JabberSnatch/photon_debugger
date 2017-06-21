@@ -18,6 +18,7 @@
 #include "input_processor.h"
 #include "bvh_accelerator.h"
 #include "primitive.h"
+#include "memory_region.h"
 
 #include <typeinfo>
 #include <iostream>
@@ -35,17 +36,18 @@ int main()
 	maths::Point3f		swizzle_test{ 1._d, 2._d, 3._d };
 	maths::Point3f		swizzledA{ maths::Swizzle(swizzle_test, 2u, 0u, 1u) };
 
-	raytracer::Film		film_35mm{ 500, 500, 0.035_d };
+	raytracer::Film		film_35mm{ 1000, 1000, 0.035_d };
 	raytracer::Camera	camera{
 		film_35mm,
-		{0._d, -5._d, .5_d}, {0._d, 1._d, .5_d}, {0._d, 0._d, 1._d},
+		{0._d, -5._d, 2.5_d}, {0._d, 1._d, 2.5_d}, {0._d, 0._d, 1._d},
 		60._d
 	};
-	maths::Transform	little_sphere_transform = maths::Translate({ 0._d, 1._d, .0_d });// *maths::RotateZ(90._d);
+	maths::Transform	little_sphere_transform = maths::Translate({ 0._d, 1._d, .0_d }) * maths::Scale(0.02_d, 0.02_d, 0.02_d) * maths::RotateX(180._d);// *maths::RotateZ(90._d);
 	raytracer::Sphere	little_sphere{ little_sphere_transform, false, .5_d, -.5_d, .2_d, 45.3_d };
 	maths::Transform	big_sphere_transform = maths::Translate({ 0._d, 1._d, -500._d });
 	raytracer::Sphere	big_sphere{ big_sphere_transform, false, 500._d, -500._d, 500._d, 360._d };
 
+#ifdef TEST_TRIANGLE
 	std::vector<int32_t>		indices{ 0, 1, 2 };
 	std::vector<maths::Point3f>	vertices{ {0._d, 0._d, 1._d}, {-1._d, 0._d, 0._d}, {1._d, 0._d, 0._d} };
 	std::vector<maths::Norm3f>	normals{ {0._d, -1._d, 0._d}, {.0_d, -1._d, 0._d}, {0._d, -1._d, 0._d} };
@@ -57,24 +59,36 @@ int main()
 	raytracer::SurfaceInteraction	hit_info;
 	bool result = test_triangle.Intersect(test_ray, t_hit, hit_info);
 	YS_ASSERT(result);
+#endif // TEST_TRIANGLE
 
-	raytracer::Shape const &sphereA = test_triangle;//little_sphere;
-	raytracer::Shape const &sphereB = big_sphere;
-	//raytracer::Camera::Scene	scene = { std::ref(sphereA), std::ref(sphereB) };
+	core::MemoryRegion<>	shapes_region;
+	core::MemoryRegion<>	primitives_region;
+	std::vector<raytracer::Primitive*>	primitives;
+	
+#if 1
+	raytracer::TriangleMesh	test_mesh =
+		raytracer::ReadTriangleMeshFromFile("Leon/Leon.dae", little_sphere_transform);
+	raytracer::Triangle				*test_triangles =
+		shapes_region.Alloc<raytracer::Triangle>(test_mesh.triangle_count);
+	raytracer::GeometryPrimitive	*test_primitives =
+		primitives_region.Alloc<raytracer::GeometryPrimitive>(test_mesh.triangle_count);
+	for (int32_t i = 0; i < test_mesh.triangle_count; ++i)
+	{
+		new (test_triangles + i) raytracer::Triangle(little_sphere_transform, false, test_mesh, i);
+		new (test_primitives + i) raytracer::GeometryPrimitive(test_triangles[i]);
+		primitives.push_back(&test_primitives[i]);
+	}
+#endif 
 
-	raytracer::GeometryPrimitive	primitiveA{ sphereA };
-	raytracer::GeometryPrimitive	primitiveB{ sphereB };
-	std::vector<std::reference_wrapper<raytracer::Primitive>>	primitives;
-	primitives.emplace_back(primitiveA);
-	primitives.emplace_back(primitiveB);
+	raytracer::Primitive	*sphere = primitives_region.Alloc<raytracer::GeometryPrimitive>();
+	new (sphere) raytracer::GeometryPrimitive(big_sphere);
+	primitives.emplace_back(sphere);
 
 	raytracer::BvhAccelerator	accelerator{ primitives, 1 };
-	raytracer::Primitive		&primitiveC{ accelerator };
-	raytracer::Camera::Scene	scene = { primitiveC };
-	//raytracer::Camera::Scene	scene = { primitiveA, primitiveB };
+	raytracer::Camera::Scene	scene = { &accelerator };
 
 	camera.Expose(scene, 0._d);
-	camera.film.WriteToFile("big_little_sphere.png");
+	camera.film.WriteToFile("squall.png");
 
 	maths::FloatBitsMapper start{ 34.23f };
 	maths::FloatBitsMapper end{ maths::NextDecimalUp(start.value) };

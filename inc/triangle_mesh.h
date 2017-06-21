@@ -2,8 +2,10 @@
 #ifndef __YS_TRIANGLE_MESH_HPP__
 #define __YS_TRIANGLE_MESH_HPP__
 
+#include <string>
 #include <vector>
 #include "maths.h"
+#include "bounds.h"
 
 
 namespace raytracer {
@@ -29,7 +31,12 @@ struct TriangleMesh
 	std::vector<maths::Norm3f>		normals;
 	std::vector<maths::Vec3f>		tangents;
 	std::vector<maths::Point2f>		uv;
+
+	maths::Bounds3f					world_bounds;
 };
+
+TriangleMesh	ReadTriangleMeshFromFile(std::string const &_path,
+										 maths::Transform const &_world_transform);
 
 } // namespace raytracer
 

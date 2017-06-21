@@ -15,7 +15,6 @@
 
 namespace raytracer {
 
-// NOTE: Remember to maybe replace size_t with uint32_t
 
 class BvhAccelerator
 	: public Primitive
@@ -25,7 +24,7 @@ class BvhAccelerator
 	struct LinearBvhNode;
 
 public:
-	using PrimitiveArray_t = std::vector<std::reference_wrapper<Primitive>>;
+	using PrimitiveArray_t = std::vector<Primitive*>;
 
 	BvhAccelerator(PrimitiveArray_t &_primitives,
 				   uint32_t _node_max_size);
