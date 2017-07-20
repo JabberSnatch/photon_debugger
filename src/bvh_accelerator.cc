@@ -9,7 +9,7 @@
 namespace raytracer {
 
 
-BvhAccelerator::BvhAccelerator(BvhAccelerator::PrimitiveArray_t &_primitives,
+BvhAccelerator::BvhAccelerator(BvhAccelerator::PrimitiveArray_t const &_primitives,
 							   uint32_t _node_max_size) :
 	primitives_{ _primitives },
 	node_max_size_{ _node_max_size }

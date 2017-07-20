@@ -6,6 +6,7 @@
 #include <list>
 #include <bitset>
 
+#include "core.h"
 #include "common_macros.h"
 #include "globals.h"
 #include "profiler.h"
@@ -34,7 +35,8 @@ class MemoryRegion final : public IMemoryRegion
 	static_assert(algo::IsPowerOfTwo(BAlign), "Alignment parameters have to be powers of two.");
 	static_assert(AAlign < BAlign, "Local alignment must be smaller than block alignment.");
 public:
-	using BlockDesc_t = std::pair<size_t, uint8_t*>;
+	// NOTE: <occupied_space, block_adress>
+	using BlockDesc_t = std::pair<size_t, uint8_t *const>;
 	using BlockList_t = std::list<BlockDesc_t>;
 	static constexpr size_t kBlockSize{ BS };
 	static constexpr uint64_t kAllocAlignment{ AAlign };
@@ -45,6 +47,8 @@ public:
 	~MemoryRegion();
 
 	void	ReserveBlocks(size_t _count = 1u) override;
+
+	void	Clear();
 
 	void	*Alloc(size_t _size) override;
 	template <typename T> T *Alloc(size_t _count, bool _default_constructed);
@@ -79,6 +83,14 @@ MemoryRegion<BS, AAlign, BAlign>::ReserveBlocks(size_t _count)
 		uint8_t		*block = core::AllocAligned<uint8_t, kBlockAlignment>(kBlockSize);
 		blocks_.emplace_front(0u, block);
 	}
+}
+
+template <size_t BS, uint64_t AAlign, uint64_t BAlign>
+void
+MemoryRegion<BS, AAlign, BAlign>::Clear()
+{
+	for (BlockDesc_t block : blocks_)
+		block.first = 0u;
 }
 
 template <size_t BS, uint64_t AAlign, uint64_t BAlign>

@@ -19,19 +19,25 @@ public:
 	using Scene = std::vector<raytracer::Primitive*>;
 
 	Camera() = delete;
-	Camera(Film const &_film, maths::Point3f const &_position, maths::Point3f const &_target,
-		   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov);
+	Camera(maths::Point3f const &_position, maths::Point3f const &_target,
+		   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov, Film *_film = nullptr);
 
-	void		Expose(Scene const &_shapes, maths::Decimal _t0);
+	void		Expose(Scene const &_scene, maths::Decimal _t0);
+	void		WriteToFile(std::string const &_path) const;
 	maths::Ray	Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const;
 
-	maths::Point3f	position;		// world position of the center of the lense
-	maths::Vec3f	forward;
-	maths::Vec3f	right;
-	maths::Vec3f	up;
-	maths::Decimal	sensor_offset;	// sensor's offset relative to the position of the lense
+	void		SetFilm(Film *_film) { film_ = _film; }
 
-	Film			film;
+private:
+	bool		ValidateFilm_() const;
+
+	maths::Point3f	position_;		// world position of the center of the lense
+	maths::Vec3f	forward_;
+	maths::Vec3f	right_;
+	maths::Vec3f	up_;
+	maths::Decimal	sensor_offset_;	// sensor's offset relative to the position of the lense
+
+	Film			*film_;
 };
 
 

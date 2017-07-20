@@ -9,6 +9,8 @@ namespace raytracer
 class Film;
 class Camera;
 
+class RenderContext;
+
 class SurfaceInteraction;
 
 class Shape;

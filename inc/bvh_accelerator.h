@@ -26,7 +26,7 @@ class BvhAccelerator
 public:
 	using PrimitiveArray_t = std::vector<Primitive*>;
 
-	BvhAccelerator(PrimitiveArray_t &_primitives,
+	BvhAccelerator(PrimitiveArray_t const &_primitives,
 				   uint32_t _node_max_size);
 	~BvhAccelerator();
 

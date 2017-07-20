@@ -28,20 +28,30 @@
 
 int main()
 {
-	//api::ProcessInputFile("TestScene.txt");
+	api::ProcessInputFile("TestScene.txt");
 
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 
+	core::MemoryRegion<>	main_region;
+
 	maths::Point3f		swizzle_test{ 1._d, 2._d, 3._d };
 	maths::Point3f		swizzledA{ maths::Swizzle(swizzle_test, 2u, 0u, 1u) };
 
-	raytracer::Film		film_35mm{ 1000, 1000, 0.035_d };
-	raytracer::Camera	camera{
-		film_35mm,
+	raytracer::Film		*film_35mm = main_region.Alloc<raytracer::Film>();
+	new (film_35mm) raytracer::Film{ 1000, 1000, 0.035_d };
+
+	raytracer::Camera	*camera = main_region.Alloc<raytracer::Camera>();
+	new (camera) raytracer::Camera{
 		{0._d, -5._d, 2.5_d}, {0._d, 1._d, 2.5_d}, {0._d, 0._d, 1._d},
-		60._d
+		60._d, film_35mm
 	};
+	//raytracer::Film		film_35mm{ 1000, 1000, 0.035_d };
+	//raytracer::Camera	camera{
+	//	film_35mm,
+	//	{0._d, -5._d, 2.5_d}, {0._d, 1._d, 2.5_d}, {0._d, 0._d, 1._d},
+	//	60._d
+	//};
 	maths::Transform	little_sphere_transform = maths::Translate({ 0._d, 1._d, .0_d }) * maths::Scale(0.02_d, 0.02_d, 0.02_d) * maths::RotateX(180._d);// *maths::RotateZ(90._d);
 	raytracer::Sphere	little_sphere{ little_sphere_transform, false, .5_d, -.5_d, .2_d, 45.3_d };
 	maths::Transform	big_sphere_transform = maths::Translate({ 0._d, 1._d, -500._d });
@@ -87,8 +97,8 @@ int main()
 	raytracer::BvhAccelerator	accelerator{ primitives, 1 };
 	raytracer::Camera::Scene	scene = { &accelerator };
 
-	camera.Expose(scene, 0._d);
-	camera.film.WriteToFile("squall.png");
+	camera->Expose(scene, 0._d);
+	camera->WriteToFile("squall.png");
 
 	maths::FloatBitsMapper start{ 34.23f };
 	maths::FloatBitsMapper end{ maths::NextDecimalUp(start.value) };

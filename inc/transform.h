@@ -15,7 +15,9 @@ class Transform final
 public:
 	enum OpDirection { kForward = 0, kInverse };
 
-	Transform() = delete;
+	explicit Transform() :
+		m_{}, mInv_{}
+	{}
 	Transform(Mat4x4f _m) :
 		m_{ _m }, mInv_{ Inverse(_m) }
 	{}

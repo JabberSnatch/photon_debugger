@@ -12,6 +12,7 @@ namespace maths {
 
 struct Ray
 {
+	explicit Ray() = default;
 	Ray(Point3f _o, Vec3f _d, Decimal _tMax, Decimal _time) :
 		origin{ _o }, direction{ _d }, tMax{ _tMax }, time{ _time }
 	{}

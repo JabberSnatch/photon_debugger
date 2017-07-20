@@ -3,6 +3,7 @@
 #define __YS_MATHS_HPP__
 
 #include <cstdint>
+#include <string>
 #include <limits>
 #include <algorithm>
 #include "common_macros.h"
@@ -74,6 +75,23 @@ using DecimalBits = uint32_t;
 
 static_assert(sizeof(Decimal) == sizeof(DecimalBits), "Decimal and DecimalBits are of different sizes.");
 using DecimalMeta = FloatMeta<Decimal>;
+
+inline maths::Decimal stof(std::string const &_str, size_t *_idx = (size_t*)0)
+{
+#if YS_DECIMAL_IS_DOUBLE
+	return std::stod(_str, _idx);
+#else
+	return std::stof(_str, _idx);
+#endif
+}
+inline maths::Decimal stof(std::wstring const &_str, size_t *_idx = (size_t*)0)
+{
+#if YS_DECIMAL_IS_DOUBLE
+	return std::stod(_str, _idx);
+#else
+	return std::stof(_str, _idx);
+#endif
+}
 
 
 template <typename V, typename B>
@@ -168,6 +186,10 @@ class Transform;
 struct Quaternion;
 
 struct REDecimal;
+
+template <uint32_t size> using VectorF = Vector<maths::Decimal, size>;
+template <uint32_t size> using VectorI = Vector<int32_t, size>;
+template <uint32_t size> using VectorB = Vector<bool, size>;
 
 template <typename T> using Vector2 = Vector<T, 2>;
 template <typename T> using Vector3 = Vector<T, 3>;

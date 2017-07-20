@@ -13,28 +13,28 @@
 
 namespace raytracer {
 
-Camera::Camera(Film const &_film, maths::Point3f const &_position, maths::Point3f const &_target,
-			   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov) :
-	position{ _position },
-	forward{ maths::Normalized(_target - _position) },
-	right{ maths::Normalized(maths::Cross(forward, _up)) },
-	up{ maths::Cross(right, forward) },
-	film { _film }
+Camera::Camera(maths::Point3f const &_position, maths::Point3f const &_target,
+			   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov, Film *_film) :
+	position_{ _position },
+	forward_{ maths::Normalized(_target - _position) },
+	right_{ maths::Normalized(maths::Cross(forward_, _up)) },
+	up_{ maths::Cross(right_, forward_) },
+	film_ { _film }
 {
 	maths::Decimal	theta = maths::Radians(_horizontal_fov);
-	maths::Decimal	half_width = film.dimensions().w * 0.5_d;
+	maths::Decimal	half_width = film_->dimensions().w * 0.5_d;
 	// tan(theta) = half_width / sensor_offset <=> tan(theta) / half_width = 1 / sensor_offset
 	// <=> half_width / tan(theta) = sensor_offset
-	sensor_offset = half_width / std::tan(theta * 0.5_d);
+	sensor_offset_ = half_width / std::tan(theta * 0.5_d);
 
 #ifdef YS_DEBUG
 	// NOTE: This could be factored in a unit test, validating ulp error for various fov and film sizes
 	{
-		maths::Vec2f	film_dimensions = film.dimensions();
-		maths::Point3f	middle_right = position - forward * sensor_offset + right * half_width;
-		maths::Point3f	middle_left = position - forward * sensor_offset - right * half_width;
-		maths::Vec3f	to_right = maths::Normalized(middle_right - position);
-		maths::Vec3f	to_left = maths::Normalized(middle_left - position);
+		maths::Vec2f	film_dimensions = film_->dimensions();
+		maths::Point3f	middle_right = position_ - forward_ * sensor_offset_ + right_ * half_width;
+		maths::Point3f	middle_left = position_ - forward_ * sensor_offset_ - right_ * half_width;
+		maths::Vec3f	to_right = maths::Normalized(middle_right - position_);
+		maths::Vec3f	to_left = maths::Normalized(middle_left - position_);
 		maths::Decimal	std_cos = std::cos(theta);
 		maths::Decimal	dot_cos = maths::Dot(to_left, to_right);
 		maths::DecimalBitsMapper	std_bits{ std_cos };
@@ -59,6 +59,10 @@ void
 Camera::Expose(Scene const &_scene, maths::Decimal _t)
 {
 	TIMED_SCOPE(CameraExpose);
+
+	if (!ValidateFilm_())
+		return;
+	Film	&film = *film_;
 
 	// NOTE: Because our ray is computed as if it originated from a real camera
 	//		 (object -> focus point -> sensor), our picture is reversed on both dimensions.
@@ -97,6 +101,15 @@ Camera::Expose(Scene const &_scene, maths::Decimal _t)
 }
 
 
+void
+Camera::WriteToFile(std::string const &_path) const
+{
+	if (!ValidateFilm_())
+		return;
+
+	film_->WriteToFile(_path);
+}
+
 
 maths::Ray
 Camera::Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const
@@ -106,6 +119,9 @@ Camera::Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const
 	YS_ASSERT(_v <= 1._d);
 	YS_ASSERT(_v >= 0._d);
 
+	if (!ValidateFilm_())
+		return maths::Ray{};
+
 	// Lower left corner is (0, 0)
 	maths::Decimal	x{ _u - .5_d }, y{ _v - .5_d };
 	// direction = position - film_point
@@ -113,13 +129,27 @@ Camera::Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const
 	// direction = position - (position - forward * sensor_offset + right * film_width * x + up * film_height * y)
 	// direction = forward * sensor_offset - right * film_width * x - up * film_height * y
 	maths::Ray		ray{
-		position,
-		forward * sensor_offset - right * film.dimensions().w * x - up * film.dimensions().h * y,
+		position_,
+		forward_ * sensor_offset_ - right_ * film_->dimensions().w * x - up_ * film_->dimensions().h * y,
 		maths::infinity<maths::Decimal>,
 		_time
 	};
 
 	return ray;
 }
+
+
+bool
+Camera::ValidateFilm_() const
+{
+	YS_ASSERT(film_ != nullptr);
+	if (film_ == nullptr)
+	{
+		LOG_WARNING(tools::kChannelGeneral, "Tried using a Camera without an instance of Film. Nothing was done.");
+		return false;
+	}
+	return true;
+}
+
 
 } // namespace raytracer
