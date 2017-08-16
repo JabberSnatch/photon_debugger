@@ -7,6 +7,8 @@
 #include "surface_interaction.h"
 #include "logger.h"
 #include "profiler.h"
+#include "render_context.h"
+#include "param_set.h"
 
 #include <iostream>
 
@@ -14,7 +16,7 @@
 namespace raytracer {
 
 Camera::Camera(maths::Point3f const &_position, maths::Point3f const &_target,
-			   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov, Film *_film) :
+			   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov, Film &_film) :
 	position_{ _position },
 	forward_{ maths::Normalized(_target - _position) },
 	right_{ maths::Normalized(maths::Cross(forward_, _up)) },
@@ -22,7 +24,7 @@ Camera::Camera(maths::Point3f const &_position, maths::Point3f const &_target,
 	film_ { _film }
 {
 	maths::Decimal	theta = maths::Radians(_horizontal_fov);
-	maths::Decimal	half_width = film_->dimensions().w * 0.5_d;
+	maths::Decimal	half_width = film_.dimensions().w * 0.5_d;
 	// tan(theta) = half_width / sensor_offset <=> tan(theta) / half_width = 1 / sensor_offset
 	// <=> half_width / tan(theta) = sensor_offset
 	sensor_offset_ = half_width / std::tan(theta * 0.5_d);
@@ -30,7 +32,7 @@ Camera::Camera(maths::Point3f const &_position, maths::Point3f const &_target,
 #ifdef YS_DEBUG
 	// NOTE: This could be factored in a unit test, validating ulp error for various fov and film sizes
 	{
-		maths::Vec2f	film_dimensions = film_->dimensions();
+		maths::Vec2f	film_dimensions = film_.dimensions();
 		maths::Point3f	middle_right = position_ - forward_ * sensor_offset_ + right_ * half_width;
 		maths::Point3f	middle_left = position_ - forward_ * sensor_offset_ - right_ * half_width;
 		maths::Vec3f	to_right = maths::Normalized(middle_right - position_);
@@ -62,7 +64,7 @@ Camera::Expose(Scene const &_scene, maths::Decimal _t)
 
 	if (!ValidateFilm_())
 		return;
-	Film	&film = *film_;
+	Film	&film = film_;
 
 	// NOTE: Because our ray is computed as if it originated from a real camera
 	//		 (object -> focus point -> sensor), our picture is reversed on both dimensions.
@@ -107,7 +109,7 @@ Camera::WriteToFile(std::string const &_path) const
 	if (!ValidateFilm_())
 		return;
 
-	film_->WriteToFile(_path);
+	film_.WriteToFile(_path);
 }
 
 
@@ -130,7 +132,7 @@ Camera::Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const
 	// direction = forward * sensor_offset - right * film_width * x - up * film_height * y
 	maths::Ray		ray{
 		position_,
-		forward_ * sensor_offset_ - right_ * film_->dimensions().w * x - up_ * film_->dimensions().h * y,
+		forward_ * sensor_offset_ - right_ * film_.dimensions().w * x - up_ * film_.dimensions().h * y,
 		maths::infinity<maths::Decimal>,
 		_time
 	};
@@ -142,6 +144,9 @@ Camera::Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const
 bool
 Camera::ValidateFilm_() const
 {
+	return true;
+
+#if 0
 	YS_ASSERT(film_ != nullptr);
 	if (film_ == nullptr)
 	{
@@ -149,7 +154,26 @@ Camera::ValidateFilm_() const
 		return false;
 	}
 	return true;
+#endif
 }
 
+
+Camera*
+MakeCamera(RenderContext &_context, api::ParamSet const &_params)
+{
+	maths::Point3f const	position = static_cast<maths::Point3f>(
+		_params.FindFloat<3>("position", { 0._d, 0._d, 0._d })
+	);
+	maths::Point3f const	lookat = static_cast<maths::Point3f>(
+		_params.FindFloat<3>("lookat", maths::Vec3f(position) + maths::Vec3f{ 0._d, 1._d, 0._d })
+	);
+	maths::Vec3f const		up = _params.FindFloat<3>("up", { 0._d, 0._d, 1._d });
+	maths::Decimal const	fov = _params.FindFloat("fov", 60._d);
+
+	Camera *camera = _context.AllocCamera();
+	new (camera) Camera{ position, lookat, up, fov, *_context.film() };
+
+	return camera;
+}
 
 } // namespace raytracer

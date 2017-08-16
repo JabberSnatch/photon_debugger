@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "raytracer.h"
+#include "api.h"
 #include "maths.h"
 #include "vector.h"
 
@@ -40,6 +42,8 @@ private:
 	maths::Vec2f				dimensions_;
 };
 
+
+Film *MakeFilm(RenderContext &_context, api::ParamSet const &_params);
 
 } // raytracer
 

@@ -6,6 +6,7 @@
 
 #include "maths.h"
 #include "raytracer.h"
+#include "api.h"
 #include "film.h"
 #include "point.h"
 
@@ -20,13 +21,13 @@ public:
 
 	Camera() = delete;
 	Camera(maths::Point3f const &_position, maths::Point3f const &_target,
-		   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov, Film *_film = nullptr);
+		   maths::Vec3f const &_up, maths::Decimal const &_horizontal_fov, Film &_film);
 
 	void		Expose(Scene const &_scene, maths::Decimal _t0);
 	void		WriteToFile(std::string const &_path) const;
 	maths::Ray	Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const;
 
-	void		SetFilm(Film *_film) { film_ = _film; }
+	//void		SetFilm(Film *_film) { film_ = _film; }
 
 private:
 	bool		ValidateFilm_() const;
@@ -37,9 +38,10 @@ private:
 	maths::Vec3f	up_;
 	maths::Decimal	sensor_offset_;	// sensor's offset relative to the position of the lense
 
-	Film			*film_;
+	Film			&film_;
 };
 
+Camera	*MakeCamera(RenderContext &_context, api::ParamSet const &_params);
 
 } // namespace raytracer
 

@@ -89,7 +89,7 @@ void
 Bounds<T, n>::BoundingSphere(Point<T, n> &_center, T &_radius) const
 {
 	_center = (min + max) / T{ 2 };
-	_radius = bounds::Inside(*this, _center) ? point::Distance(_center, max) : zero<T>;
+	_radius = Inside(*this, _center) ? Distance(_center, max) : zero<T>;
 }
 
 
@@ -174,7 +174,7 @@ template <typename T, uint32_t n>
 Bounds<T, n>
 Expand(Bounds<T, n> const &_v, T _delta)
 {
-	return Bounds<T, n>{min - Vector<T, n>(_delta), max + Vector<T, n>(_delta)};
+	return Bounds<T, n>{_v.min - Vector<T, n>(_delta), _v.max + Vector<T, n>(_delta)};
 }
 
 } // namespace maths

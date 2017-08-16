@@ -21,7 +21,7 @@
 
 namespace tools {
 
-enum LogChannel { kChannelGeneral = 0, kChannelProfiling, kChannelCount, kChannelStdOut };
+enum LogChannel { kChannelGeneral = 0, kChannelProfiling, kChannelParsing, kChannelCount, kChannelStdOut };
 enum LogLevel { kLevelDebug = 0, kLevelInfo, kLevelWarning, kLevelError, kLevelCount };
 
 // One instance of FileLogger manages an array of stringstreams.
@@ -383,7 +383,7 @@ template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::EnableChannel(LogChannel _channel, bool _enabled)
 {
-	is_active_[_channel] = _enabled;
+	is_enabled_[_channel] = _enabled;
 }
 
 

@@ -3,8 +3,9 @@
 #define __YS_INPUT_PARSER_HPP__
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
+#include <functional>
 
 #include "raytracer.h"
 
@@ -51,7 +52,8 @@ namespace api {
 // max_phi float [ 360 ]
 // }
 
-bool ProcessInputFile(std::string const &_path);
+
+bool	ProcessInputFile(std::string const &_path);
 
 
 
@@ -59,6 +61,7 @@ enum TokenId
 {
 	kNone,
 
+	kOutput,
 	kFilm,
 	kCamera,
 	kShape,
@@ -85,11 +88,13 @@ enum TokenId
 	kFilmGroup,
 	kCameraGroup,
 	kShapeGroup,
+	kOutputGroup,
 	kSceneGroup,
 
 	kEnd,
 	kDefault,
 };
+
 
 struct Token
 {
@@ -98,10 +103,35 @@ struct Token
 };
 
 
+class TransformCache final
+{
+public:
+	TransformCache() = default;
+	~TransformCache() = default;
+	TransformCache(TransformCache const &) = delete;
+	TransformCache(TransformCache &&) = delete;
+	TransformCache &operator=(TransformCache const &) = delete;
+	TransformCache &operator=(TransformCache &&) = delete;
 
+	maths::Transform const &Lookup(maths::Transform const &_t);
+
+private:
+	std::map<maths::Transform, maths::Transform *>	lookup_table_;
+	core::MemoryRegion<>	mem_region_;
+};
+
+
+// NOTE: Implementation doesn't enforce syntax compliance, be very careful about using it out of the
+//		 input processor.
 class TranslationState final
 {
 public:
+	using MakeShapeCallback_t = std::function <
+		std::vector<raytracer::Shape*>(raytracer::RenderContext &_context, 
+									   maths::Transform const & _t, bool _flip_normals,
+									   ParamSet const & _params)
+	>;
+
 	TranslationState();
 	~TranslationState() = default;
 	TranslationState(TranslationState const &) = delete;
@@ -109,22 +139,36 @@ public:
 	TranslationState &operator=(TranslationState const &) = delete;
 	TranslationState &operator=(TranslationState &&) = delete;
 
+	void			Workdir(std::string const &_absolute_path);
+	void			Output(std::string const &_relative_path);
+	void			Film();
+	void			Camera();
+	void			Shape(std::string const &_type);
 	void			Identity();
 	void			Translate(maths::Vec3f const &_t);
 	void			Rotate(maths::Decimal _angle, maths::Vec3f const &_axis);
 	void			Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z);
-
 	void			ScopeBegin();
 	void			ScopeEnd();
+	void			SceneBegin();
+	void			SceneEnd();
 
 	ParamSet		&param_set() { return parameters_; }
 
+	static bool		LookupShapeFunc(std::string const &_id, MakeShapeCallback_t &_func);
+
 private:
+	std::string					workdir_;
+	std::string					output_path_;
+
 	raytracer::RenderContext	render_context_;
 	ParamSet					parameters_;
+	TransformCache				transform_cache_;
 
 	uint32_t							scope_depth_;
 	std::vector<maths::Transform>		transform_stack_;
+
+	static std::unordered_map<std::string, MakeShapeCallback_t> const	shape_callbacks_;
 };
 
 } // namespace api

@@ -25,7 +25,7 @@ extern tools::Logger<4096, 1048>	logger;
 #define LOG_FULL(channel, level, message, logger) logger.Log(channel, level, message)
 #ifndef YS_NO_LOGS
 #define LOG(channel, level, message) LOG_FULL(channel, level, message, ::globals::logger)
-#define LOG_DEBUG(channel, message) LOG(channel, ::tools:kLevelDebug, message)
+#define LOG_DEBUG(channel, message) LOG(channel, ::tools::kLevelDebug, message)
 #define LOG_INFO(channel, message) LOG(channel, ::tools::kLevelInfo, message)
 #define LOG_ERROR(channel, message) LOG(channel, ::tools::kLevelError, message)
 #define LOG_WARNING(channel, message) LOG(channel, ::tools::kLevelWarning, message)

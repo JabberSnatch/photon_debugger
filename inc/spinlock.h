@@ -10,6 +10,13 @@ namespace core {
 class AtomicSpinLock final
 {
 public:
+	AtomicSpinLock() = default;
+	~AtomicSpinLock() = default;
+	AtomicSpinLock(AtomicSpinLock const &) = delete;
+	AtomicSpinLock(AtomicSpinLock &&) = delete;
+	AtomicSpinLock &operator=(AtomicSpinLock const &) = delete;
+	AtomicSpinLock &operator=(AtomicSpinLock &&) = delete;
+
 	inline void Acquire() { uint32_t value = 1u; while (value == 1u) value = atomic_.exchange(1u); }
 	inline void Wait() const { uint32_t value = 1u; while (value == 1u) value = atomic_.load(); }
 	inline void Release() { atomic_.exchange(0u); }

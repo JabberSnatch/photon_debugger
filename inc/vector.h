@@ -111,6 +111,7 @@ struct Vector<T, 4> final
 	using						value_type = T;
 	static constexpr uint32_t	size{ 4 };
 
+	// NOTE: Nameless struct are nonstandard
 	union
 	{
 		std::array<T, 4>	e;
@@ -181,7 +182,7 @@ struct Vector<T, 2> final
 		x{ _e0 }, y{ _e1 }
 	{}
 	Vector(Vector<T, 1> const &_v, T _value) :
-		Vector{ _v[0], value }
+		Vector{ _v[0], _value }
 	{}
 	template<typename U>
 	explicit Vector(Vector<U, 2> const &_v)

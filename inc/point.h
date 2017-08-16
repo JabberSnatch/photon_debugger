@@ -25,6 +25,9 @@ struct Point final
 	constexpr explicit Point(T _value) :
 		e{ std::move(algo::fill<n>::apply(_value)) }
 	{}
+	constexpr explicit Point(Vector<T, n> _vec) :
+		e{ _vec.e }
+	{}
 	Point(std::initializer_list<T> _args) {
 		std::copy(_args.begin(), _args.end(), e.begin());
 	}
@@ -59,6 +62,9 @@ struct Point<T, 3> final
 	constexpr explicit Point(T _value) :
 		e{ std::move(algo::fill<3>::apply(_value)) }
 	{}
+	constexpr explicit Point(Vector<T, 3> _vec) :
+		e{ _vec.e }
+	{}
 	constexpr Point(T _e0, T _e1, T _e2) :
 		x{ _e0 }, y{ _e1 }, z{ _e2 }
 	{}
@@ -91,6 +97,9 @@ struct Point<T, 2> final
 	{}
 	constexpr explicit Point(T _value) :
 		e{ std::move(algo::fill<2>::apply(_value)) }
+	{}
+	constexpr explicit Point(Vector<T, 2> _vec) :
+		e{ _vec.e }
 	{}
 	constexpr Point(T _e0, T _e1) :
 		x{ _e0 }, y{ _e1 }

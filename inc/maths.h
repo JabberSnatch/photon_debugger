@@ -78,7 +78,7 @@ using DecimalMeta = FloatMeta<Decimal>;
 
 inline maths::Decimal stof(std::string const &_str, size_t *_idx = (size_t*)0)
 {
-#if YS_DECIMAL_IS_DOUBLE
+#ifdef YS_DECIMAL_IS_DOUBLE
 	return std::stod(_str, _idx);
 #else
 	return std::stof(_str, _idx);
@@ -86,7 +86,7 @@ inline maths::Decimal stof(std::string const &_str, size_t *_idx = (size_t*)0)
 }
 inline maths::Decimal stof(std::wstring const &_str, size_t *_idx = (size_t*)0)
 {
-#if YS_DECIMAL_IS_DOUBLE
+#ifdef YS_DECIMAL_IS_DOUBLE
 	return std::stod(_str, _idx);
 #else
 	return std::stof(_str, _idx);

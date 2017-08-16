@@ -7,6 +7,8 @@
 #include "redecimal.h"
 #include "surface_interaction.h"
 #include "profiler.h"
+#include "param_set.h"
+#include "render_context.h"
 
 namespace raytracer {
 
@@ -155,6 +157,24 @@ Sphere::ObjectBounds() const
 		{-radius, -radius, z_min},
 		{radius, radius, z_max}
 	};
+}
+
+std::vector<Shape*>
+MakeSphere(RenderContext &_context,
+		   maths::Transform const &_t, bool _flip_normals,
+		   api::ParamSet const &_params)
+{
+	maths::Decimal const	radius = _params.FindFloat("radius", 1._d);
+	maths::Decimal const	z_min = _params.FindFloat("z_min", -1._d);
+	maths::Decimal const	z_max = _params.FindFloat("z_max", 1._d);
+	maths::Decimal const	phi_max = _params.FindFloat("phi_max", 360._d);
+
+	std::vector<Shape *> const	result = {
+		_context.AllocShapes<Sphere>()
+	};
+	new (result[0]) Sphere{ _t, _flip_normals, radius, z_min, z_max, phi_max };
+
+	return result;
 }
 
 } // namespace raytracer

@@ -24,7 +24,8 @@ TriangleMesh::TriangleMesh(maths::Transform const &_world_transform, int32_t _tr
 {
 	TIMED_SCOPE(TriangleMesh_ctor);
 
-	YS_ASSERT(3 * triangle_count == indices.size());
+	YS_ASSERT(triangle_count > 0);
+	YS_ASSERT(static_cast<size_t>(3 * triangle_count) == indices.size());
 
 	vertices.reserve(_vertices.size());
 	for (auto &&vertex : _vertices)
@@ -107,7 +108,6 @@ ReadTriangleMeshFromFile(std::string const &_path,
 			YS_ASSERT(face.mNumIndices == 3);
 			for (uint32_t j = 0; j < face.mNumIndices; ++j)
 			{
-				YS_ASSERT(face.mIndices[j] >= 0);
 				uint32_t const	base_index = static_cast<uint32_t>(face.mIndices[j]);
 				uint32_t const	offset_index =
 					base_index + static_cast<uint32_t>(out_vertices.size());

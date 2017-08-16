@@ -127,7 +127,7 @@ Clamp(Point<T, n> const &_v, T _min, T _max)
 {
 	Point<T, n> result{};
 	for (uint32_t i = 0; i < n; ++i)
-		result[i] = maths::Clamp(_lhs[i], _rhs[i]);
+		result[i] = maths::Clamp(_min[i], _max[i]);
 	return result;
 }
 template <typename T, uint32_t n>
@@ -183,13 +183,13 @@ template <typename T, uint32_t n>
 Decimal
 Distance(Point<T, n> const &_lhs, Point<T, n> const &_rhs)
 {
-	return vector::Length(_lhs - _rhs);
+	return Length(_lhs - _rhs);
 }
 template <typename T, uint32_t n>
 Decimal
 SqrDistance(Point<T, n> const &_lhs, Point<T, n> const &_rhs)
 {
-	return vector::SqrLength(_lhs - _rhs);
+	return SqrLength(_lhs - _rhs);
 }
 
 template <typename T, uint32_t n, typename... Indices>

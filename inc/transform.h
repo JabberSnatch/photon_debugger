@@ -46,6 +46,7 @@ private:
 
 inline bool operator==(Transform const &_lhs, Transform const &_rhs);
 inline bool operator!=(Transform const &_lhs, Transform const &_rhs);
+inline bool operator<(Transform const &_lhs, Transform const &_rhs);
 
 inline Transform operator*(Transform const &_lhs, Transform const &_rhs);
 
@@ -168,6 +169,17 @@ inline bool
 operator!=(Transform const &_lhs, Transform const &_rhs)
 {
 	return _lhs.m() != _rhs.m() || _lhs.mInv() != _rhs.mInv();
+}
+inline bool
+operator<(Transform const &_lhs, Transform const &_rhs)
+{
+	for (int i = 0; i < 4; ++i)
+		for (int j = 0; j < 4; ++j)
+		{
+			if (_lhs.m()[i][j] < _rhs.m()[i][j]) return true;
+			if (_lhs.m()[i][j] > _rhs.m()[i][j]) return false;
+		}
+	return false;
 }
 
 inline Transform

@@ -1,6 +1,14 @@
 #include "input_processor.h"
 
+#include "boost/lexical_cast.hpp"
+#include "boost/filesystem.hpp"
+
 #include "common_macros.h"
+#include "shapes/sphere.h"
+#include "primitive.h"
+#include "film.h"
+#include "camera.h"
+#include "logger.h"
 
 /*
 param_group ->		kString (kType kParamBegin kString* kParamEnd)+
@@ -106,6 +114,7 @@ using ProductionStack_t = std::vector<ProductionMetadata>;
 
 TokenTable_t const		token_table
 {
+	{ "Output", kOutput },
 	{ "Film", kFilm },
 	{ "Camera", kCamera },
 	{ "Shape", kShape },
@@ -131,10 +140,17 @@ ProductionRules_t const		production_rules
 		{ kTranslate, { kTranslateGroup, kSceneGroup } },
 		{ kRotate, { kRotateGroup, kSceneGroup } },
 		{ kScale, { kScaleGroup, kSceneGroup } },
+		{ kTransformIdentity, { kTransformIdentity, kSceneGroup } },
+		{ kOutput, { kOutputGroup, kSceneGroup } },
+
 		{ kFilm, { kFilmGroup, kSceneGroup } },
 		{ kCamera, { kCameraGroup, kSceneGroup } },
 		{ kShape, { kShapeGroup, kSceneGroup } },
 		{ kDefault, { kEnd } }
+	} },
+
+	{ kOutputGroup, {
+		{ kDefault, { kOutput, kString } },
 	} },
 
 	{ kTranslateGroup, {
@@ -181,10 +197,12 @@ ProductionRules_t const		production_rules
 	} },
 	
 	{ kAttributeGroup, {
-		{ kString, { kParamGroup, kAttributeGroup } },
 		{ kTranslate, { kTranslateGroup, kAttributeGroup } },
 		{ kRotate, { kRotateGroup, kAttributeGroup } },
 		{ kScale, { kScaleGroup, kAttributeGroup } },
+		{ kTransformIdentity, { kTransformIdentity, kAttributeGroup } },
+
+		{ kString, { kParamGroup, kAttributeGroup } },
 		{ kDefault, {} },
 	} },
 };
@@ -215,6 +233,9 @@ void	RotateGroup(TranslationState &_state,
 void	ScaleGroup(TranslationState &_state,
 				   std::vector<Token>::const_iterator _production_begin,
 				   std::vector<Token>::const_iterator _production_end);
+void	OutputGroup(TranslationState &_state,
+					std::vector<Token>::const_iterator _production_begin,
+					std::vector<Token>::const_iterator _production_end);
 
 void	IdentityTerminal(TranslationState &_state,
 						 std::vector<Token>::const_iterator _production_begin,
@@ -234,6 +255,8 @@ TranslationTable_t	semantic_actions = {
 	{ kTranslateGroup, &api::TranslateGroup },
 	{ kRotateGroup, &api::RotateGroup },
 	{ kScaleGroup, &api::ScaleGroup },
+	{ kOutputGroup, &api::OutputGroup },
+
 	{ kTransformIdentity, &api::IdentityTerminal },
 	{ kScopeBegin, &api::ScopeBeginTerminal },
 	{ kScopeEnd, &api::ScopeEndTerminal },
@@ -241,7 +264,8 @@ TranslationTable_t	semantic_actions = {
 
 
 std::vector<Token>	LexicalAnalysis(std::ifstream &_file_stream);
-bool				SyntaxAnalysis(std::vector<Token> const &_input_string);
+bool				SyntaxAnalysis(std::vector<Token> const &_input_string,
+								   api::TranslationState &_state);
 Token				StringToToken(std::string const &_string);
 
 
@@ -250,13 +274,12 @@ bool
 ProcessInputFile(std::string const &_path)
 {
 	std::ifstream file_stream(_path);
-	std::vector<Token>			input_string = LexicalAnalysis(file_stream);
-	if (SyntaxAnalysis(input_string))
-	{
-		int i = 0;
-	}
-
-	return false;
+	std::vector<Token> const input_string = LexicalAnalysis(file_stream);
+	boost::filesystem::path const input_path{ boost::filesystem::absolute(_path) };
+	TranslationState translation_state{};
+	translation_state.Workdir(input_path.parent_path().string());
+	translation_state.Output(input_path.stem().string() + ".png");
+	return SyntaxAnalysis(input_string, translation_state);
 }
 
 
@@ -293,98 +316,135 @@ LexicalAnalysis(std::ifstream &_file_stream)
 }
 
 bool
-SyntaxAnalysis(std::vector<Token> const &_input_string)
+SyntaxAnalysis(std::vector<Token> const &_input_string, TranslationState &_state)
 {
 	YS_ASSERT(_input_string.size() > 0);
-	bool				input_is_valid = true;
-
-	TranslationState	state{};
-	ProductionStack_t	production_stack;
-
+	bool					input_is_valid = true;
+	ProductionStack_t		production_stack;
 	std::vector<TokenId>	planar_view{ kSceneGroup };
 	size_t					input_index = 0;
 	size_t					value_index = 0;
 	size_t					view_index = 0;
-
-
+	//
+	_state.SceneBegin();
 	while (input_index < _input_string.size())
 	{
 		TokenId const	planar_token = planar_view[view_index];
 		Token const		lookahead = _input_string[input_index];
-
 		auto const		token_productions_it = production_rules.find(planar_token);
 		if (token_productions_it != production_rules.end())
 		{
+			// NOTE: Token expansion
 			TokenProductions_t const &available_productions = token_productions_it->second;
-
 			auto	production_it = available_productions.find(lookahead.id);
 			if (production_it == available_productions.end())
 				production_it = available_productions.find(kDefault);
-
+			//
 			if (production_it != available_productions.end())
 			{
 				Production_t const &production = production_it->second;
 				planar_view.insert(planar_view.cbegin() + view_index + 1,
 								   production.begin(), production.end());
 				planar_view.erase(planar_view.cbegin() + view_index);
-
 				uint32_t const		production_size = static_cast<uint32_t>(production.size());
 				std::vector<Token>::const_iterator const	production_begin =
 					_input_string.begin() + input_index;
-
 				production_stack.push_back({ planar_token, production_size, production_begin });
+				//
+				LOG_INFO(tools::kChannelParsing,
+						 "Expanding token " + 
+						 boost::lexical_cast<std::string>(planar_token) + 
+						 " using lookahead " +
+						 boost::lexical_cast<std::string>(lookahead.id)
+				);
 			}
 			else
 			{
 				// Production not found for current lookahead => syntax error, unexpected token
+				LOG_ERROR(tools::kChannelParsing,
+						  "No production found for token " +
+						  boost::lexical_cast<std::string>(planar_token) +
+						  " matching lookahead " +
+						  boost::lexical_cast<std::string>(lookahead.id)
+				);
 				input_is_valid = false;
 			}
 		}
 		else
 		{
-			// No production rules found for current token => terminal token
+			// NOTE: Syntax validation + Terminal semantic actions
 			if (lookahead.id == planar_token)
 			{
+				LOG_INFO(tools::kChannelParsing,
+						 "Successfully matched terminal token " +
+						 boost::lexical_cast<std::string>(planar_token)
+				);
+				//
 				if (production_stack.back().unscanned_count != 0)
 				{
+					TokenId	const	past_token = (input_index > 0) ? 
+						_input_string[input_index - 1].id : kEnd;
 					view_index++;
 					input_index++;
-
-					auto	action_it = semantic_actions.find(lookahead.id);
+					auto	action_it = semantic_actions.find(past_token);
 					if (action_it != semantic_actions.end())
-						action_it->second(state,
-										  _input_string.begin() + input_index - 1,
-										  _input_string.begin() + input_index);
+					{
+						LOG_INFO(tools::kChannelParsing, "Found semantic action ");
+						action_it->second(_state,
+										  _input_string.begin() + input_index - 2,
+										  _input_string.begin() + input_index - 1);
+					}
+					LOG_INFO(tools::kChannelParsing, "Stepped forward");
 				}
 				else
 				{
 					// An empty production should be ignored and there can't be more than one in a row.
 					production_stack.pop_back();
+					LOG_INFO(tools::kChannelParsing, "Popped empty production");
 				}
 				production_stack.back().unscanned_count--;
 			}
 			else
 			{
 				// Token mismatch
+				LOG_INFO(tools::kChannelParsing,
+						 "Token mismatch, expected " +
+						 boost::lexical_cast<std::string>(planar_token) +
+						 " but found " +
+						 boost::lexical_cast<std::string>(lookahead.id) +
+						 " instead"
+				);
 				input_is_valid = false;
 			}
 		}
 
+		// NOTE: Non-terminal semantic actions
 		while (production_stack.back().unscanned_count == 0)
 		{
+			LOG_INFO(tools::kChannelParsing,
+					 "Popping nonterminal " +
+					 boost::lexical_cast<std::string>(production_stack.back().parent) +
+					 " from production stack"
+			);
 			auto	action_it = semantic_actions.find(production_stack.back().parent);
 			if (action_it != semantic_actions.end())
-				action_it->second(state, 
+			{
+				LOG_INFO(tools::kChannelParsing, "Found semantic action ");
+				action_it->second(_state,
 								  production_stack.back().begin, 
 								  _input_string.begin() + input_index);
-
+			}
 			production_stack.pop_back();
 			if (production_stack.size() == 0)
 				break;
-
 			production_stack.back().unscanned_count--;
 		}
+		//
+		LOG_INFO(tools::kChannelParsing, "");
 	}
+
+	if (input_is_valid)
+		_state.SceneEnd();
 
 	return input_is_valid;
 }
@@ -470,48 +530,63 @@ void
 ShapeGroup(TranslationState &_state,
 		   std::vector<Token>::const_iterator _production_begin,
 		   std::vector<Token>::const_iterator _production_end)
-{}
+{
+	std::string const		shape_type = std::next(_production_begin, 1)->text;
+	_state.Shape(shape_type);
+}
 void
 FilmGroup(TranslationState &_state,
 		  std::vector<Token>::const_iterator _production_begin,
 		  std::vector<Token>::const_iterator _production_end)
-{}
+{
+	_state.Film();
+}
 void
 CameraGroup(TranslationState &_state,
 			std::vector<Token>::const_iterator _production_begin,
 			std::vector<Token>::const_iterator _production_end)
-{}
+{
+	_state.Camera();
+}
 void
 TranslateGroup(TranslationState &_state,
 			   std::vector<Token>::const_iterator _production_begin,
 			   std::vector<Token>::const_iterator _production_end)
 {
-	std::vector<Token>::const_iterator const	it = _production_begin + 1;
+	std::vector<Token>::const_iterator const	it = std::next(_production_begin, 1);
 	_state.Translate({ maths::stof(it->text),
-					   maths::stof((it + 1)->text),
-					   maths::stof((it + 2)->text) });
+					   maths::stof(std::next(it, 1)->text),
+					   maths::stof(std::next(it, 2)->text) });
 }
 void
 RotateGroup(TranslationState &_state,
 			std::vector<Token>::const_iterator _production_begin,
 			std::vector<Token>::const_iterator _production_end)
 {
-	std::vector<Token>::const_iterator const	it = _production_begin + 1;
+	std::vector<Token>::const_iterator const	it = std::next(_production_begin, 1);
 	_state.Rotate(maths::stof(it->text),
-				  { maths::stof((it + 1)->text),
-					maths::stof((it + 2)->text),
-					maths::stof((it + 3)->text) });
+				  { maths::stof(std::next(it, 1)->text),
+					maths::stof(std::next(it, 2)->text),
+					maths::stof(std::next(it, 3)->text) });
 }
 void
 ScaleGroup(TranslationState &_state,
 		   std::vector<Token>::const_iterator _production_begin,
 		   std::vector<Token>::const_iterator _production_end)
 {
-	std::vector<Token>::const_iterator const	it = _production_begin + 1;
+	std::vector<Token>::const_iterator const	it = std::next(_production_begin, 1);
 	_state.Scale(maths::stof(it->text),
-				 maths::stof((it + 1)->text),
-				 maths::stof((it + 2)->text));
+				 maths::stof(std::next(it, 1)->text),
+				 maths::stof(std::next(it, 2)->text));
 }
+void
+OutputGroup(TranslationState &_state,
+			std::vector<Token>::const_iterator _production_begin,
+			std::vector<Token>::const_iterator _production_end)
+{
+
+}
+
 void
 IdentityTerminal(TranslationState &_state,
 				 std::vector<Token>::const_iterator _production_begin,
@@ -535,10 +610,90 @@ ScopeEndTerminal(TranslationState &_state,
 }
 
 
+maths::Transform const &
+TransformCache::Lookup(maths::Transform const &_t)
+{
+	auto	it = lookup_table_.find(_t);
+	if (it == lookup_table_.end())
+	{
+		maths::Transform *const instance = mem_region_.Alloc<maths::Transform>();
+		new (instance) maths::Transform{ _t };
+		lookup_table_.emplace(*instance, instance);
+		return *instance;
+	}
+	else
+		return *(it->second);
+}
+
+
+bool
+TranslationState::LookupShapeFunc(std::string const &_id, TranslationState::MakeShapeCallback_t &_func)
+{
+	auto	it = shape_callbacks_.find(_id);
+	if (it != shape_callbacks_.end())
+	{
+		_func = it->second;
+		return true;
+	}
+	else
+		return false;
+}
+std::unordered_map<std::string, TranslationState::MakeShapeCallback_t> const
+TranslationState::shape_callbacks_ = {
+	{ "sphere", &raytracer::MakeSphere },
+};
+
 TranslationState::TranslationState() :
+	workdir_{ boost::filesystem::current_path().string() },
+	output_path_{ boost::filesystem::absolute("image.png", workdir_).string() },
 	render_context_{}, parameters_{},
 	scope_depth_{ 1 }, transform_stack_{ maths::Transform{} }
 {}
+void
+TranslationState::Workdir(std::string const &_absolute_path)
+{
+	workdir_ = boost::filesystem::absolute(_absolute_path).string();
+}
+void
+TranslationState::Output(std::string const &_relative_path)
+{
+	output_path_ = boost::filesystem::absolute(_relative_path, workdir_).string();
+}
+void
+TranslationState::Film()
+{
+	raytracer::Film	*film = raytracer::MakeFilm(render_context_, parameters_);
+	render_context_.SetFilm(film);
+}
+void
+TranslationState::Camera()
+{
+	raytracer::Camera	*camera = raytracer::MakeCamera(render_context_, parameters_);
+	render_context_.SetCamera(camera);
+}
+void
+TranslationState::Shape(std::string const &_type)
+{
+	MakeShapeCallback_t	callback{};
+	bool const			flip_normals = parameters_.FindBool("flip_normals", false);
+
+	if (LookupShapeFunc(_type, callback))
+	{
+		maths::Transform const	&transform = transform_cache_.Lookup(transform_stack_.back());
+		std::vector<raytracer::Shape*>	shapes = 
+			callback(render_context_, transform, flip_normals, parameters_);
+
+		raytracer::GeometryPrimitive	*prim_begin = 
+			static_cast<raytracer::GeometryPrimitive*>(
+				render_context_.AllocPrimitives<raytracer::GeometryPrimitive>(shapes.size())
+			);
+
+		for (size_t i = 0; i < shapes.size(); ++i)
+			new (prim_begin + i) raytracer::GeometryPrimitive{ *shapes[i] };
+	}
+	else
+		LOG_WARNING(tools::kChannelGeneral, "No factory function bound to shape id " + _type);
+}
 void
 TranslationState::Identity()
 {
@@ -572,6 +727,18 @@ TranslationState::ScopeEnd()
 	transform_stack_.pop_back();
 	parameters_.Clear();
 }
+void
+TranslationState::SceneBegin()
+{
+	render_context_.Clear();
+}
+void
+TranslationState::SceneEnd()
+{
+	if (render_context_.GoodForRender())
+		render_context_.RenderAndWrite(output_path_);
+}
+
 
 } // namespace api
 

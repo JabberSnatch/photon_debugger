@@ -108,6 +108,7 @@ public:
 		timer_.Add(end.QuadPart - start_.QuadPart, last_cycle - first_cycle_);
 	}
 
+	TimeProbe &operator=(TimeProbe const &) = delete;
 
 	static inline TimePoint_t
 	now()

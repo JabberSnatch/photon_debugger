@@ -6,6 +6,8 @@
 #include "globals.h"
 #include "vector.h"
 #include "profiler.h"
+#include "render_context.h"
+#include "param_set.h"
 
 namespace raytracer
 {
@@ -73,6 +75,18 @@ maths::Vec3f
 Film::MapToLimitedRange(maths::Vec3f const &_color) const
 {
 	return maths::Clamp(_color, maths::zero<maths::Decimal>, maths::one<maths::Decimal>);
+}
+
+Film*
+MakeFilm(RenderContext &_context, api::ParamSet const &_params)
+{
+	maths::Vec2i32 const	resolution = _params.FindInt<2>("resolution", { 800, 600 });
+	maths::Decimal const	side = _params.FindFloat("side", .036_d);
+
+	Film *const		film = _context.AllocFilm();
+	new (film) Film{ resolution.x, resolution.y, side };
+
+	return film;
 }
 
 } // raytracer

@@ -221,7 +221,7 @@ Triangle::WorldBounds() const
 maths::Point2f
 Triangle::uv(uint32_t _index) const
 {
-	YS_ASSERT(_index < 3u && _index >= 0u);
+	YS_ASSERT(_index < 3u);
 	if (mesh_.has_uv())
 		return mesh_.uv[vertex_index_[_index]];
 	else
