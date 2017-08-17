@@ -1,7 +1,7 @@
 #include "globals.h"
 
-#include "logger.h"
-#include "profiler.h"
+#include "core/logger.h"
+#include "core/profiler.h"
 
 namespace globals
 {

@@ -3,8 +3,8 @@
 #define __YS_BENCH_LOGGER_HPP__
 
 #include "globals.h"
-#include "profiler.h"
-#include "logger.h"
+#include "core/profiler.h"
+#include "core/logger.h"
 #include <thread>
 
 

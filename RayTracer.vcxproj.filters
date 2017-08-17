@@ -15,109 +15,106 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="inc\profiler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\win32_timer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\film.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\vector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\maths.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inc\globals.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\matrix.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\quaternion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\algorithms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\point.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\ray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\bounds.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\redecimal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\shape.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\raytracer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\surface_interaction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\shapes\sphere.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\logger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inc\common_macros.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\spinlock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\benchmarks\bench_logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\input_processor.h">
+    <ClInclude Include="inc\maths\maths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\triangle_mesh.h">
+    <ClInclude Include="inc\maths\bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\shapes\triangle.h">
+    <ClInclude Include="inc\maths\matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\primitive.h">
+    <ClInclude Include="inc\maths\quaternion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\bvh_accelerator.h">
+    <ClInclude Include="inc\maths\point.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\memory_region.h">
+    <ClInclude Include="inc\maths\ray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\core.h">
+    <ClInclude Include="inc\maths\transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\alloc.h">
+    <ClInclude Include="inc\maths\vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\translation_state.h">
+    <ClInclude Include="inc\raytracer\shapes\sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\render_context.h">
+    <ClInclude Include="inc\raytracer\shapes\triangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\param_set.h">
+    <ClInclude Include="inc\raytracer\bvh_accelerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\api.h">
+    <ClInclude Include="inc\raytracer\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\film.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\primitive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\raytracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\render_context.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\shape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\surface_interaction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\triangle_mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\alloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\profiler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\maths\redecimal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\spinlock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\win32_timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\memory_region.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\api\api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\api\input_processor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\api\param_set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -125,70 +122,70 @@
     <ClCompile Include="src\raytracer_main.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\film.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\win32_timer.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\globals.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\transform.cc">
+    <ClCompile Include="src\raytracer\shapes\sphere.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\maths.cc">
+    <ClCompile Include="src\raytracer\shapes\triangle.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\quaternion.cc">
+    <ClCompile Include="src\raytracer\camera.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\shape.cc">
+    <ClCompile Include="src\raytracer\film.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\shapes\sphere.cc">
+    <ClCompile Include="src\raytracer\bvh_accelerator.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\camera.cc">
+    <ClCompile Include="src\raytracer\primitive.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\redecimal.cc">
+    <ClCompile Include="src\raytracer\shape.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\logger.cc">
+    <ClCompile Include="src\raytracer\triangle_mesh.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\input_processor.cc">
+    <ClCompile Include="src\maths\transform.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\triangle_mesh.cc">
+    <ClCompile Include="src\maths\quaternion.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\shapes\triangle.cc">
+    <ClCompile Include="src\maths\maths.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\primitive.cc">
+    <ClCompile Include="src\maths\redecimal.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\bvh_accelerator.cc">
+    <ClCompile Include="src\core\logger.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\param_set.cc">
+    <ClCompile Include="src\core\win32_timer.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\api\input_processor.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\api\param_set.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="inc\vector.inl" />
-    <None Include="inc\matrix.inl">
+    <None Include="inc\maths\bounds.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="inc\point.inl">
+    <None Include="inc\maths\matrix.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="inc\bounds.inl">
+    <None Include="inc\maths\point.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="inc\redecimal.inl">
+    <None Include="inc\maths\vector.inl" />
+    <None Include="inc\maths\redecimal.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
