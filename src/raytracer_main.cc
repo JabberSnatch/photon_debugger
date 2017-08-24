@@ -6,7 +6,6 @@
 #include "maths/transform.h"
 #include "raytracer/film.h"
 #include "globals.h"
-#include "algorithms.h"
 #include "maths/redecimal.h"
 #include "raytracer/surface_interaction.h"
 #include "raytracer/camera.h"
@@ -19,6 +18,8 @@
 #include "raytracer/bvh_accelerator.h"
 #include "raytracer/primitive.h"
 #include "core/memory_region.h"
+#include "algorithms.h"
+#include "primes.h"
 
 #include <typeinfo>
 #include <iostream>
@@ -29,6 +30,12 @@
 
 int main(int argc, char *argv[])
 {
+	constexpr uint64_t index = 128;
+	using IndexSizedArray_t = std::array<uint64_t, index>;
+	constexpr IndexSizedArray_t primes = algo::primes::get_array<index>();
+
+	return 0;
+
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 	globals::logger.BindPath(tools::kChannelParsing, "parsing.log");

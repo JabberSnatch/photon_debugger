@@ -1,9 +1,12 @@
 #ifndef __YS_ALGORITHMS_HPP__
 #define __YS_ALGORITHMS_HPP__
 
+#include <array>
+
 
 namespace algo
 {
+
 
 template <size_t N>
 struct fill
@@ -30,6 +33,7 @@ constexpr bool IsPowerOfTwo(T _value)
 {
 	return _value && ((_value & (_value - 1)) == 0);
 }
+
 
 } // namespace algo
 
