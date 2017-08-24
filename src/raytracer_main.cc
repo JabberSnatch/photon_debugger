@@ -30,9 +30,12 @@
 
 int main(int argc, char *argv[])
 {
-	constexpr uint64_t index = 128;
+	constexpr uint64_t index = 2048;
 	using IndexSizedArray_t = std::array<uint64_t, index>;
-	constexpr IndexSizedArray_t primes = algo::primes::get_array<index>();
+	constexpr IndexSizedArray_t first_primes = algo::get_primes<index>();
+	//constexpr IndexSizedArray_t primes = algo::primes::get_array<index>();
+	constexpr uint64_t prime = algo::primes::compute_next_prime();
+	constexpr uint64_t prime3 = algo::primes::compute_next_prime(2, 3, 5);
 
 	return 0;
 
