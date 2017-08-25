@@ -26,18 +26,11 @@ static constexpr std::array<uint64_t, N> get_primes()
 	uint64_t candidate_prime = 2;
 	for (uint64_t i = 0; i < N; ++i)
 	{
-		//PrimeArray_t::const_iterator cdit = primes.cbegin();
 		uint64_t cdit = 0;
-		for (;;)
+		uint64_t candidate_divisor = 0;
+		while ((cdit < i) && (candidate_divisor < (candidate_prime / 2)))
 		{
-			//uint64_t candidate_divisor = *cdit;
-			uint64_t candidate_divisor = primes[cdit];
-			if (candidate_divisor > candidate_prime / 2 || cdit >= i)
-			{
-				primes[i] = candidate_prime;
-				++candidate_prime;
-				break;
-			}
+			candidate_divisor = primes[cdit];
 			if (candidate_prime % candidate_divisor == 0)
 			{
 				++candidate_prime;
@@ -45,82 +38,98 @@ static constexpr std::array<uint64_t, N> get_primes()
 			}
 			else
 				++cdit;
-
 		}
+		primes[i] = candidate_prime;
+		++candidate_prime;
 	}
 	return primes;
 }
 
-struct primes
+template <uint64_t N, uint64_t FirstIndex>
+static constexpr std::array<uint64_t, N> get_primes(
+	std::array<uint64_t, FirstIndex> first_primes)
 {
-	template <uint64_t i>
-	static constexpr uint64_t prime()
+	using PrimeArray_t = std::array<uint64_t, N>;
+	PrimeArray_t primes{};
+	uint64_t candidate_prime = first_primes[FirstIndex - 1] + 1u;
+	for (uint64_t i = 0; i < N; ++i)
 	{
-		uint64_t candidate_prime = primes::prime<i - 1>() + 1;
-		uint64_t candidate_divisor = 1;
-		for (;;)
+		const uint64_t total_primes_count = i + FirstIndex - 1;
+		uint64_t cdit = 0;
+		uint64_t candidate_divisor = 0;
+		while ((cdit < total_primes_count) && (candidate_divisor < (candidate_prime / 2)))
 		{
-			++candidate_divisor;
-			if (candidate_divisor > candidate_prime / 2)
-			{
-				return candidate_prime;
-			}
+			candidate_divisor = cdit < FirstIndex ? first_primes[cdit] : primes[cdit - FirstIndex];
 			if (candidate_prime % candidate_divisor == 0)
 			{
 				++candidate_prime;
-				candidate_divisor = 1;
-			}
-		}
-	}
-
-	template <>
-	static constexpr uint64_t prime<0>()
-	{
-		return 2;
-	}
-
-	template <typename ...Values>
-	static constexpr uint64_t compute_next_prime(Values ..._previous)
-	{
-		using PreviousArray = std::array<uint64_t, sizeof...(_previous)>;
-		PreviousArray previous{_previous...};
-		uint64_t candidate_prime = previous.back() + 1;
-		//PreviousArray::const_iterator pcit = previous.cbegin();
-		uint64_t pcit = 0;
-		for (;;)
-		{
-			uint64_t candidate_divisor = previous[pcit];
-			if (candidate_divisor >= candidate_prime / 2)
-				break;
-			if (candidate_prime % candidate_divisor == 0)
-			{
-				++candidate_prime;
-				pcit = 0;
+				cdit = 0;
 			}
 			else
-				++pcit;
+				++cdit;
 		}
-		return candidate_prime;
+		primes[i] = candidate_prime;
+		++candidate_prime;
 	}
-	template <>
-	static constexpr uint64_t compute_next_prime()
+	return primes;
+}
+
+
+template <uint64_t i>
+static constexpr uint64_t prime()
+{
+	uint64_t candidate_prime = prime<i - 1>() + 1;
+	uint64_t candidate_divisor = 1;
+	for (;;)
 	{
-		return 2;
+		++candidate_divisor;
+		if (candidate_divisor > candidate_prime / 2)
+		{
+			return candidate_prime;
+		}
+		if (candidate_prime % candidate_divisor == 0)
+		{
+			++candidate_prime;
+			candidate_divisor = 1;
+		}
 	}
+}
+template <>
+static constexpr uint64_t prime<0>()
+{
+	return 2;
+}
 
-	template <uint64_t P>
-	struct Prime
+template <typename ...Values>
+static constexpr uint64_t compute_next_prime(Values ..._previous)
+{
+	using PreviousArray = std::array<uint64_t, sizeof...(_previous)>;
+	PreviousArray previous{_previous...};
+	uint64_t candidate_prime = previous.back() + 1u;
+	//PreviousArray::const_iterator pcit = previous.cbegin();
+	uint64_t pcit = 0u;
+	uint64_t candidate_divisor = 0u;
+	while (candidate_divisor <= (candidate_prime / 2))
 	{
-		using tag = boost::mpl::integral_c_tag;
-		using value_type = uint64_t;
-		static constexpr value_type value{ P };
-		using type = Prime;
-		using next = Prime<value + 1>;
-		using prior = Prime<value - 1>;
-		constexpr operator uint64_t() const { return (this->value); }
-	};
+		candidate_divisor = previous[pcit];
+		if (candidate_prime % candidate_divisor == 0u)
+		{
+			++candidate_prime;
+			pcit = 0u;
+		}
+		else
+			++pcit;
+	}
+	return candidate_prime;
+}
+template <>
+static constexpr uint64_t compute_next_prime()
+{
+	return 2;
+}
 
-
+struct prime_rec
+{
 private:
 	template <uint64_t i>
 	struct helper
@@ -130,22 +139,22 @@ private:
 		{
 			if constexpr (i < N)
 			{
-				uint64_t candidate_prime = previous + 1;
-				uint64_t candidate_divisor = 1;
-				for (;;)
+				std::array<uint64_t, sizeof...(done)+1> computed_primes{done..., previous};
+				uint64_t candidate_prime = previous + 1u;
+				uint64_t candidate_divisor = 0u;
+				uint64_t cpit = 0u;
+				while((cpit < i) && (candidate_divisor < (candidate_prime / 2)))
 				{
-					++candidate_divisor;
-					if (candidate_divisor > candidate_prime / 2)
-					{
-						break;
-					}
+					candidate_divisor = computed_primes[cpit];
 					if (candidate_prime % candidate_divisor == 0)
 					{
 						++candidate_prime;
-						candidate_divisor = 1;
+						cpit = 0;
 					}
+					else
+						++cpit;
 				}
-				return primes::helper<i + 1>::upward_primes<N>(candidate_prime, done..., previous);
+				return helper<i + 1>::upward_primes<N>(candidate_prime, done..., previous);
 			}
 			else
 			{
@@ -160,13 +169,13 @@ private:
 		template <uint64_t N, typename ...values>
 		static constexpr auto upward_primes(uint64_t previous, values ...done)
 		{
-			return primes::helper<1>::upward_primes<N>(primes::prime<0>());
+			return helper<1>::upward_primes<N>(prime<0>());
 		}
 	};
 
 public:
 	template <uint64_t i>
-	static constexpr auto get_array()
+	static constexpr auto get_primes()
 	{
 		return helper<0>::upward_primes<i>(0);
 	}
@@ -206,17 +215,16 @@ struct ComputeNextPrime
 	PreviousArray previous{ _previous... };
 	uint64_t candidate_prime = previous.back() + 1;
 	PreviousArray::const_iterator pcit = previous.cbegin();
-	for (;;)
+	while (candidate_divisor <= (candidate_prime / 2))
 	{
-		if (*pcit >= candidate_prime / 2)
-			break;
-		if (candidate_prime % *pcit == 0)
+		candidate_divisor = primes[cdit];
+		if (candidate_prime % candidate_divisor == 0)
 		{
 			++candidate_prime;
-			pcit = previous.cbegin();
+			cdit = 0;
 		}
 		else
-			++pcit;
+			++cdit;
 	}
 	return candidate_prime;
 	*/

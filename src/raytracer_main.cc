@@ -1,41 +1,29 @@
-#include "maths/vector.h"
-#include "maths/point.h"
-#include "maths/bounds.h"
-#include "maths/matrix.h"
-#include "maths/quaternion.h"
-#include "maths/transform.h"
-#include "raytracer/film.h"
-#include "globals.h"
-#include "maths/redecimal.h"
-#include "raytracer/surface_interaction.h"
-#include "raytracer/camera.h"
-#include "raytracer/shapes/sphere.h"
-#include "raytracer/triangle_mesh.h"
-#include "raytracer/shapes/triangle.h"
-#include "core/logger.h"
-#include "core/profiler.h"
-#include "api/input_processor.h"
-#include "raytracer/bvh_accelerator.h"
-#include "raytracer/primitive.h"
-#include "core/memory_region.h"
-#include "algorithms.h"
-#include "primes.h"
-
 #include <typeinfo>
 #include <iostream>
 #include <sstream>
+
 #include "boost/filesystem.hpp"
 
+#include "algorithms.h"
+#include "primes.h"
+#include "api/input_processor.h"
 #include "benchmarks/bench_logger.h"
+#include "core/logger.h"
+#include "core/profiler.h"
+
 
 int main(int argc, char *argv[])
 {
-	constexpr uint64_t index = 2048;
-	using IndexSizedArray_t = std::array<uint64_t, index>;
-	constexpr IndexSizedArray_t first_primes = algo::get_primes<index>();
-	//constexpr IndexSizedArray_t primes = algo::primes::get_array<index>();
-	constexpr uint64_t prime = algo::primes::compute_next_prime();
-	constexpr uint64_t prime3 = algo::primes::compute_next_prime(2, 3, 5);
+	constexpr uint64_t count = 1024;
+	using CountSizedArray_t = std::array<uint64_t, count>;
+	using DoubleSizedArray_t = std::array<uint64_t, count * 2>;
+	//constexpr uint64_t prime0 = algo::prime<count>();
+	constexpr CountSizedArray_t first_primes = algo::get_primes<count>();
+	constexpr CountSizedArray_t next_primes = algo::get_primes<count, count>(first_primes);
+	//constexpr DoubleSizedArray_t all_primes = algo::get_primes<count * 2>();
+	//constexpr IndexSizedArray_t primes = algo::prime_rec::get_primes<count>();
+	//constexpr uint64_t prime = algo::compute_next_prime();
+	//constexpr uint64_t prime3 = algo::compute_next_prime(2, 3, 5, 7, 11, 13);
 
 	return 0;
 
