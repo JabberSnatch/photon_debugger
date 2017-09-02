@@ -18,6 +18,61 @@ namespace algo
 {
 
 
+using TestFunctionType = std::function<uint64_t(uint64_t)>;
+
+
+template <uint64_t value>
+struct func_struct
+{
+	uint64_t operator()(uint64_t i) const { return i * value; }
+	using signature = std::function<uint64_t(uint64_t)>;
+	//static constexpr type value{ func_struct<value>{} };
+};
+
+
+template <uint64_t V>
+struct UintContainer
+{
+	using type = uint64_t;
+	static constexpr type value { V };
+};
+
+template <template<uint64_t> typename Functor, uint64_t V>
+struct FunctionContainer
+{
+	using type = typename Functor<V>::signature;
+	static constexpr type value{ Functor<V>{} };
+};
+template <uint64_t V>
+using func_struct_container = FunctionContainer<func_struct, V>;
+
+template <uint64_t N, template<uint64_t> typename Container>
+static constexpr std::array<typename Container<0>::type, N> build_array()
+{
+	std::array<typename Container<0>::type, N> result{};
+	for (uint64_t i = 0; i < N; ++i)
+	{
+		// NOTE: This can't work unless i is constexpr
+		//result[i] = Container<i>::value;
+	}
+	return result;
+}
+
+template <uint64_t N, template<uint64_t> typename Container, typename ...Acc>
+struct build_array_rec
+{
+	static constexpr auto value{ 
+		build_array_rec<N - 1u, Container, Container<N>, Acc...>::value
+	};
+};
+template <template <uint64_t> typename Container, typename ...Acc>
+struct build_array_rec<0, Container, Acc...>
+{
+	static constexpr auto value{
+		std::array<typename Container<0>::type, sizeof...(Acc)> { Acc::value... };
+	};
+};
+
 template <uint64_t N>
 static constexpr std::array<uint64_t, N> get_primes()
 {
@@ -51,7 +106,7 @@ static constexpr std::array<uint64_t, N> get_primes(
 {
 	using PrimeArray_t = std::array<uint64_t, N>;
 	PrimeArray_t primes{};
-	uint64_t candidate_prime = first_primes[FirstIndex - 1] + 1u;
+	uint64_t candidate_prime = (FirstIndex > 0) ? first_primes[FirstIndex - 1] + 1u : 2;
 	for (uint64_t i = 0; i < N; ++i)
 	{
 		const uint64_t total_primes_count = i + FirstIndex - 1;

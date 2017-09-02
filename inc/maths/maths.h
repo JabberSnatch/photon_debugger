@@ -116,6 +116,7 @@ float	NextDecimalDown(float _v, uint32_t _delta = 1);
 
 bool	Quadratic(Decimal _a, Decimal _b, Decimal _c, Decimal &_t0, Decimal &_t1);
 } // namespace maths
+
 constexpr maths::Decimal operator "" _d(long double _v) { return maths::Decimal(_v); }
 constexpr maths::DecimalBits operator "" _db(unsigned long long _v) { return maths::DecimalBits(_v); }
 //inline maths::Decimal operator "" _d(char const *_v) { return maths::Decimal(std::atof(_v)); }

@@ -234,6 +234,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\rng.cc" />
     <ClCompile Include="src\raytracer\bvh_accelerator.cc" />
     <ClCompile Include="src\raytracer\camera.cc" />
     <ClCompile Include="src\raytracer\film.cc" />
@@ -259,6 +260,7 @@
     <ClInclude Include="inc\core\core.h" />
     <ClInclude Include="inc\algorithms.h" />
     <ClInclude Include="inc\benchmarks\bench_logger.h" />
+    <ClInclude Include="inc\core\rng.h" />
     <ClInclude Include="inc\maths\bounds.h" />
     <ClInclude Include="inc\primes.h" />
     <ClInclude Include="inc\raytracer\bvh_accelerator.h" />
