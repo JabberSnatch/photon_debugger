@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <array>
+#include <limits>
 #include <tuple>
 
 
@@ -81,7 +82,16 @@ private:
 	};
 public:
 	explicit RNG(uint64_t _seed);
-	uint32_t operator()();
+	uint32_t get_32b();
+	uint32_t get_32b(uint32_t _max);
+	uint64_t get_64b();
+	uint64_t get_64b(uint64_t _max);
+	float get_single();
+	double get_double();
+	template <typename T> T get_float();
+	template <> float get_float() { return get_single(); }
+	template <> double get_float() { return get_double(); }
+	//
 	static uint32_t xorshift(uint32_t _input, Bitcount_t _shift);
 	static uint32_t inv_xorshift(uint32_t _output, Bitcount_t _shift);
 	static uint32_t rotate_right(uint32_t _input, Bitcount_t _rotation);

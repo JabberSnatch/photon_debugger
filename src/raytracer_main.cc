@@ -11,6 +11,7 @@
 #include "core/logger.h"
 #include "core/profiler.h"
 #include "core/rng.h"
+#include <random>
 
 int main(int argc, char *argv[])
 {
@@ -44,22 +45,11 @@ int main(int argc, char *argv[])
 	return 0;
 #endif
 
-	uint32_t input{ 65421356u }, output{ 0u }, inverse{ 0u };
-	uint64_t seed{ 345981108932u };
-	core::RNG rng{ seed };
-	{
-		TIMED_SCOPE(RNG_Bench);
-		for (uint64_t i = 0; i < 10000000u; ++i)
-		{
-			rng();
-		}
-	}
-
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 	globals::logger.BindPath(tools::kChannelParsing, "parsing.log");
 
-	if (argc > 1 && false)
+	if (argc > 1)
 	{
 		std::string const input_file{ argv[1] };
 		std::string const absolute_path = boost::filesystem::absolute(input_file).string();

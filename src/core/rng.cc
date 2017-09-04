@@ -1,13 +1,8 @@
 #include "core/rng.h"
 
-
 #include <typeinfo>
 
-
 #include "boost/numeric/conversion/cast.hpp"
-
-
-#include "common_macros.h"
 
 
 namespace core
@@ -77,11 +72,66 @@ RNG::RNG(uint64_t _seed) :
 }
 
 
-uint32_t RNG::operator()()
+uint32_t RNG::get_32b()
 {
 	const uint32_t rhs = extension_value_();
 	const uint32_t lhs = generator_value_();
 	return lhs ^ rhs;
+}
+
+
+uint32_t RNG::get_32b(uint32_t _max)
+{
+	const uint32_t threshold = (std::numeric_limits<uint32_t>::max() - _max + 1u) % _max;
+	for (;;)
+	{
+		const uint32_t random = get_32b();
+		if (random >= threshold)
+		{
+			return random % _max;
+		}
+	}
+}
+
+
+uint64_t RNG::get_64b()
+{
+	const size_t extension_index = static_cast<size_t>(state_ & kDimensionMask_);
+	if (extension_index == 1u)
+	{
+		get_32b();
+	}
+	const uint32_t low_order = get_32b();
+	const uint32_t high_order = get_32b();
+	return static_cast<uint64_t>(low_order) | (static_cast<uint64_t>(high_order) << 32u);
+}
+
+
+uint64_t RNG::get_64b(uint64_t _max)
+{
+	const uint64_t threshold = (std::numeric_limits<uint64_t>::max() - _max + 1u) % _max;
+	for (;;)
+	{
+		const uint64_t random = get_64b();
+		if (random >= threshold)
+		{
+			return random % _max;
+		}
+	}
+}
+
+
+float RNG::get_single()
+{
+	constexpr float factor = (1.f - std::numeric_limits<float>::epsilon()) / std::numeric_limits<uint32_t>::max();
+	return static_cast<float>(get_32b()) * factor;
+}
+
+
+double RNG::get_double()
+{
+	constexpr double factor = (1.0 - std::numeric_limits<double>::epsilon()) / std::numeric_limits<uint64_t>::max();
+	return static_cast<double>(get_64b()) * factor;
 }
 
 
