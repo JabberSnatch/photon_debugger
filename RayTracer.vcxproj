@@ -243,8 +243,11 @@
     <ClCompile Include="src\core\logger.cc" />
     <ClCompile Include="src\maths\maths.cc" />
     <ClCompile Include="src\api\param_set.cc" />
+    <ClCompile Include="src\raytracer\integrator.cc" />
     <ClCompile Include="src\raytracer\primitive.cc" />
     <ClCompile Include="src\maths\quaternion.cc" />
+    <ClCompile Include="src\raytracer\sampler.cc" />
+    <ClCompile Include="src\raytracer\samplers\random_sampler.cc" />
     <ClCompile Include="src\raytracer_main.cc" />
     <ClCompile Include="src\maths\redecimal.cc" />
     <ClCompile Include="src\raytracer\shape.cc" />
@@ -274,12 +277,15 @@
     <ClInclude Include="inc\core\memory_region.h" />
     <ClInclude Include="inc\api\param_set.h" />
     <ClInclude Include="inc\maths\point.h" />
+    <ClInclude Include="inc\raytracer\integrator.h" />
     <ClInclude Include="inc\raytracer\primitive.h" />
     <ClInclude Include="inc\maths\quaternion.h" />
     <ClInclude Include="inc\maths\ray.h" />
     <ClInclude Include="inc\raytracer\raytracer.h" />
     <ClInclude Include="inc\maths\redecimal.h" />
     <ClInclude Include="inc\raytracer\render_context.h" />
+    <ClInclude Include="inc\raytracer\sampler.h" />
+    <ClInclude Include="inc\raytracer\samplers\random_sampler.h" />
     <ClInclude Include="inc\raytracer\shape.h" />
     <ClInclude Include="inc\raytracer\shapes\sphere.h" />
     <ClInclude Include="inc\raytracer\shapes\triangle.h" />

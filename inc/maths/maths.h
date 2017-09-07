@@ -208,6 +208,7 @@ template <typename T> using Point3 = Point<T, 3>;
 template <typename T> using Point2 = Point<T, 2>;
 using Point3f = Point3<Decimal>;
 using Point2f = Point2<Decimal>;
+using Point2i = Point2<int32_t>;
 
 using Bounds2f = Bounds<maths::Decimal, 2>;
 using Bounds3f = Bounds<maths::Decimal, 3>;

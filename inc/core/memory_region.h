@@ -50,6 +50,7 @@ public:
 
 	void	Clear();
 
+	// TODO: override new operator and replace Alloc everywhere
 	void	*Alloc(size_t _size) override;
 	template <typename T> T *Alloc(size_t _count, bool _default_constructed);
 	template <typename T> T *Alloc(size_t _count = 1u);

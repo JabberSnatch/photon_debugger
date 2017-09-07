@@ -7,6 +7,8 @@
 #include <limits>
 #include <tuple>
 
+#include "maths/maths.h"
+
 
 namespace core
 {
@@ -43,7 +45,7 @@ private:
 	// 64/32 xorshift, random shift
 	struct xsh_rs
 	{
-		static uint32_t apply(uint64_t _input);
+		static uint32_t Apply(uint64_t _input);
 		//
 		static constexpr Bitcount_t	kOpcodeSize = 3; // depends on input size
 		static constexpr Bitcount_t	kOpcodeMask = (1u << kOpcodeSize) - 1u;
@@ -53,7 +55,7 @@ private:
 	// 64/32 xorshift, random rotate
 	struct xsh_rr
 	{
-		static uint32_t apply(uint64_t _input);
+		static uint32_t Apply(uint64_t _input);
 		//
 		static constexpr Bitcount_t	kOpcodeSize = 5; // depends on input size
 		static constexpr Bitcount_t	kOpcodeMask = (1u << kOpcodeSize) - 1u;
@@ -65,9 +67,9 @@ private:
 	struct rxs_m_xs
 	{
 		using BoolUint32Pair_t = std::tuple<bool, uint32_t>;
-		static BoolUint32Pair_t inverse_step(uint32_t _output, size_t _i);
-		static uint32_t apply(uint32_t _input);
-		static uint32_t inverse(uint32_t _output);
+		static BoolUint32Pair_t InverseStep(uint32_t _output, size_t _i);
+		static uint32_t Apply(uint32_t _input);
+		static uint32_t Inverse(uint32_t _output);
 		//
 		static constexpr uint32_t kIncrement = 2891336453u;
 		static constexpr uint32_t kMultiplier = 747796405u;
@@ -82,24 +84,25 @@ private:
 	};
 public:
 	explicit RNG(uint64_t _seed);
-	uint32_t get_32b();
-	uint32_t get_32b(uint32_t _max);
-	uint64_t get_64b();
-	uint64_t get_64b(uint64_t _max);
-	float get_single();
-	double get_double();
-	template <typename T> T get_float();
-	template <> float get_float() { return get_single(); }
-	template <> double get_float() { return get_double(); }
+	uint32_t Get32b();
+	uint32_t Get32b(uint32_t _max);
+	uint64_t Get64b();
+	uint64_t Get64b(uint64_t _max);
+	float GetSingle();
+	double GetDouble();
+	maths::Decimal GetDecimal() { return GetFloat<maths::Decimal>(); }
 	//
-	static uint32_t xorshift(uint32_t _input, Bitcount_t _shift);
-	static uint32_t inv_xorshift(uint32_t _output, Bitcount_t _shift);
-	static uint32_t rotate_right(uint32_t _input, Bitcount_t _rotation);
+	static uint32_t Xorshift(uint32_t _input, Bitcount_t _shift);
+	static uint32_t InvXorshift(uint32_t _output, Bitcount_t _shift);
+	static uint32_t RotateRight(uint32_t _input, Bitcount_t _rotation);
 private:
-	static uint32_t __inv_xorshift_(uint32_t _output, Bitcount_t _bitcount, Bitcount_t _shift);
-	uint32_t generator_value_();
-	uint32_t extension_value_();
-	void advance_extension_();
+	template <typename T> T GetFloat();
+	template <> float GetFloat() { return GetSingle(); }
+	template <> double GetFloat() { return GetDouble(); }
+	static uint32_t __InvXorshift_(uint32_t _output, Bitcount_t _bitcount, Bitcount_t _shift);
+	uint32_t GeneratorValue_();
+	uint32_t ExtensionValue_();
+	void AdvanceExtension_();
 private:
 	uint64_t			state_;
 	ExtensionArray_t	extension_;

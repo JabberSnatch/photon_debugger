@@ -9,6 +9,8 @@
 
 #include "raytracer/camera.h"
 #include "raytracer/primitive.h"
+#include "raytracer/integrator.h"
+#include "raytracer/samplers/random_sampler.h"
 
 namespace raytracer {
 
@@ -33,12 +35,14 @@ public:
 	void	SetFilm(Film *_f)
 	{
 		film_ = _f;
+		integrator_.SetFilm(film_);
 		//if (camera_)
 		//	camera_->SetFilm(film_);
 	}
 	void	SetCamera(Camera *_c)
 	{
 		camera_ = _c;
+		integrator_.SetCamera(camera_);
 		//if (film_)
 		//	camera_->SetFilm(film_);
 	}
@@ -46,9 +50,15 @@ public:
 	{
 		return (camera_ && film_);
 	}
-	void	RenderAndWrite(std::string const &_path) const
+	void	RenderAndWrite(std::string const &_path)
 	{
-		camera_->Expose(primitives_, 0._d);
+		Sampler *sampler = mem_region_.Alloc<RandomSampler>();
+		core::RNG sampler_rng(14587126349871134129u);
+		new (sampler) RandomSampler(sampler_rng, 16u, 2u);
+		integrator_.SetSampler(sampler);
+
+		integrator_.Integrate(primitives_, 0._d);
+		//camera_->Expose(primitives_, 0._d);
 		camera_->WriteToFile(_path);
 	}
 
@@ -80,6 +90,7 @@ public:
 private:
 	raytracer::Camera			*camera_ = nullptr;
 	raytracer::Film				*film_ = nullptr;
+	raytracer::Integrator		integrator_;
 	std::vector<Primitive*>		primitives_;
 
 	core::MemoryRegion<>		mem_region_;
