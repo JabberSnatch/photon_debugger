@@ -63,7 +63,7 @@ public:
 	}
 
 	raytracer::Film		*film() { return film_; }
-	core::MemoryRegion<> &mem_region() { return mem_region_; }
+	core::MemoryRegion &mem_region() { return mem_region_; }
 
 private:
 	raytracer::Camera			*camera_ = nullptr;
@@ -71,7 +71,7 @@ private:
 	raytracer::Integrator		integrator_;
 	std::vector<Primitive*>		primitives_;
 
-	core::MemoryRegion<>		mem_region_;
+	core::MemoryRegion			mem_region_;
 };
 
 

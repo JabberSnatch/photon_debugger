@@ -42,6 +42,7 @@ MakeSphere(raytracer::RenderContext &_context,
 		   maths::Transform const &_t, bool _flip_normals,
 		   api::ParamSet const &_params)
 {
+	bool const				flip_normals = _params.FindBool("flip_normals", false);
 	maths::Decimal const	radius = _params.FindFloat("radius", 1._d);
 	maths::Decimal const	z_min = _params.FindFloat("z_min", -radius);
 	maths::Decimal const	z_max = _params.FindFloat("z_max", radius);

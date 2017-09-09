@@ -235,6 +235,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\api\factory_functions.cc" />
+    <ClCompile Include="src\core\alloc.cc" />
+    <ClCompile Include="src\core\memory_region.cc" />
     <ClCompile Include="src\core\rng.cc" />
     <ClCompile Include="src\raytracer\bvh_accelerator.cc" />
     <ClCompile Include="src\raytracer\camera.cc" />

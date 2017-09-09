@@ -206,6 +206,12 @@
     <ClCompile Include="src\api\factory_functions.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\memory_region.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\alloc.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="inc\maths\bounds.inl">

@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "core/core.h"
+#include "core/memory_region.h"
 #include "raytracer/raytracer.h"
 #include "maths/maths.h"
 
@@ -31,7 +31,7 @@ public:
 	~BvhAccelerator();
 
 	
-	BvhNode		*BuildRecursive(core::IMemoryRegion &_region,
+	BvhNode		*BuildRecursive(core::MemoryRegion &_region,
 								std::vector<BvhPrimitiveDesc> &_primitive_desc,
 								uint32_t _first, uint32_t _end, int &_node_count,
 								PrimitiveArray_t &_ordered_primitives);

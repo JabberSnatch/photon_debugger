@@ -3,6 +3,7 @@
 #include "globals.h"
 #include "core/logger.h"
 #include "core/memory_region.h"
+#include "core/alloc.h"
 
 #include "maths/ray.h"
 
@@ -27,7 +28,7 @@ BvhAccelerator::BvhAccelerator(BvhAccelerator::PrimitiveArray_t const &_primitiv
 	for (size_t i = 0; i < primitives_.size(); ++i)
 		primitive_desc.emplace_back(static_cast<uint32_t>(i), primitives_[i]->WorldBounds());
 
-	core::MemoryRegion<1024 * 1024>		allocator;
+	core::MemoryRegion					allocator{ 1024 * 1024 };
 	int									node_count = 0;
 	BvhAccelerator::PrimitiveArray_t	ordered_primitives;
 	BvhNode								*root;
@@ -47,7 +48,7 @@ BvhAccelerator::~BvhAccelerator()
 }
 
 BvhAccelerator::BvhNode	*
-BvhAccelerator::BuildRecursive(core::IMemoryRegion &_region,
+BvhAccelerator::BuildRecursive(core::MemoryRegion &_region,
 							   std::vector<BvhPrimitiveDesc> &_primitive_desc,
 							   uint32_t _first, uint32_t _last, int &_node_count,
 							   PrimitiveArray_t &_ordered_primitives)

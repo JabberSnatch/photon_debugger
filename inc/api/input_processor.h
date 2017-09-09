@@ -117,7 +117,7 @@ public:
 
 private:
 	std::map<maths::Transform, maths::Transform *>	lookup_table_;
-	core::MemoryRegion<>	mem_region_;
+	core::MemoryRegion	mem_region_;
 };
 
 

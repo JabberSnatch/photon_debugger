@@ -73,7 +73,7 @@ private:
 	std::unordered_map<std::string, InputParameter<int32_t>>		int_parameters_;
 	std::unordered_map<std::string, InputParameter<bool>>			bool_parameters_;
 
-	core::MemoryRegion<>	region_;
+	core::MemoryRegion region_;
 
 
 	template <typename T>
