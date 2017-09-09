@@ -177,7 +177,7 @@ ParamSet::AllocateCommon_(std::string const &_id, uint32_t _count,
 			_map.erase(it);
 	}
 
-	T	*location = region_.Alloc<T>(static_cast<size_t>(_count));
+	T *location = new (region_) T();
 	InputParameter<T>	parameter{ location, _count };
 
 	return _map.emplace(_id, parameter).first->second;

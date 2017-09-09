@@ -3,6 +3,7 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/filesystem.hpp"
 
+#include "api/factory_functions.h"
 #include "common_macros.h"
 #include "raytracer/shapes/sphere.h"
 #include "raytracer/primitive.h"
@@ -617,8 +618,7 @@ TransformCache::Lookup(maths::Transform const &_t)
 	auto	it = lookup_table_.find(_t);
 	if (it == lookup_table_.end())
 	{
-		maths::Transform *const instance = mem_region_.Alloc<maths::Transform>();
-		new (instance) maths::Transform{ _t };
+		maths::Transform *const instance = new (mem_region_) maths::Transform{ _t };
 		lookup_table_.emplace(*instance, instance);
 		return *instance;
 	}
@@ -630,7 +630,7 @@ TransformCache::Lookup(maths::Transform const &_t)
 bool
 TranslationState::LookupShapeFunc(std::string const &_id, TranslationState::MakeShapeCallback_t &_func)
 {
-	auto	it = shape_callbacks_.find(_id);
+	auto it = shape_callbacks_.find(_id);
 	if (it != shape_callbacks_.end())
 	{
 		_func = it->second;
@@ -641,7 +641,7 @@ TranslationState::LookupShapeFunc(std::string const &_id, TranslationState::Make
 }
 std::unordered_map<std::string, TranslationState::MakeShapeCallback_t> const
 TranslationState::shape_callbacks_ = {
-	{ "sphere", &raytracer::MakeSphere },
+	{ "sphere", &MakeSphere },
 };
 
 TranslationState::TranslationState() :
@@ -663,13 +663,13 @@ TranslationState::Output(std::string const &_relative_path)
 void
 TranslationState::Film()
 {
-	raytracer::Film	*film = raytracer::MakeFilm(render_context_, parameters_);
+	raytracer::Film *film = MakeFilm(render_context_, parameters_);
 	render_context_.SetFilm(film);
 }
 void
 TranslationState::Camera()
 {
-	raytracer::Camera	*camera = raytracer::MakeCamera(render_context_, parameters_);
+	raytracer::Camera *camera = MakeCamera(render_context_, parameters_);
 	render_context_.SetCamera(camera);
 }
 void
@@ -681,16 +681,14 @@ TranslationState::Shape(std::string const &_type)
 	if (LookupShapeFunc(_type, callback))
 	{
 		maths::Transform const	&transform = transform_cache_.Lookup(transform_stack_.back());
-		std::vector<raytracer::Shape*>	shapes = 
+		std::vector<raytracer::Shape*> shapes = 
 			callback(render_context_, transform, flip_normals, parameters_);
-
-		raytracer::GeometryPrimitive	*prim_begin = 
-			static_cast<raytracer::GeometryPrimitive*>(
-				render_context_.AllocPrimitives<raytracer::GeometryPrimitive>(shapes.size())
-			);
-
 		for (size_t i = 0; i < shapes.size(); ++i)
-			new (prim_begin + i) raytracer::GeometryPrimitive{ *shapes[i] };
+		{
+			raytracer::GeometryPrimitive *prim =
+				new (render_context_.mem_region()) raytracer::GeometryPrimitive(*shapes[i]);
+			render_context_.AddPrimitive(prim);
+		}
 	}
 	else
 		LOG_WARNING(tools::kChannelGeneral, "No factory function bound to shape id " + _type);

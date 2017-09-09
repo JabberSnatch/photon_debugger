@@ -41,8 +41,6 @@ private:
 	Film			&film_;
 };
 
-Camera	*MakeCamera(RenderContext &_context, api::ParamSet const &_params);
-
 } // namespace raytracer
 
 

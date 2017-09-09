@@ -234,6 +234,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\api\factory_functions.cc" />
     <ClCompile Include="src\core\rng.cc" />
     <ClCompile Include="src\raytracer\bvh_accelerator.cc" />
     <ClCompile Include="src\raytracer\camera.cc" />
@@ -258,6 +259,7 @@
     <ClCompile Include="src\core\win32_timer.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\api\factory_functions.h" />
     <ClInclude Include="inc\core\alloc.h" />
     <ClInclude Include="inc\api\api.h" />
     <ClInclude Include="inc\core\core.h" />

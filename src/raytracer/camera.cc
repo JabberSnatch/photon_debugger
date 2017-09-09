@@ -156,22 +156,4 @@ Camera::ValidateFilm_() const
 }
 
 
-Camera*
-MakeCamera(RenderContext &_context, api::ParamSet const &_params)
-{
-	maths::Point3f const	position = static_cast<maths::Point3f>(
-		_params.FindFloat<3>("position", { 0._d, 0._d, 0._d })
-	);
-	maths::Point3f const	lookat = static_cast<maths::Point3f>(
-		_params.FindFloat<3>("lookat", maths::Vec3f(position) + maths::Vec3f{ 0._d, 1._d, 0._d })
-	);
-	maths::Vec3f const		up = _params.FindFloat<3>("up", { 0._d, 0._d, 1._d });
-	maths::Decimal const	fov = _params.FindFloat("fov", 60._d);
-
-	Camera *camera = _context.AllocCamera();
-	new (camera) Camera{ position, lookat, up, fov, *_context.film() };
-
-	return camera;
-}
-
 } // namespace raytracer

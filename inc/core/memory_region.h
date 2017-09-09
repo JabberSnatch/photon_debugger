@@ -50,7 +50,9 @@ public:
 
 	void	Clear();
 
-	// TODO: override new operator and replace Alloc everywhere
+	friend void* ::operator new (size_t _count, MemoryRegion<BS, AAlign, BAlign> &_region);
+	friend void* ::operator new[] (size_t _count, MemoryRegion<BS, AAlign, BAlign> &_region);
+private:
 	void	*Alloc(size_t _size) override;
 	template <typename T> T *Alloc(size_t _count, bool _default_constructed);
 	template <typename T> T *Alloc(size_t _count = 1u);
@@ -62,6 +64,24 @@ private:
 
 
 } // namespace core
+
+
+template <size_t BS, uint64_t AAlign, uint64_t BAlign>
+void* operator new (size_t _count, core::MemoryRegion<BS, AAlign, BAlign> &_region)
+{
+	return _region.Alloc(_count);
+}
+template <size_t BS, uint64_t AAlign, uint64_t BAlign>
+void operator delete(void* _ptr, core::MemoryRegion<BS, AAlign, BAlign> &_region)
+{}
+template <size_t BS, uint64_t AAlign, uint64_t BAlign>
+void* operator new[] (size_t _count, core::MemoryRegion<BS, AAlign, BAlign> &_region)
+{
+	return _region.Alloc(_count);
+}
+template <size_t BS, uint64_t AAlign, uint64_t BAlign>
+void operator delete[](void* _ptr, core::MemoryRegion<BS, AAlign, BAlign> &_region)
+{}
 
 
 namespace core {
@@ -93,6 +113,7 @@ MemoryRegion<BS, AAlign, BAlign>::Clear()
 	for (BlockDesc_t block : blocks_)
 		block.first = 0u;
 }
+
 
 template <size_t BS, uint64_t AAlign, uint64_t BAlign>
 void *

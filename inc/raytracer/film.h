@@ -43,8 +43,6 @@ private:
 };
 
 
-Film *MakeFilm(RenderContext &_context, api::ParamSet const &_params);
-
 } // raytracer
 
 

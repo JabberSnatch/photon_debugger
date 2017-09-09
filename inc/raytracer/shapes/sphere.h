@@ -33,10 +33,6 @@ public:
 	maths::Decimal const	theta_min, theta_max, phi_max;
 };
 
-std::vector<Shape*> MakeSphere(RenderContext &_context, 
-							   maths::Transform const &_t, bool _flip_normals,
-							   api::ParamSet const &_params);
-
 } // namespace raytracer
 
 

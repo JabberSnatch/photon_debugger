@@ -36,15 +36,11 @@ public:
 	{
 		film_ = _f;
 		integrator_.SetFilm(film_);
-		//if (camera_)
-		//	camera_->SetFilm(film_);
 	}
 	void	SetCamera(Camera *_c)
 	{
 		camera_ = _c;
 		integrator_.SetCamera(camera_);
-		//if (film_)
-		//	camera_->SetFilm(film_);
 	}
 	bool	GoodForRender() const
 	{
@@ -52,9 +48,8 @@ public:
 	}
 	void	RenderAndWrite(std::string const &_path)
 	{
-		Sampler *sampler = mem_region_.Alloc<RandomSampler>();
 		core::RNG sampler_rng(14587126349871134129u);
-		new (sampler) RandomSampler(sampler_rng, 16u, 2u);
+		Sampler *sampler = new (mem_region_) RandomSampler(sampler_rng, 16u, 2u);
 		integrator_.SetSampler(sampler);
 
 		integrator_.Integrate(primitives_, 0._d);
@@ -62,30 +57,13 @@ public:
 		camera_->WriteToFile(_path);
 	}
 
-	template <typename T>
-	Shape	*AllocShapes(size_t _count = 1)
+	void AddPrimitive(Primitive *_prim)
 	{
-		return static_cast<Shape*>(mem_region_.Alloc<T>(_count));
-	}
-	template <typename T>
-	Primitive	*AllocPrimitives(size_t _count = 1)
-	{
-		Primitive	*first = static_cast<Primitive*>(mem_region_.Alloc<T>(_count));
-		//primitives_.insert(primitives_.cend(), first, first + _count);
-		for (int i = 0; i < _count; ++i)
-			primitives_.emplace_back(first + i);
-		return	first;
-	}
-	Film	*AllocFilm()
-	{
-		return mem_region_.Alloc<Film>();
-	}
-	Camera	*AllocCamera()
-	{
-		return mem_region_.Alloc<Camera>();
+		primitives_.push_back(_prim);
 	}
 
 	raytracer::Film		*film() { return film_; }
+	core::MemoryRegion<> &mem_region() { return mem_region_; }
 
 private:
 	raytracer::Camera			*camera_ = nullptr;
