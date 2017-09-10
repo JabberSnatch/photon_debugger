@@ -40,6 +40,18 @@ ParamSet::PushBool(std::string const &_id, bool _v)
 	PushBool(_id, &_v, 1);
 }
 
+void
+ParamSet::PushTransform(std::string const &_id, maths::Transform const &_transform)
+{
+	using IteratorBoolPair_t = std::pair<TransformMap_t::const_iterator, bool>;
+	IteratorBoolPair_t result = transforms_.emplace(_id, &_transform);
+	if (!result.second)
+	{
+		YS_ASSERT(false);
+		LOG_ERROR(tools::kChannelGeneral, "Tried to push a Transform on a pre-existing identifier");
+	}
+}
+
 maths::Decimal const *
 ParamSet::FindFloat(std::string const &_id, uint32_t &_count) const
 {
@@ -118,12 +130,27 @@ ParamSet::FindBool(std::string const &_id, bool _default) const
 	return _default;
 }
 
+maths::Transform const &
+ParamSet::FindTransform(std::string const &_id, maths::Transform const &_default) const
+{
+	TransformMap_t::const_iterator tcit = transforms_.find(_id);
+	if (tcit != transforms_.cend())
+	{
+		return *tcit->second;
+	}
+	else
+	{
+		return _default;
+	}
+}
+
 void
 ParamSet::Clear()
 {
 	float_parameters_.clear();
 	int_parameters_.clear();
 	bool_parameters_.clear();
+	transforms_.clear();
 	region_.Clear();
 }
 

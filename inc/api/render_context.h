@@ -4,27 +4,23 @@
 
 #include <vector>
 
-#include "raytracer/raytracer.h"
+#include "api/transform_cache.h"
 #include "core/memory_region.h"
-
+#include "core/noncopyable.h"
+#include "core/nonmovable.h"
 #include "raytracer/camera.h"
 #include "raytracer/primitive.h"
 #include "raytracer/integrator.h"
 #include "raytracer/samplers/random_sampler.h"
 
-namespace raytracer {
+namespace api {
 
 
-class RenderContext
+class RenderContext final :
+	private core::noncopyable,
+	private core::nonmovable
 {
 public:
-	RenderContext() = default;
-	~RenderContext() = default;
-	RenderContext(RenderContext const &) = delete;
-	RenderContext(RenderContext &&) = delete;
-	RenderContext &operator=(RenderContext const &) = delete;
-	RenderContext &operator=(RenderContext &&) = delete;
-
 	void	Clear()
 	{
 		film_ = nullptr;
@@ -32,12 +28,12 @@ public:
 		primitives_.clear();
 		mem_region_.Clear();
 	}
-	void	SetFilm(Film *_f)
+	void	SetFilm(raytracer::Film *_f)
 	{
 		film_ = _f;
 		integrator_.SetFilm(film_);
 	}
-	void	SetCamera(Camera *_c)
+	void	SetCamera(raytracer::Camera *_c)
 	{
 		camera_ = _c;
 		integrator_.SetCamera(camera_);
@@ -49,7 +45,7 @@ public:
 	void	RenderAndWrite(std::string const &_path)
 	{
 		core::RNG sampler_rng(14587126349871134129u);
-		Sampler *sampler = new (mem_region_) RandomSampler(sampler_rng, 16u, 2u);
+		raytracer::Sampler *sampler = new (mem_region_) raytracer::RandomSampler(sampler_rng, 16u, 2u);
 		integrator_.SetSampler(sampler);
 
 		integrator_.Integrate(primitives_, 0._d);
@@ -57,21 +53,22 @@ public:
 		camera_->WriteToFile(_path);
 	}
 
-	void AddPrimitive(Primitive *_prim)
+	void AddPrimitive(raytracer::Primitive *_prim)
 	{
 		primitives_.push_back(_prim);
 	}
 
 	raytracer::Film		*film() { return film_; }
-	core::MemoryRegion &mem_region() { return mem_region_; }
+	TransformCache		&transform_cache() { return transform_cache_; }
+	core::MemoryRegion	&mem_region() { return mem_region_; }
 
 private:
-	raytracer::Camera			*camera_ = nullptr;
-	raytracer::Film				*film_ = nullptr;
-	raytracer::Integrator		integrator_;
-	std::vector<Primitive*>		primitives_;
-
-	core::MemoryRegion			mem_region_;
+	raytracer::Camera					*camera_ = nullptr;
+	raytracer::Film						*film_ = nullptr;
+	raytracer::Integrator				integrator_;
+	std::vector<raytracer::Primitive*>	primitives_;
+	TransformCache						transform_cache_;
+	core::MemoryRegion					mem_region_;
 };
 
 

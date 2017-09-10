@@ -3,6 +3,8 @@
 #define __YS_FACTORY_FUNCTIONS_HPP__
 
 #include <vector>
+#include <unordered_map>
+#include <functional>
 
 
 namespace maths {
@@ -11,7 +13,6 @@ class Transform;
 
 namespace raytracer {
 
-class RenderContext;
 class Camera;
 class Film;
 class Shape;
@@ -22,16 +23,21 @@ class Shape;
 namespace api {
 
 class ParamSet;
+class RenderContext;
 
-raytracer::Camera *MakeCamera(
-	raytracer::RenderContext &_context, api::ParamSet const &_params);
-raytracer::Film *MakeFilm(
-	raytracer::RenderContext &_context, api::ParamSet const &_params);
+using MakeShapeCallback_t = std::function<
+	std::vector<raytracer::Shape*>(api::RenderContext &_context, ParamSet const & _params)
+>;
+using ShapeCallbackContainer_t = std::unordered_map<std::string, MakeShapeCallback_t>;
+
+
+raytracer::Camera *MakeCamera(api::RenderContext &_context, api::ParamSet const &_params);
+raytracer::Film *MakeFilm(api::RenderContext &_context, api::ParamSet const &_params);
 std::vector<raytracer::Shape*>
-MakeSphere(raytracer::RenderContext &_context,
-		   maths::Transform const &_t, bool _flip_normals,
-		   api::ParamSet const &_params);
+MakeSphere(api::RenderContext &_context, api::ParamSet const &_params);
 
+ShapeCallbackContainer_t const &shape_callbacks();
+MakeShapeCallback_t const &LookupShapeFunc(std::string const &_id);
 
 } // namespace api
 

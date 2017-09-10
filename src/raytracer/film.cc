@@ -6,8 +6,6 @@
 #include "globals.h"
 #include "maths/vector.h"
 #include "core/profiler.h"
-#include "raytracer/render_context.h"
-#include "api/param_set.h"
 
 namespace raytracer
 {

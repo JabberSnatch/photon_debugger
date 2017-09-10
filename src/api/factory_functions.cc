@@ -1,18 +1,19 @@
 #include "api/factory_functions.h"
 
 #include "api/param_set.h"
+#include "api/render_context.h"
+#include "maths/transform.h"
 #include "raytracer/camera.h"
 #include "raytracer/film.h"
 #include "raytracer/shape.h"
 #include "raytracer/shapes/sphere.h"
-#include "raytracer/render_context.h"
 
 
 namespace api {
 
 
 raytracer::Camera*
-MakeCamera(raytracer::RenderContext &_context, api::ParamSet const &_params)
+MakeCamera(api::RenderContext &_context, api::ParamSet const &_params)
 {
 	maths::Point3f const	position = static_cast<maths::Point3f>(
 		_params.FindFloat<3>("position", { 0._d, 0._d, 0._d })
@@ -28,7 +29,7 @@ MakeCamera(raytracer::RenderContext &_context, api::ParamSet const &_params)
 }
 
 raytracer::Film*
-MakeFilm(raytracer::RenderContext &_context, api::ParamSet const &_params)
+MakeFilm(api::RenderContext &_context, api::ParamSet const &_params)
 {
 	maths::Vec2i32 const	resolution = _params.FindInt<2>("resolution", { 800, 600 });
 	maths::Decimal const	side = _params.FindFloat("side", .036_d);
@@ -38,10 +39,10 @@ MakeFilm(raytracer::RenderContext &_context, api::ParamSet const &_params)
 
 
 std::vector<raytracer::Shape*>
-MakeSphere(raytracer::RenderContext &_context,
-		   maths::Transform const &_t, bool _flip_normals,
-		   api::ParamSet const &_params)
+MakeSphere(api::RenderContext &_context, api::ParamSet const &_params)
 {
+	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
+	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
 	bool const				flip_normals = _params.FindBool("flip_normals", false);
 	maths::Decimal const	radius = _params.FindFloat("radius", 1._d);
 	maths::Decimal const	z_min = _params.FindFloat("z_min", -radius);
@@ -49,9 +50,28 @@ MakeSphere(raytracer::RenderContext &_context,
 	maths::Decimal const	phi_max = _params.FindFloat("phi_max", 360._d);
 
 	raytracer::Shape *const sphere_shape = new (_context.mem_region())
-		raytracer::Sphere{ _t, _flip_normals, radius, z_min, z_max, phi_max };
+		raytracer::Sphere{ world_transform, flip_normals, radius, z_min, z_max, phi_max };
 
 	return std::vector<raytracer::Shape*>{ sphere_shape };
+}
+
+
+ShapeCallbackContainer_t const &
+shape_callbacks()
+{
+	static ShapeCallbackContainer_t const callbacks {
+			{ "sphere", &MakeSphere },
+	};
+	return callbacks;
+}
+
+MakeShapeCallback_t const &
+LookupShapeFunc(std::string const &_id)
+{
+	ShapeCallbackContainer_t const &callbacks = shape_callbacks();
+	ShapeCallbackContainer_t::const_iterator msccit = callbacks.find(_id);
+	YS_ASSERT(msccit != callbacks.cend());
+	return msccit->second;
 }
 
 

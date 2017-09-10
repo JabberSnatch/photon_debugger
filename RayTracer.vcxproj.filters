@@ -72,9 +72,6 @@
     <ClInclude Include="inc\raytracer\raytracer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\raytracer\render_context.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inc\raytracer\shape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -133,6 +130,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\api\factory_functions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\api\translation_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\noncopyable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\core\nonmovable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\api\transform_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\api\render_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -210,6 +222,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\core\alloc.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\api\transform_cache.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\api\translation_state.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

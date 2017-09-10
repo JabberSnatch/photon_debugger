@@ -235,6 +235,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\api\factory_functions.cc" />
+    <ClCompile Include="src\api\transform_cache.cc" />
+    <ClCompile Include="src\api\translation_state.cc" />
     <ClCompile Include="src\core\alloc.cc" />
     <ClCompile Include="src\core\memory_region.cc" />
     <ClCompile Include="src\core\rng.cc" />
@@ -262,11 +264,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\api\factory_functions.h" />
+    <ClInclude Include="inc\api\transform_cache.h" />
+    <ClInclude Include="inc\api\translation_state.h" />
     <ClInclude Include="inc\core\alloc.h" />
     <ClInclude Include="inc\api\api.h" />
     <ClInclude Include="inc\core\core.h" />
     <ClInclude Include="inc\algorithms.h" />
     <ClInclude Include="inc\benchmarks\bench_logger.h" />
+    <ClInclude Include="inc\core\noncopyable.h" />
+    <ClInclude Include="inc\core\nonmovable.h" />
     <ClInclude Include="inc\core\rng.h" />
     <ClInclude Include="inc\maths\bounds.h" />
     <ClInclude Include="inc\primes.h" />
@@ -287,7 +293,7 @@
     <ClInclude Include="inc\maths\ray.h" />
     <ClInclude Include="inc\raytracer\raytracer.h" />
     <ClInclude Include="inc\maths\redecimal.h" />
-    <ClInclude Include="inc\raytracer\render_context.h" />
+    <ClInclude Include="inc\api\render_context.h" />
     <ClInclude Include="inc\raytracer\sampler.h" />
     <ClInclude Include="inc\raytracer\samplers\random_sampler.h" />
     <ClInclude Include="inc\raytracer\shape.h" />

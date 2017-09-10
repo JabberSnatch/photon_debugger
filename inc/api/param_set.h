@@ -48,6 +48,8 @@ public:
 	template <uint32_t size>
 	void	PushBool(std::string const &_id, maths::Vector<bool, size> _v);
 
+	void	PushTransform(std::string const &_id, maths::Transform const &_transform);
+
 	maths::Decimal const *FindFloat(std::string const &_id, uint32_t &_count) const;
 	maths::Decimal FindFloat(std::string const &_id, maths::Decimal _default) const;
 	template <uint32_t size>
@@ -66,12 +68,22 @@ public:
 	maths::VectorB<size> FindBool(std::string const &_id,
 								  maths::VectorB<size> const &_default) const;
 
+	maths::Transform const &FindTransform(std::string const &_id,
+										  maths::Transform const &_default) const;
+
 	void	Clear();
 
 private:
-	std::unordered_map<std::string, InputParameter<maths::Decimal>>	float_parameters_;
-	std::unordered_map<std::string, InputParameter<int32_t>>		int_parameters_;
-	std::unordered_map<std::string, InputParameter<bool>>			bool_parameters_;
+	template <typename T>
+	using ParamMap_t = std::unordered_map<std::string, InputParameter<T>>;
+	using FloatMap_t = ParamMap_t<maths::Decimal>;
+	using IntMap_t = ParamMap_t<int32_t>;
+	using BoolMap_t = ParamMap_t<bool>;
+	using TransformMap_t = std::unordered_map<std::string, maths::Transform const *const>;
+	FloatMap_t		float_parameters_;
+	IntMap_t		int_parameters_;
+	BoolMap_t		bool_parameters_;
+	TransformMap_t	transforms_;
 
 	core::MemoryRegion region_;
 
@@ -163,11 +175,11 @@ ParamSet::FindBool(std::string const &_id,
 template <typename T>
 InputParameter<T> &
 ParamSet::AllocateCommon_(std::string const &_id, uint32_t _count,
-						  std::unordered_map<std::string, InputParameter<T>> &_map)
+						  ParamMap_t<T> &_map)
 {
 	YS_ASSERT(_count != 0);
 
-	auto	it = _map.find(_id);
+	ParamMap_t<T>::iterator it = _map.find(_id);
 	if (it != _map.end())
 	{
 		LOG_WARNING(tools::kChannelGeneral, "Allocating on an existing field, value will be overwritten.");

@@ -6,8 +6,6 @@
 #include "core/profiler.h"
 #include "raytracer/primitive.h"
 #include "raytracer/surface_interaction.h"
-#include "raytracer/render_context.h"
-#include "api/param_set.h"
 
 #include <iostream>
 

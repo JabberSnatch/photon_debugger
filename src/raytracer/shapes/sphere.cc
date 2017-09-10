@@ -7,8 +7,7 @@
 #include "maths/redecimal.h"
 #include "raytracer/surface_interaction.h"
 #include "core/profiler.h"
-#include "api/param_set.h"
-#include "raytracer/render_context.h"
+
 
 namespace raytracer {
 

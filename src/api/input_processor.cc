@@ -1,85 +1,5 @@
 #include "api/input_processor.h"
 
-#include "boost/lexical_cast.hpp"
-#include "boost/filesystem.hpp"
-
-#include "api/factory_functions.h"
-#include "common_macros.h"
-#include "raytracer/shapes/sphere.h"
-#include "raytracer/primitive.h"
-#include "raytracer/film.h"
-#include "raytracer/camera.h"
-#include "core/logger.h"
-
-/*
-param_group ->		kString (kType kParamBegin kString* kParamEnd)+
-translate_group ->	kTranslate kString kString kString
-rotate_group ->		kRotate kString kString kString
-scale_group ->		kScale kString kString kString
-film_group ->		kFilm kScopeBegin param_group* kScopeEnd
-camera_group ->		kCamera kScopeBegin param_group* kScopeEnd
-shape_group ->		kShape kString kScopeBegin (param_group|translate_group|rotate_group|scale_group)* kScopeEnd
-scene_group ->		(translate_group|rotate_group|scale_group|film_group|camera_group|shape_group)*
-*/
-
-/*
-value_group ->		kNumber
-value_group ->		kNumber kNumber
-value_group ->		kNumber kNumber kNumber
-value_group ->		kNumber kNumber kNumber kNumber
-
-definition_group ->	kType kParamBegin value_group kParamEnd
-definition_group ->	{}
-
-param_group ->		kString definition_group
-
-properties_group ->	param_group properties_group
-properties_group -> {}
-
-attribute_group ->	param_group attribute_group
-attribute_group ->	translate_group attribute_group
-attribute_group ->	rotate_group attribute_group
-attribute_group ->	scale_group attribute_group
-attribute_group ->	{}
-
-translate_group ->	kTranslate kNumber kNumber kNumber 
-rotate_group ->		kRotate kNumber kNumber kNumber kNumber
-scale_group ->		kScale kNumber kNumber kNumber 
-
-film_group ->		kFilm kScopeBegin properties_group kScopeEnd
-camera_group ->		kCamera kScopeBegin properties_group kScopeEnd
-
-shape_group ->		kShape kString kScopeBegin attribute_group kScopeEnd
-
-scene_group ->		translate_group scene_group
-scene_group ->		rotate_group scene_group
-scene_group ->		scale_group scene_group
-scene_group ->		film_group scene_group
-scene_group ->		camera_group scene_group
-scene_group ->		shape_group scene_group
-scene_group ->		{}
-
-Lookahead identifier deductions
-
-kTranslate => translate_group
-kRotate => rotate_group
-kScale => scale_group
-kFilm => film_group
-kCamera => camera_group
-kShape => shape_group
-
-kString => param_group
-kNumber => value_group
-
-param_group => properties_group / attribute_group
-
-translate_group => kTranslate
-rotate_group => kRotate
-scale_group => kScale
-film_group => 
-*/
-
-
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -89,12 +9,21 @@ film_group =>
 #include <map>
 #include <functional>
 
+#include "boost/lexical_cast.hpp"
+#include "boost/filesystem.hpp"
+
+#include "api/factory_functions.h"
+#include "api/translation_state.h"
 #include "common_macros.h"
-#include "maths/vector.h"
-#include "maths/transform.h"
-#include "maths/quaternion.h"
-#include "raytracer/camera.h"
+#include "core/logger.h"
 #include "core/memory_region.h"
+#include "maths/quaternion.h"
+#include "maths/transform.h"
+#include "maths/vector.h"
+#include "raytracer/camera.h"
+#include "raytracer/film.h"
+#include "raytracer/primitive.h"
+#include "raytracer/shapes/sphere.h"
 
 
 namespace api {
@@ -523,7 +452,7 @@ ParamGroup(TranslationState &_state,
 	}
 	else
 	{
-		// In case we find a lone identifier, we treat it as a bool set to true
+		// If we find a lone identifier, we treat it as a bool set to true
 		_state.param_set().PushBool(identifier, true);
 	}
 }
@@ -609,133 +538,6 @@ ScopeEndTerminal(TranslationState &_state,
 				 std::vector<Token>::const_iterator _production_end)
 {
 	_state.ScopeEnd();
-}
-
-
-maths::Transform const &
-TransformCache::Lookup(maths::Transform const &_t)
-{
-	auto	it = lookup_table_.find(_t);
-	if (it == lookup_table_.end())
-	{
-		maths::Transform *const instance = new (mem_region_) maths::Transform{ _t };
-		lookup_table_.emplace(*instance, instance);
-		return *instance;
-	}
-	else
-		return *(it->second);
-}
-
-
-bool
-TranslationState::LookupShapeFunc(std::string const &_id, TranslationState::MakeShapeCallback_t &_func)
-{
-	auto it = shape_callbacks_.find(_id);
-	if (it != shape_callbacks_.end())
-	{
-		_func = it->second;
-		return true;
-	}
-	else
-		return false;
-}
-std::unordered_map<std::string, TranslationState::MakeShapeCallback_t> const
-TranslationState::shape_callbacks_ = {
-	{ "sphere", &MakeSphere },
-};
-
-TranslationState::TranslationState() :
-	workdir_{ boost::filesystem::current_path().string() },
-	output_path_{ boost::filesystem::absolute("image.png", workdir_).string() },
-	render_context_{}, parameters_{},
-	scope_depth_{ 1 }, transform_stack_{ maths::Transform{} }
-{}
-void
-TranslationState::Workdir(std::string const &_absolute_path)
-{
-	workdir_ = boost::filesystem::absolute(_absolute_path).string();
-}
-void
-TranslationState::Output(std::string const &_relative_path)
-{
-	output_path_ = boost::filesystem::absolute(_relative_path, workdir_).string();
-}
-void
-TranslationState::Film()
-{
-	raytracer::Film *film = MakeFilm(render_context_, parameters_);
-	render_context_.SetFilm(film);
-}
-void
-TranslationState::Camera()
-{
-	raytracer::Camera *camera = MakeCamera(render_context_, parameters_);
-	render_context_.SetCamera(camera);
-}
-void
-TranslationState::Shape(std::string const &_type)
-{
-	MakeShapeCallback_t	callback{};
-	bool const			flip_normals = parameters_.FindBool("flip_normals", false);
-
-	if (LookupShapeFunc(_type, callback))
-	{
-		maths::Transform const	&transform = transform_cache_.Lookup(transform_stack_.back());
-		std::vector<raytracer::Shape*> shapes = 
-			callback(render_context_, transform, flip_normals, parameters_);
-		for (size_t i = 0; i < shapes.size(); ++i)
-		{
-			raytracer::GeometryPrimitive *prim =
-				new (render_context_.mem_region()) raytracer::GeometryPrimitive(*shapes[i]);
-			render_context_.AddPrimitive(prim);
-		}
-	}
-	else
-		LOG_WARNING(tools::kChannelGeneral, "No factory function bound to shape id " + _type);
-}
-void
-TranslationState::Identity()
-{
-	transform_stack_.back() = maths::Transform{};
-}
-void
-TranslationState::Translate(maths::Vec3f const &_t)
-{
-	transform_stack_.back() = transform_stack_.back() * maths::Translate(_t);
-}
-void
-TranslationState::Rotate(maths::Decimal _angle, maths::Vec3f const &_axis)
-{
-	transform_stack_.back() = transform_stack_.back() * maths::Rotate(_angle, _axis);
-}
-void
-TranslationState::Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z)
-{
-	transform_stack_.back() = transform_stack_.back() * maths::Scale(_x, _y, _z);
-}
-void
-TranslationState::ScopeBegin()
-{
-	transform_stack_.push_back(transform_stack_.back());
-	scope_depth_++;
-}
-void
-TranslationState::ScopeEnd()
-{
-	scope_depth_--;
-	transform_stack_.pop_back();
-	parameters_.Clear();
-}
-void
-TranslationState::SceneBegin()
-{
-	render_context_.Clear();
-}
-void
-TranslationState::SceneEnd()
-{
-	if (render_context_.GoodForRender())
-		render_context_.RenderAndWrite(output_path_);
 }
 
 
