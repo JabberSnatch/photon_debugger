@@ -12,8 +12,10 @@ namespace api {
 TranslationState::TranslationState() :
 	workdir_{ boost::filesystem::current_path().string() },
 	output_path_{ boost::filesystem::absolute("image.png", workdir_).string() },
-	render_context_{}, parameters_{},
-	scope_depth_{ 1 }, transform_stack_{ maths::Transform{} }
+	render_context_{},
+	scope_depth_{ 1 }, transform_stack_{ maths::Transform{} },
+	mem_region_{}, parameters_{new (mem_region_) ParamSet()},
+	scene_desc_{}
 {}
 void
 TranslationState::Workdir(std::string const &_absolute_path)
@@ -28,21 +30,25 @@ TranslationState::Output(std::string const &_relative_path)
 void
 TranslationState::Film()
 {
-	raytracer::Film *film = MakeFilm(render_context_, parameters_);
-	render_context_.SetFilm(film);
+	PushObjectDesc_(ObjectIdentifier::kFilm, "");
+	//raytracer::Film *film = MakeFilm(render_context_, parameters_);
+	//render_context_.SetFilm(film);
 }
 void
 TranslationState::Camera()
 {
-	raytracer::Camera *camera = MakeCamera(render_context_, parameters_);
-	render_context_.SetCamera(camera);
+	PushObjectDesc_(ObjectIdentifier::kCamera, "");
+	//raytracer::Camera *camera = MakeCamera(render_context_, parameters_);
+	//render_context_.SetCamera(camera);
 }
 void
 TranslationState::Shape(std::string const &_type)
 {
 	maths::Transform const &transform =
 		render_context_.transform_cache().Lookup(transform_stack_.back());
-	parameters_.PushTransform("world_transform", transform);
+	param_set().PushTransform("world_transform", transform);
+	PushObjectDesc_(ObjectIdentifier::kShape, _type);
+	/*
 	MakeShapeCallback_t	const &callback = LookupShapeFunc(_type);
 	std::vector<raytracer::Shape*> shapes = callback(render_context_, parameters_);
 	for (size_t i = 0; i < shapes.size(); ++i)
@@ -51,6 +57,7 @@ TranslationState::Shape(std::string const &_type)
 			new (render_context_.mem_region()) raytracer::GeometryPrimitive(*shapes[i]);
 		render_context_.AddPrimitive(prim);
 	}
+	*/
 }
 void
 TranslationState::Identity()
@@ -83,7 +90,7 @@ TranslationState::ScopeEnd()
 {
 	scope_depth_--;
 	transform_stack_.pop_back();
-	parameters_.Clear();
+	param_set().Clear();
 }
 void
 TranslationState::SceneBegin()
@@ -93,9 +100,63 @@ TranslationState::SceneBegin()
 void
 TranslationState::SceneEnd()
 {
+	SceneSetup_();
 	if (render_context_.GoodForRender())
 		render_context_.RenderAndWrite(output_path_);
 }
+
+
+void
+TranslationState::SceneSetup_()
+{
+	{
+		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kFilm);
+		YS_ASSERT(!descriptors.empty());
+		ParamSet const &parameters = *std::get<1>(descriptors.back());
+		raytracer::Film *film = MakeFilm(render_context_, parameters);
+		render_context_.SetFilm(film);
+	}
+	{
+		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kCamera);
+		YS_ASSERT(!descriptors.empty());
+		ParamSet const &parameters = *std::get<1>(descriptors.back());
+		raytracer::Camera *camera = MakeCamera(render_context_, parameters);
+		render_context_.SetCamera(camera);
+	}
+	{
+		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kShape);
+		for (ObjectDescriptorContainer_t::const_iterator odcit = descriptors.cbegin();
+			 odcit != descriptors.cend(); ++odcit)
+		{
+			ObjectDescriptor_t const &descriptor = *odcit;
+			std::string const &type = std::get<0>(descriptor);
+			ParamSet const &parameters = *std::get<1>(descriptor);
+			MakeShapeCallback_t	const &callback = LookupShapeFunc(type);
+			std::vector<raytracer::Shape*> shapes = callback(render_context_, parameters);
+			for (size_t i = 0; i < shapes.size(); ++i)
+			{
+				raytracer::GeometryPrimitive *prim =
+				new (render_context_.mem_region()) raytracer::GeometryPrimitive(*shapes[i]);
+				render_context_.AddPrimitive(prim);
+			}
+		}
+	}
+}
+
+void
+TranslationState::PushObjectDesc_(ObjectIdentifier const _id, std::string const &_name)
+{
+	ObjectDescriptorContainer_t &descriptors = object_desc_vector_(_id);
+	descriptors.push_back(std::make_tuple(_name, parameters_));
+	parameters_ = new (mem_region_) ParamSet();
+}
+
+TranslationState::ObjectDescriptorContainer_t &
+TranslationState::object_desc_vector_(ObjectIdentifier const _id)
+{
+	return scene_desc_[static_cast<unsigned>(_id)];
+}
+
 
 
 } // namespace api

@@ -5,11 +5,14 @@
 #include <cstdint>
 #include <list>
 
+#include "core/noncopyable.h"
+
 
 namespace core {
 
 
-class MemoryRegion final
+class MemoryRegion final :
+	core::noncopyable
 {
 public:
 	// NOTE: <occupied_space, block_adress>
@@ -20,21 +23,19 @@ public:
 	MemoryRegion(size_t const _block_size);
 	MemoryRegion(size_t const _block_size, uint64_t const _alloc_align, uint64_t const _block_align);
 	~MemoryRegion();
-	MemoryRegion(MemoryRegion&&) = default;
-	MemoryRegion& operator = (MemoryRegion&&) = default;
-	MemoryRegion(const MemoryRegion&) = delete;
-	MemoryRegion& operator = (const MemoryRegion&) = delete;
+	MemoryRegion(MemoryRegion const &) = default;
+	MemoryRegion &operator = (MemoryRegion const &) = default;
 public:
 	void ReserveBlocks(size_t const _count = 1u);
 	void Clear();
 	void *Alloc(size_t const _size);
 private:
 	BlockList_t		blocks_;
-	const size_t	block_size_;
-	const uint64_t	alloc_align_;
-	const uint64_t	alloc_mask_;
-	const uint64_t	block_align_;
-	const uint64_t	block_mask_;
+	size_t const	block_size_;
+	uint64_t const	alloc_align_;
+	uint64_t const 	alloc_mask_;
+	uint64_t const	block_align_;
+	uint64_t const	block_mask_;
 };
 
 

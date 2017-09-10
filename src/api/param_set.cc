@@ -47,8 +47,8 @@ ParamSet::PushTransform(std::string const &_id, maths::Transform const &_transfo
 	IteratorBoolPair_t result = transforms_.emplace(_id, &_transform);
 	if (!result.second)
 	{
-		YS_ASSERT(false);
 		LOG_ERROR(tools::kChannelGeneral, "Tried to push a Transform on a pre-existing identifier");
+		YS_ASSERT(false);
 	}
 }
 

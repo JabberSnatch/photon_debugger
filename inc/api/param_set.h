@@ -6,11 +6,12 @@
 #include <unordered_map>
 #include <string>
 
+#include "core/logger.h"
+#include "core/memory_region.h"
+#include "core/noncopyable.h"
+#include "globals.h"
 #include "maths/maths.h"
 #include "maths/vector.h"
-#include "core/logger.h"
-#include "globals.h"
-#include "core/memory_region.h"
 
 
 namespace api {
@@ -23,16 +24,10 @@ struct InputParameter
 };
 
 
-class ParamSet final
+class ParamSet final :
+	core::noncopyable
 {
 public:
-	ParamSet() = default;
-	~ParamSet() = default;
-	ParamSet(ParamSet const &) = delete;
-	ParamSet(ParamSet &&) = delete;
-	ParamSet &operator=(ParamSet const &) = delete;
-	ParamSet &operator=(ParamSet &&) = delete;
-
 	void	PushFloat(std::string const &_id, maths::Decimal *_v, uint32_t _count);
 	void	PushFloat(std::string const &_id, maths::Decimal _v);
 	template <uint32_t size>

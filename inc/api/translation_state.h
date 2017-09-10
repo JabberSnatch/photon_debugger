@@ -25,7 +25,19 @@ class TranslationState final :
 	private core::nonmovable
 {
 private:
+	enum class ObjectIdentifier
+	{
+		kFilm = 0,
+		kCamera,
+		kShape,
+		kCount
+	};
+private:
 	using TransformStack_t = std::vector<maths::Transform>;
+	using ObjectDescriptor_t = std::tuple<std::string, ParamSet*>;
+	using ObjectDescriptorContainer_t = std::vector<ObjectDescriptor_t>;
+	using SceneDescription_t = 
+		std::array<ObjectDescriptorContainer_t, static_cast<unsigned>(ObjectIdentifier::kCount)>;
 public:
 	TranslationState();
 	void	Workdir(std::string const &_absolute_path);
@@ -41,14 +53,20 @@ public:
 	void	ScopeEnd();
 	void	SceneBegin();
 	void	SceneEnd();
-	ParamSet	&param_set() { return parameters_; }
+	ParamSet	&param_set() { return *parameters_; }
+private:
+	void	SceneSetup_();
+	void	PushObjectDesc_(ObjectIdentifier const _id, std::string const &_name);
+	ObjectDescriptorContainer_t &object_desc_vector_(ObjectIdentifier const _id);
 private:
 	std::string			workdir_;
 	std::string			output_path_;
 	api::RenderContext	render_context_;
-	ParamSet			parameters_;
 	uint32_t			scope_depth_;
 	TransformStack_t	transform_stack_;
+	core::MemoryRegion	mem_region_;
+	ParamSet			*parameters_;
+	SceneDescription_t	scene_desc_;
 };
 
 
