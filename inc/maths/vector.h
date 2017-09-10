@@ -445,7 +445,8 @@ template <typename T>
 Vector<T, 3> Cross(Vector<T, 3> const &_lhs, Normal<T, 3> const &_rhs);
 
 template <uint32_t size> using VectorF = Vector<maths::Decimal, size>;
-template <uint32_t size> using VectorI = Vector<int32_t, size>;
+template <uint32_t size> using VectorI = Vector<int64_t, size>;
+template <uint32_t size> using VectorU = Vector<uint64_t, size>;
 template <uint32_t size> using VectorB = Vector<bool, size>;
 
 template <typename T> using Vector2 = Vector<T, 2>;
@@ -455,7 +456,7 @@ template <typename T> using Vector4 = Vector<T, 4>;
 using Vec2f = Vector2<Decimal>;
 using Vec3f = Vector3<Decimal>;
 using Vec4f = Vector4<Decimal>;
-using Vec2i32 = Vector2<int32_t>;
+using Vec2i = Vector2<int64_t>;
 
 template <typename T> using Normal3 = Normal<T, 3>;
 using Norm3f = Normal3<Decimal>;

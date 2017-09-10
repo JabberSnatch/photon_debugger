@@ -31,15 +31,11 @@ void
 TranslationState::Film()
 {
 	PushObjectDesc_(ObjectIdentifier::kFilm, "");
-	//raytracer::Film *film = MakeFilm(render_context_, parameters_);
-	//render_context_.SetFilm(film);
 }
 void
 TranslationState::Camera()
 {
 	PushObjectDesc_(ObjectIdentifier::kCamera, "");
-	//raytracer::Camera *camera = MakeCamera(render_context_, parameters_);
-	//render_context_.SetCamera(camera);
 }
 void
 TranslationState::Shape(std::string const &_type)
@@ -48,16 +44,11 @@ TranslationState::Shape(std::string const &_type)
 		render_context_.transform_cache().Lookup(transform_stack_.back());
 	param_set().PushTransform("world_transform", transform);
 	PushObjectDesc_(ObjectIdentifier::kShape, _type);
-	/*
-	MakeShapeCallback_t	const &callback = LookupShapeFunc(_type);
-	std::vector<raytracer::Shape*> shapes = callback(render_context_, parameters_);
-	for (size_t i = 0; i < shapes.size(); ++i)
-	{
-		raytracer::GeometryPrimitive *prim =
-			new (render_context_.mem_region()) raytracer::GeometryPrimitive(*shapes[i]);
-		render_context_.AddPrimitive(prim);
-	}
-	*/
+}
+void
+TranslationState::Sampler(std::string const &_type)
+{
+	PushObjectDesc_(ObjectIdentifier::kSampler, _type);
 }
 void
 TranslationState::Identity()
@@ -122,6 +113,16 @@ TranslationState::SceneSetup_()
 		ParamSet const &parameters = *std::get<1>(descriptors.back());
 		raytracer::Camera *camera = MakeCamera(render_context_, parameters);
 		render_context_.SetCamera(camera);
+	}
+	{
+		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kSampler);
+		YS_ASSERT(!descriptors.empty());
+		ObjectDescriptor_t const &descriptor = descriptors.back();
+		std::string const &type = std::get<0>(descriptor);
+		ParamSet const &parameters = *std::get<1>(descriptor);
+		MakeSamplerCallback_t const &callback = LookupSamplerFunc(type);
+		raytracer::Sampler *sampler = callback(render_context_, parameters);
+		render_context_.SetSampler(sampler);
 	}
 	{
 		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kShape);

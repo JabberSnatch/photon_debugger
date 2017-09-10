@@ -2,6 +2,7 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#include "boost/numeric/conversion/cast.hpp"
 
 #include "globals.h"
 #include "maths/vector.h"
@@ -10,7 +11,7 @@
 namespace raytracer
 {
 
-Film::Film(int32_t _width, int32_t _height, maths::Decimal _side) :
+Film::Film(int64_t _width, int64_t _height, maths::Decimal _side) :
 	pixels_(_width * _height, maths::Vec3f{ 0.f }),
 	resolution_{ _width, _height },
 	aspect_{ resolution_.w / maths::Decimal(resolution_.h) },
@@ -20,7 +21,7 @@ Film::Film(int32_t _width, int32_t _height, maths::Decimal _side) :
 }
 
 void
-Film::SetPixel(maths::Vec3f const &_value, maths::Vec2i32 const &_pos)
+Film::SetPixel(maths::Vec3f const &_value, maths::Vec2i const &_pos)
 {
 	YS_ASSERT(_pos.x >= 0 && _pos.y >= 0);
 	pixels_[_pos.x + _pos.y * resolution_.w] = _value;
@@ -36,11 +37,11 @@ Film::WriteToFile(std::string const &_path) const
 	uint8_t	*buffer = new uint8_t[resolution_.w * resolution_.h * 3];
 	
 	uint8_t	*head = buffer;
-	for (int32_t j = resolution_.h - 1; j >= 0; --j)
+	for (int64_t j = resolution_.h - 1; j >= 0; --j)
 	{
-		for (int32_t i = 0; i < resolution_.w; ++i)
+		for (int64_t i = 0; i < resolution_.w; ++i)
 		{
-			int32_t	x{ i }, y{ j };
+			int64_t	x{ i }, y{ j };
 			// NOTE: Depending on our camera implementation, we might want to unflip a picture
 			//		 before writing it to a file. We assume that both axes are flipped
 			//		 which might not always be the case.
@@ -63,8 +64,9 @@ Film::WriteToFile(std::string const &_path) const
 		}
 	}
 
-	stbi_write_png(_path.c_str(),
-				   resolution_.w, resolution_.h, 3, buffer, resolution_.w * 3);
+	int const width = boost::numeric_cast<int>(resolution_.w);
+	int const height = boost::numeric_cast<int>(resolution_.h);
+	stbi_write_png(_path.c_str(), width, height, 3, buffer, width * 3);
 
 	delete[] buffer;
 }

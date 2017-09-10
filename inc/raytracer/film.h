@@ -20,12 +20,12 @@ class Film
 {
 public:
 	Film() = delete;
-	Film(int32_t _width, int32_t _height, maths::Decimal _side);
+	Film(int64_t _width, int64_t _height, maths::Decimal _side);
 
-	void	SetPixel(maths::Vec3f const &_value, maths::Vec2i32 const &_pos);
+	void	SetPixel(maths::Vec3f const &_value, maths::Vec2i const &_pos);
 	void	WriteToFile(std::string const &_path) const;
 
-	maths::Vec2i32 const	&resolution() const { return resolution_; }
+	maths::Vec2i const		&resolution() const { return resolution_; }
 	maths::Vec2f const		&dimensions() const { return dimensions_; }
 	maths::Decimal			aspect() const { return aspect_; }
 
@@ -37,7 +37,7 @@ public:
 
 private:
 	std::vector<maths::Vec3f>	pixels_;
-	maths::Vec2i32				resolution_;
+	maths::Vec2i				resolution_;
 	maths::Decimal				aspect_;
 	maths::Vec2f				dimensions_;
 };

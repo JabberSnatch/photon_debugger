@@ -10,8 +10,8 @@
 #include "core/nonmovable.h"
 #include "raytracer/camera.h"
 #include "raytracer/primitive.h"
+#include "raytracer/sampler.h"
 #include "raytracer/integrator.h"
-#include "raytracer/samplers/random_sampler.h"
 
 namespace api {
 
@@ -38,18 +38,18 @@ public:
 		camera_ = _c;
 		integrator_.SetCamera(camera_);
 	}
+	void	SetSampler(raytracer::Sampler *_s)
+	{
+		sampler_ = _s;
+		integrator_.SetSampler(sampler_);
+	}
 	bool	GoodForRender() const
 	{
-		return (camera_ && film_);
+		return (camera_ && film_ && sampler_);
 	}
 	void	RenderAndWrite(std::string const &_path)
 	{
-		core::RNG sampler_rng(14587126349871134129u);
-		raytracer::Sampler *sampler = new (mem_region_) raytracer::RandomSampler(sampler_rng, 16u, 2u);
-		integrator_.SetSampler(sampler);
-
 		integrator_.Integrate(primitives_, 0._d);
-		//camera_->Expose(primitives_, 0._d);
 		camera_->WriteToFile(_path);
 	}
 
@@ -65,6 +65,7 @@ public:
 private:
 	raytracer::Camera					*camera_ = nullptr;
 	raytracer::Film						*film_ = nullptr;
+	raytracer::Sampler					*sampler_ = nullptr;
 	raytracer::Integrator				integrator_;
 	std::vector<raytracer::Primitive*>	primitives_;
 	TransformCache						transform_cache_;

@@ -31,33 +31,40 @@ public:
 	void	PushFloat(std::string const &_id, maths::Decimal *_v, uint32_t _count);
 	void	PushFloat(std::string const &_id, maths::Decimal _v);
 	template <uint32_t size>
-	void	PushFloat(std::string const &_id, maths::Vector<maths::Decimal, size> _v);
+	void	PushFloat(std::string const &_id, maths::VectorF<size> _v);
 
-	void	PushInt(std::string const &_id, int32_t *_v, uint32_t _count);
-	void	PushInt(std::string const &_id, int32_t _v);
+	void	PushInt(std::string const &_id, int64_t *_v, uint32_t _count);
+	void	PushInt(std::string const &_id, int64_t _v);
 	template <uint32_t size>
-	void	PushInt(std::string const &_id, maths::Vector<int32_t, size> _v);
+	void	PushInt(std::string const &_id, maths::VectorI<size> _v);
+
+	void	PushUint(std::string const &_id, uint64_t *_v, uint32_t _count);
+	void	PushUint(std::string const &_id, uint64_t _v);
+	template <uint32_t size>
+	void	PushUint(std::string const &_id, maths::VectorU<size> _v);
 
 	void	PushBool(std::string const &_id, bool *_v, uint32_t _count);
 	void	PushBool(std::string const &_id, bool _v);
 	template <uint32_t size>
-	void	PushBool(std::string const &_id, maths::Vector<bool, size> _v);
+	void	PushBool(std::string const &_id, maths::VectorB<size> _v);
 
 	void	PushTransform(std::string const &_id, maths::Transform const &_transform);
 
-	maths::Decimal const *FindFloat(std::string const &_id, uint32_t &_count) const;
 	maths::Decimal FindFloat(std::string const &_id, maths::Decimal _default) const;
 	template <uint32_t size>
 	maths::VectorF<size> FindFloat(std::string const &_id,
 								   maths::VectorF<size> const &_default) const;
 
-	int32_t const *FindInt(std::string const &_id, uint32_t &_count) const;
-	int32_t FindInt(std::string const &_id, int32_t _default) const;
+	int64_t FindInt(std::string const &_id, int64_t _default) const;
 	template <uint32_t size>
 	maths::VectorI<size> FindInt(std::string const &_id,
 								 maths::VectorI<size> const &_default) const;
 
-	bool const *FindBool(std::string const &_id, uint32_t &_count) const;
+	uint64_t FindUint(std::string const &_id, uint64_t _default) const;
+	template <uint32_t size>
+	maths::VectorU<size> FindUint(std::string const &_id,
+								  maths::VectorU<size> const &_default) const;
+
 	bool FindBool(std::string const &_id, bool _default) const;
 	template <uint32_t size>
 	maths::VectorB<size> FindBool(std::string const &_id,
@@ -72,16 +79,17 @@ private:
 	template <typename T>
 	using ParamMap_t = std::unordered_map<std::string, InputParameter<T>>;
 	using FloatMap_t = ParamMap_t<maths::Decimal>;
-	using IntMap_t = ParamMap_t<int32_t>;
+	using IntMap_t = ParamMap_t<int64_t>;
+	using UintMap_t = ParamMap_t<uint64_t>;
 	using BoolMap_t = ParamMap_t<bool>;
 	using TransformMap_t = std::unordered_map<std::string, maths::Transform const *const>;
 	FloatMap_t		float_parameters_;
 	IntMap_t		int_parameters_;
+	UintMap_t		uint_parameters_;
 	BoolMap_t		bool_parameters_;
 	TransformMap_t	transforms_;
 
 	core::MemoryRegion region_;
-
 
 	template <typename T>
 	inline InputParameter<T> &AllocateCommon_(
@@ -92,21 +100,28 @@ private:
 
 template <uint32_t size>
 void
-ParamSet::PushFloat(std::string const &_id, maths::Vector<maths::Decimal, size> _v)
+ParamSet::PushFloat(std::string const &_id, maths::VectorF<size> _v)
 {
 	PushFloat(_id, _v.e.data(), _v.size);
 }
 
 template <uint32_t size>
 void
-ParamSet::PushInt(std::string const &_id, maths::Vector<int32_t, size> _v)
+ParamSet::PushInt(std::string const &_id, maths::VectorI<size> _v)
 {
 	PushInt(_id, _v.e.data(), _v.size);
 }
 
 template <uint32_t size>
 void
-ParamSet::PushBool(std::string const &_id, maths::Vector<bool, size> _v)
+ParamSet::PushUint(std::string const &_id, maths::VectorU<size> _v)
+{
+	PushUint(_id, _v.e.data(), _v.size);
+}
+
+template <uint32_t size>
+void
+ParamSet::PushBool(std::string const &_id, maths::VectorB<size> _v)
 {
 	PushBool(_id, _v.e.data(), _v.size);
 }
@@ -140,6 +155,25 @@ ParamSet::FindInt(std::string const &_id,
 		if (it->second.count == size)
 		{
 			maths::VectorI<size>	result{};
+			std::copy(it->second.values, it->second.values + it->second.count, result.e.begin());
+			return result;
+		}
+	}
+
+	return _default;
+}
+
+template <uint32_t size>
+maths::VectorU<size>
+ParamSet::FindUint(std::string const &_id,
+				   maths::VectorU<size> const &_default) const
+{
+	auto	it = uint_parameters_.find(_id);
+	if (it != uint_parameters_.end())
+	{
+		if (it->second.count == size)
+		{
+			maths::VectorU<size>	result{};
 			std::copy(it->second.values, it->second.values + it->second.count, result.e.begin());
 			return result;
 		}

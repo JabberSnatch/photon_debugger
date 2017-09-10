@@ -1,6 +1,9 @@
 #include "core/alloc.h"
 
+#include <cstring>
+
 #include "common_macros.h"
+#include "algorithms.h"
 
 
 namespace core {
@@ -9,11 +12,11 @@ namespace core {
 void *
 AllocAligned(size_t const _size, size_t const _alignment)
 {
-	YS_ASSERT(algo::IsPowerOfTwo(_alignement));
+	YS_ASSERT(algo::IsPowerOfTwo(_alignment));
 	size_t const align_mask = _alignment - 1;
 	uint8_t *const alloc_begin = new uint8_t[_size + _alignment + sizeof(size_t)];
 #ifdef YS_DEBUG
-	memset(alloc_begin, 0xcau, _size + Alignment + sizeof(size_t));
+	std::memset(alloc_begin, 0xcau, _size + _alignment + sizeof(size_t));
 #endif
 	size_t const alloc_begin_address = reinterpret_cast<size_t>(alloc_begin);
 	size_t const aligned_begin_address =

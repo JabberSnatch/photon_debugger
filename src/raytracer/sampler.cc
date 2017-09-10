@@ -10,9 +10,9 @@ namespace raytracer
 {
 
 
-Sampler::Sampler(core::RNG &_rng, 
-				 unsigned const _samples_per_pixel, unsigned const _dimensions_per_sample) :
-	rng_{ _rng },
+Sampler::Sampler(uint64_t const _seed, 
+				 uint64_t const _samples_per_pixel, uint64_t const _dimensions_per_sample) :
+	rng_{ _seed },
 	samples_per_pixel_{ _samples_per_pixel },
 	dimensions_per_sample_{ _dimensions_per_sample },
 	current_pixel_{ -1, -1 },
@@ -97,7 +97,7 @@ Sampler::StartNextSample()
 
 
 bool
-Sampler::SetSampleNumber(unsigned _sample_num)
+Sampler::SetSampleNumber(uint64_t _sample_num)
 {
 	current_dimension_1D_ = current_dimension_2D_ = 0u;
 	current_extension_1D_ = current_extension_2D_ = 0u;
@@ -107,14 +107,14 @@ Sampler::SetSampleNumber(unsigned _sample_num)
 
 
 Sampler::Sample1DContainer_t const &
-Sampler::GetArray1D(unsigned const _size)
+Sampler::GetArray1D(uint64_t const _size)
 {
-	unsigned const extension_index = extension_1D_index();
+	uint64_t const extension_index = extension_1D_index();
 	bool const current_index_is_valid = 
 		(extension_index < arrays_1D_count());
 	YS_ASSERT(current_index_is_valid);
 	bool const extension_size_is_valid =
-		(static_cast<unsigned>(std::next(arrays_2D_.cbegin(), extension_index)
+		(static_cast<uint64_t>(std::next(arrays_2D_.cbegin(), extension_index)
 							   ->size()) == _size);
 	YS_ASSERT(extension_size_is_valid);
 	SampleVector1DContainer_t::const_iterator const sccit =
@@ -127,14 +127,14 @@ Sampler::GetArray1D(unsigned const _size)
 
 
 Sampler::Sample2DContainer_t const &
-Sampler::GetArray2D(unsigned const _size)
+Sampler::GetArray2D(uint64_t const _size)
 {
-	unsigned const extension_index = extension_2D_index();
+	uint64_t const extension_index = extension_2D_index();
 	bool const current_index_is_valid =
 		(extension_index < arrays_2D_count());
 	YS_ASSERT(current_index_is_valid);
 	bool const extension_size_is_valid =
-		(static_cast<unsigned>(std::next(arrays_2D_.cbegin(), extension_index)
+		(static_cast<uint64_t>(std::next(arrays_2D_.cbegin(), extension_index)
 							   ->size()) == _size);
 	YS_ASSERT(extension_size_is_valid);
 	SampleVector2DContainer_t::const_iterator const sccit =
@@ -147,7 +147,7 @@ Sampler::GetArray2D(unsigned const _size)
 
 
 void 
-Sampler::ReserveArray1D(unsigned _size)
+Sampler::ReserveArray1D(uint64_t _size)
 {
 	YS_ASSERT(_size != 0u);
 	extension_sizes_1D_.push_back(_size);
@@ -155,14 +155,14 @@ Sampler::ReserveArray1D(unsigned _size)
 
 
 void 
-Sampler::ReserveArray2D(const unsigned _size)
+Sampler::ReserveArray2D(const uint64_t _size)
 {
 	YS_ASSERT(_size != 0u);
 	extension_sizes_2D_.push_back(_size);
 }
 
 
-unsigned
+uint64_t
 Sampler::current_sample() const
 {
 	YS_ASSERT(current_sample_ < samples_per_pixel_);
@@ -170,34 +170,34 @@ Sampler::current_sample() const
 }
 
 
-unsigned
+uint64_t
 Sampler::extension_1D_count() const
 {
-	return static_cast<unsigned>(extension_sizes_1D_.size());
+	return static_cast<uint64_t>(extension_sizes_1D_.size());
 }
 
 
-unsigned
+uint64_t
 Sampler::extension_2D_count() const
 {
-	return static_cast<unsigned>(extension_sizes_2D_.size());
+	return static_cast<uint64_t>(extension_sizes_2D_.size());
 }
 
 
-unsigned
+uint64_t
 Sampler::extension_1D_index() const
 {
-	unsigned const index = first_extension_index() +
+	uint64_t const index = first_extension_index() +
 		(extension_1D_count() * current_extension_1D_) + current_sample();
 	YS_ASSERT(index < arrays_1D_count());
 	return index;
 }
 
 
-unsigned
+uint64_t
 Sampler::extension_2D_index() const
 {
-	unsigned const index = first_extension_index() +
+	uint64_t const index = first_extension_index() +
 		(extension_2D_count() * current_extension_2D_) + current_sample();
 	YS_ASSERT(index < arrays_2D_count());
 	return index;

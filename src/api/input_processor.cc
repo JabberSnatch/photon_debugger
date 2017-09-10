@@ -29,6 +29,55 @@
 namespace api {
 
 
+
+enum TokenId
+{
+	kNone,
+
+	kOutput,
+	kFilm,
+	kCamera,
+	kShape,
+	kSampler,
+	kScopeBegin,
+	kScopeEnd,
+	kParamBegin,
+	kParamEnd,
+	kType,
+	kTransformIdentity,
+	kTranslate,
+	kRotate,
+	kScale,
+	kString,
+	kNumber,
+
+	kValueGroup,
+	kDefinitionGroup,
+	kParamGroup,
+	kPropertiesGroup,
+	kAttributeGroup,
+	kTranslateGroup,
+	kRotateGroup,
+	kScaleGroup,
+	kFilmGroup,
+	kCameraGroup,
+	kShapeGroup,
+	kSamplerGroup,
+	kOutputGroup,
+	kSceneGroup,
+
+	kEnd,
+	kDefault,
+};
+
+
+struct Token
+{
+	TokenId		id;
+	std::string	text;
+};
+
+
 struct ProductionMetadata
 {
 	TokenId		parent;
@@ -48,12 +97,14 @@ TokenTable_t const		token_table
 	{ "Film", kFilm },
 	{ "Camera", kCamera },
 	{ "Shape", kShape },
+	{ "Sampler", kSampler },
 	{ "{", kScopeBegin },
 	{ "}", kScopeEnd },
 	{ "[", kParamBegin }, 
 	{ "]", kParamEnd }, 
 	{ "float", kType }, 
-	{ "int", kType }, 
+	{ "int", kType },
+	{ "uint", kType },
 	{ "bool", kType },
 	{ "false", kNumber },
 	{ "true", kNumber },
@@ -76,6 +127,7 @@ ProductionRules_t const		production_rules
 		{ kFilm, { kFilmGroup, kSceneGroup } },
 		{ kCamera, { kCameraGroup, kSceneGroup } },
 		{ kShape, { kShapeGroup, kSceneGroup } },
+		{ kSampler, { kSamplerGroup, kSceneGroup } },
 		{ kDefault, { kEnd } }
 	} },
 
@@ -105,6 +157,9 @@ ProductionRules_t const		production_rules
 
 	{ kShapeGroup, {
 		{ kDefault, { kShape, kString, kScopeBegin, kAttributeGroup, kScopeEnd } },
+	} },
+	{ kSamplerGroup, {
+		{ kDefault, { kSampler, kString, kScopeBegin, kAttributeGroup, kScopeEnd } },
 	} },
 
 	{ kPropertiesGroup, {
@@ -148,6 +203,9 @@ void	ParamGroup(TranslationState &_state,
 void	ShapeGroup(TranslationState &_state, 
 				   std::vector<Token>::const_iterator _production_begin,
 				   std::vector<Token>::const_iterator _production_end);
+void	SamplerGroup(TranslationState &_state,
+					 std::vector<Token>::const_iterator _production_begin,
+					 std::vector<Token>::const_iterator _production_end);
 void	FilmGroup(TranslationState &_state,
 				  std::vector<Token>::const_iterator _production_begin,
 				  std::vector<Token>::const_iterator _production_end);
@@ -180,6 +238,7 @@ void	ScopeEndTerminal(TranslationState &_state,
 TranslationTable_t	semantic_actions = {
 	{ kParamGroup, &api::ParamGroup },
 	{ kShapeGroup, &api::ShapeGroup },
+	{ kSamplerGroup, &api::SamplerGroup },
 	{ kFilmGroup, &api::FilmGroup },
 	{ kCameraGroup, &api::CameraGroup },
 	{ kTranslateGroup, &api::TranslateGroup },
@@ -428,15 +487,22 @@ ParamGroup(TranslationState &_state,
 		{
 			maths::Decimal	*values = new maths::Decimal[value_count];
 			for (uint32_t i = 0; i < value_count; ++i)
-				values[i] = maths::stof(cursor[i].text);
+				values[i] = boost::lexical_cast<maths::Decimal>(cursor[i].text);
 			_state.param_set().PushFloat(identifier, values, value_count);
 		}
 		else if (type_string == "int")
 		{
-			int32_t			*values = new int32_t[value_count];
+			int64_t			*values = new int64_t[value_count];
 			for (uint32_t i = 0; i < value_count; ++i)
-				values[i] = std::stoi(cursor[i].text);
+				values[i] = boost::lexical_cast<int64_t>(cursor[i].text);
 			_state.param_set().PushInt(identifier, values, value_count);
+		}
+		else if (type_string == "uint")
+		{
+			uint64_t		*values = new uint64_t[value_count];
+			for (uint32_t i = 0; i < value_count; ++i)
+				values[i] = boost::lexical_cast<uint64_t>(cursor[i].text);
+			_state.param_set().PushUint(identifier, values, value_count);
 		}
 		else if (type_string == "bool")
 		{
@@ -462,8 +528,16 @@ ShapeGroup(TranslationState &_state,
 		   std::vector<Token>::const_iterator _production_begin,
 		   std::vector<Token>::const_iterator _production_end)
 {
-	std::string const		shape_type = std::next(_production_begin, 1)->text;
+	std::string const	shape_type = std::next(_production_begin, 1)->text;
 	_state.Shape(shape_type);
+}
+void
+SamplerGroup(TranslationState &_state,
+			 std::vector<Token>::const_iterator _production_begin,
+			 std::vector<Token>::const_iterator _production_end)
+{
+	std::string const	sampler_type = std::next(_production_begin, 1)->text;
+	_state.Sampler(sampler_type);
 }
 void
 FilmGroup(TranslationState &_state,

@@ -17,15 +17,27 @@ ParamSet::PushFloat(std::string const &_id, maths::Decimal _v)
 }
 
 void
-ParamSet::PushInt(std::string const &_id, int32_t *_v, uint32_t _count)
+ParamSet::PushInt(std::string const &_id, int64_t *_v, uint32_t _count)
 {
-	InputParameter<int32_t>	&param = AllocateCommon_(_id, _count, int_parameters_);
+	InputParameter<int64_t>	&param = AllocateCommon_(_id, _count, int_parameters_);
 	std::copy(_v, _v + _count, param.values);
 }
 void
-ParamSet::PushInt(std::string const &_id, int32_t _v)
+ParamSet::PushInt(std::string const &_id, int64_t _v)
 {
 	PushInt(_id, &_v, 1);
+}
+
+void
+ParamSet::PushUint(std::string const &_id, uint64_t *_v, uint32_t _count)
+{
+	InputParameter<uint64_t>	&param = AllocateCommon_(_id, _count, uint_parameters_);
+	std::copy(_v, _v + _count, param.values);
+}
+void
+ParamSet::PushUint(std::string const &_id, uint64_t _v)
+{
+	PushUint(_id, &_v, 1);
 }
 
 void
@@ -52,19 +64,6 @@ ParamSet::PushTransform(std::string const &_id, maths::Transform const &_transfo
 	}
 }
 
-maths::Decimal const *
-ParamSet::FindFloat(std::string const &_id, uint32_t &_count) const
-{
-	auto	it = float_parameters_.find(_id);
-	if (it != float_parameters_.end())
-	{
-		_count = it->second.count;
-		return it->second.values;
-	}
-
-	_count = 0;
-	return nullptr;
-}
 maths::Decimal
 ParamSet::FindFloat(std::string const &_id, maths::Decimal _default) const
 {
@@ -78,21 +77,8 @@ ParamSet::FindFloat(std::string const &_id, maths::Decimal _default) const
 	return _default;
 }
 
-int32_t const *
-ParamSet::FindInt(std::string const &_id, uint32_t &_count) const
-{
-	auto	it = int_parameters_.find(_id);
-	if (it != int_parameters_.end())
-	{
-		_count = it->second.count;
-		return it->second.values;
-	}
-
-	_count = 0;
-	return nullptr;
-}
-int32_t
-ParamSet::FindInt(std::string const &_id, int32_t _default) const
+int64_t
+ParamSet::FindInt(std::string const &_id, int64_t _default) const
 {
 	auto	it = int_parameters_.find(_id);
 	if (it != int_parameters_.end())
@@ -104,19 +90,19 @@ ParamSet::FindInt(std::string const &_id, int32_t _default) const
 	return _default;
 }
 
-bool const *
-ParamSet::FindBool(std::string const &_id, uint32_t &_count) const
+uint64_t
+ParamSet::FindUint(std::string const &_id, uint64_t _default) const
 {
-	auto	it = bool_parameters_.find(_id);
-	if (it != bool_parameters_.end())
+	auto	it = uint_parameters_.find(_id);
+	if (it != uint_parameters_.end())
 	{
-		_count = it->second.count;
-		return it->second.values;
+		if (it->second.count == 1)
+			return *(it->second.values);
 	}
 
-	_count = 0;
-	return nullptr;
+	return _default;
 }
+
 bool
 ParamSet::FindBool(std::string const &_id, bool _default) const
 {

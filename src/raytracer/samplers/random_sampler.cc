@@ -5,10 +5,10 @@ namespace raytracer
 {
 
 
-RandomSampler::RandomSampler(core::RNG &_rng,
-							 unsigned const _samples_per_pixel,
-							 unsigned const _dimensions_per_sample) :
-	Sampler(_rng, _samples_per_pixel, _dimensions_per_sample)
+RandomSampler::RandomSampler(uint64_t const _seed,
+							 uint64_t const _samples_per_pixel,
+							 uint64_t const _dimensions_per_sample) :
+	Sampler(_seed, _samples_per_pixel, _dimensions_per_sample)
 {}
 
 void
