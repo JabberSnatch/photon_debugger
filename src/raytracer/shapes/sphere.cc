@@ -30,19 +30,25 @@ Sphere::Intersect(maths::Ray const &_ray,
 {
 	TIMED_SCOPE(Sphere_Intersect);
 
-	// NOTE: Candidate for error correction (pbr p134)
-	maths::Ray ray = world_transform(_ray, maths::Transform::kInverse);
-	
+	maths::Vec3f origin_error{ maths::zero<maths::Vec3f> }, direction_error{ maths::zero<maths::Vec3f> };
+	maths::Ray ray = world_transform(_ray,
+									 origin_error, direction_error,
+									 maths::Transform::kInverse);
+
 	// xx + yy + zz - rr = 0
 	// (ox + tdx)^2 + (oy + tdy)^2 + (oz + tdz)^2 = rr
 	// oxox + 2oxdxt + dxdxt^2 + oyoy + 2oydyt + dydyt^2 + ozoz + 2ozdzt + dzdzt^2 = rr
 	// (dxdx + dydy + dzdz)t^2 + 2(oxdx + oydy + ozdz)t + (oxox + oyoy + ozoz - rr) = 0
-
-	// NOTE: For a proper running error measure, we should propagate the computed error
-	//		 from the earlier transformation.
-	maths::REDecimal	A = maths::SqrLength(ray.direction);
-	maths::REDecimal	B = 2._d * maths::FoldSum((maths::Vec3f)ray.origin * ray.direction);
-	maths::REDecimal	C = maths::SqrLength((maths::Vec3f)ray.origin) - radius * radius;
+	maths::REDecimal const	ox{ ray.origin.x, origin_error.x },
+							oy{ ray.origin.y, origin_error.y },
+							oz{ ray.origin.z, origin_error.z };
+	maths::REDecimal const	dx{ ray.direction.x, direction_error.x },
+							dy{ ray.direction.y, direction_error.y },
+							dz{ ray.direction.z, direction_error.z };
+	maths::REDecimal const A = dx * dx + dy * dy + dz * dz;
+	maths::REDecimal const B = maths::REDecimal(2._d) * (ox * dx + oy * dy + oz * dz);
+	maths::REDecimal const re_radius = maths::REDecimal(radius);
+	maths::REDecimal const C = ox * ox + oy * oy + oz * oz - re_radius * re_radius;
 	maths::REDecimal	t0, t1;
 	if (!maths::Quadratic(A, B, C, t0, t1))
 		return false;
@@ -63,6 +69,7 @@ Sphere::Intersect(maths::Ray const &_ray,
 	}
 
 	maths::Point3f		pHit{ ray(tHit.value) };
+	pHit *= radius / maths::Distance(pHit, maths::zero<maths::Point3f>);
 	if (pHit.x == 0._d && pHit.y == 0._d)
 		pHit.x = 1e-5f * radius;
 	maths::Decimal		phi = std::atan2(pHit.x, pHit.y);
@@ -77,10 +84,11 @@ Sphere::Intersect(maths::Ray const &_ray,
 		if (t1.UpperBound() > ray.tMax) return false;
 		tHit = t1;
 
-		maths::Point3f		pHit{ ray(tHit.value) };
+		pHit = ray(tHit.value);
+		pHit *= radius / maths::Distance(pHit, maths::zero<maths::Point3f>);
 		if (pHit.x == 0._d && pHit.y == 0._d)
 			pHit.x = 1e-5f * radius;
-		maths::Decimal		phi = std::atan2(pHit.x, pHit.y);
+		phi = std::atan2(pHit.x, pHit.y);
 		if (phi < 0._d)
 			phi += 2._d * maths::pi<maths::Decimal>;
 
@@ -90,46 +98,49 @@ Sphere::Intersect(maths::Ray const &_ray,
 			return false;
 	}
 
-	maths::Decimal const	theta_delta = theta_max - theta_min;
-	maths::Decimal	u = phi / phi_max;
-	maths::Decimal	theta = std::acos(maths::Clamp(pHit.z / radius, -1._d, 1._d));
-	maths::Decimal	v = (theta - theta_min) / theta_delta;
+	maths::Decimal const theta_delta = theta_max - theta_min;
+	maths::Decimal const u = phi / phi_max;
+	maths::Decimal const theta = std::acos(maths::Clamp(pHit.z / radius, -1._d, 1._d));
+	maths::Decimal const v = (theta - theta_min) / theta_delta;
 
-	maths::Decimal	z_radius = std::sqrt(pHit.x * pHit.x + pHit.y * pHit.y);
-	maths::Decimal	inv_z_radius = 1._d / z_radius;
-	maths::Decimal	cos_phi = pHit.x * inv_z_radius;
-	maths::Decimal	sin_phi = pHit.y * inv_z_radius;
-	maths::Vec3f	dpdu(-phi_max * pHit.y, phi_max * pHit.x, 0._d);
-	maths::Vec3f	dpdv{
+	maths::Decimal const z_radius = std::sqrt(pHit.x * pHit.x + pHit.y * pHit.y);
+	maths::Decimal const inv_z_radius = 1._d / z_radius;
+	maths::Decimal const cos_phi = pHit.x * inv_z_radius;
+	maths::Decimal const sin_phi = pHit.y * inv_z_radius;
+	maths::Vec3f const dpdu(-phi_max * pHit.y, phi_max * pHit.x, 0._d);
+	maths::Vec3f const dpdv{
 		theta_delta *
 		maths::Vec3f{ pHit.z * cos_phi, pHit.z * sin_phi, -radius * std::sin(theta) }
 	};
 
+	maths::Vec3f const error_bounds = maths::gamma(5) * maths::Abs(maths::Vec3f(pHit));
+
 	// NOTE: Using differential geometry first fundamental form to compute dndu and dndv
 	//		 see Gray(1991) for a reference on differential geometry.
-	maths::Vec3f	d2pduu = -phi_max * phi_max * maths::Vec3f{ pHit.x, pHit.y, 0._d };
-	maths::Vec3f	d2pduv = theta_delta * pHit.z * phi_max * maths::Vec3f{ -sin_phi, cos_phi, 0._d };
-	maths::Vec3f	d2pdvv = -theta_delta * theta_delta * (maths::Vec3f)pHit;
+	maths::Vec3f const d2pduu = -phi_max * phi_max * maths::Vec3f{ pHit.x, pHit.y, 0._d };
+	maths::Vec3f const d2pduv =
+		theta_delta * pHit.z * phi_max * maths::Vec3f{ -sin_phi, cos_phi, 0._d };
+	maths::Vec3f const d2pdvv = -theta_delta * theta_delta * (maths::Vec3f)pHit;
 
-	maths::Decimal	E = Dot(dpdu, dpdu);
-	maths::Decimal	F = Dot(dpdu, dpdv);
-	maths::Decimal	G = Dot(dpdv, dpdv);
-	maths::Vec3f	N = maths::Normalized(maths::Cross(dpdu, dpdv));
-	maths::Decimal	e = Dot(N, d2pduu);
-	maths::Decimal	f = Dot(N, d2pduv);
-	maths::Decimal	g = Dot(N, d2pdvv);
+	maths::Decimal const E = Dot(dpdu, dpdu);
+	maths::Decimal const F = Dot(dpdu, dpdv);
+	maths::Decimal const G = Dot(dpdv, dpdv);
+	maths::Vec3f const N = maths::Normalized(maths::Cross(dpdu, dpdv));
+	maths::Decimal const e = Dot(N, d2pduu);
+	maths::Decimal const f = Dot(N, d2pduv);
+	maths::Decimal const g = Dot(N, d2pdvv);
 
-	maths::Decimal	inv_EGF2 = 1._d / (E * G - F * F);
-	maths::Norm3f	dndu = maths::Norm3f{
+	maths::Decimal const inv_EGF2 = 1._d / (E * G - F * F);
+	maths::Norm3f const dndu = maths::Norm3f{
 		(f * F - e * G) * inv_EGF2 * dpdu + (e * F - f * E) * inv_EGF2 * dpdv
 	};
-	maths::Norm3f	dndv = maths::Norm3f{
+	maths::Norm3f const dndv = maths::Norm3f{
 		(g * F - f * G) * inv_EGF2 * dpdu + (f * F - g * E) * inv_EGF2 * dpdv
 	};
 
 	_hit_info = world_transform(SurfaceInteraction(
-		pHit, ray.time, -ray.direction, this, maths::Point2f(u, v), dpdu, dpdv, dndu, dndv
-	), maths::Transform::kInverse);
+		pHit, error_bounds, ray.time, -ray.direction, this, maths::Point2f(u, v), dpdu, dpdv, dndu, dndv
+	), maths::Transform::kForward);
 
 	_tHit = tHit.value;
 

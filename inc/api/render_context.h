@@ -21,27 +21,38 @@ class RenderContext final :
 	private core::nonmovable
 {
 public:
+	RenderContext() :
+		mem_region_{},
+		transform_cache_{},
+		camera_{ nullptr },
+		film_{ nullptr },
+		sampler_{ nullptr },
+		integrator_{ new (mem_region()) raytracer::AOIntegrator(4u) },
+		primitives_{}
+	{}
 	void	Clear()
 	{
+		mem_region_.Clear();
 		film_ = nullptr;
 		camera_ = nullptr;
+		sampler_ = nullptr;
+		integrator_ = new (mem_region()) raytracer::AOIntegrator(4u);
 		primitives_.clear();
-		mem_region_.Clear();
 	}
 	void	SetFilm(raytracer::Film *_f)
 	{
 		film_ = _f;
-		integrator_.SetFilm(film_);
+		integrator_->SetFilm(film_);
 	}
 	void	SetCamera(raytracer::Camera *_c)
 	{
 		camera_ = _c;
-		integrator_.SetCamera(camera_);
+		integrator_->SetCamera(camera_);
 	}
 	void	SetSampler(raytracer::Sampler *_s)
 	{
 		sampler_ = _s;
-		integrator_.SetSampler(sampler_);
+		integrator_->SetSampler(sampler_);
 	}
 	bool	GoodForRender() const
 	{
@@ -49,7 +60,8 @@ public:
 	}
 	void	RenderAndWrite(std::string const &_path)
 	{
-		integrator_.Integrate(primitives_, 0._d);
+		integrator_->Prepare();
+		integrator_->Integrate(primitives_, 0._d);
 		camera_->WriteToFile(_path);
 	}
 
@@ -63,13 +75,13 @@ public:
 	core::MemoryRegion	&mem_region() { return mem_region_; }
 
 private:
+	core::MemoryRegion					mem_region_;
+	TransformCache						transform_cache_;
 	raytracer::Camera					*camera_ = nullptr;
 	raytracer::Film						*film_ = nullptr;
 	raytracer::Sampler					*sampler_ = nullptr;
-	raytracer::Integrator				integrator_;
+	raytracer::Integrator				*integrator_ = nullptr;
 	std::vector<raytracer::Primitive*>	primitives_;
-	TransformCache						transform_cache_;
-	core::MemoryRegion					mem_region_;
 };
 
 

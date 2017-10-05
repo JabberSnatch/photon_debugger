@@ -10,6 +10,16 @@ namespace raytracer
 {
 
 
+maths::Vec3f
+HemisphereMapping(maths::Vec2f const &_uv)
+{
+	maths::Decimal const z = _uv.u;
+	maths::Decimal const sin_theta = std::sqrt(maths::Max(0._d, 1._d - z * z));
+	maths::Decimal const phi = 2._d * maths::pi<maths::Decimal> * _uv.v;
+	return { sin_theta * std::cos(phi), sin_theta * std::sin(phi), z };
+}
+
+
 Sampler::Sampler(uint64_t const _seed, 
 				 uint64_t const _samples_per_pixel, uint64_t const _dimensions_per_sample) :
 	rng_{ _seed },
@@ -151,6 +161,11 @@ Sampler::ReserveArray1D(uint64_t _size)
 {
 	YS_ASSERT(_size != 0u);
 	extension_sizes_1D_.push_back(_size);
+	SampleVector1DContainer_t const arrays = SampleVector1DContainer_t(
+		static_cast<size_t>(samples_per_pixel()),
+		Sample1DContainer_t(static_cast<size_t>(_size))
+	);
+	arrays_1D_.insert(arrays_1D_.end(), arrays.begin(), arrays.end());
 }
 
 
@@ -159,6 +174,11 @@ Sampler::ReserveArray2D(const uint64_t _size)
 {
 	YS_ASSERT(_size != 0u);
 	extension_sizes_2D_.push_back(_size);
+	SampleVector2DContainer_t const arrays = SampleVector2DContainer_t(
+		static_cast<size_t>(samples_per_pixel()),
+		Sample2DContainer_t(static_cast<size_t>(_size))
+	);
+	arrays_2D_.insert(arrays_2D_.end(), arrays.begin(), arrays.end());
 }
 
 
@@ -188,7 +208,7 @@ uint64_t
 Sampler::extension_1D_index() const
 {
 	uint64_t const index = first_extension_index() +
-		(extension_1D_count() * current_extension_1D_) + current_sample();
+		(samples_per_pixel() * current_extension_1D_) + current_sample();
 	YS_ASSERT(index < arrays_1D_count());
 	return index;
 }
@@ -198,7 +218,7 @@ uint64_t
 Sampler::extension_2D_index() const
 {
 	uint64_t const index = first_extension_index() +
-		(extension_2D_count() * current_extension_2D_) + current_sample();
+		(samples_per_pixel() * current_extension_2D_) + current_sample();
 	YS_ASSERT(index < arrays_2D_count());
 	return index;
 }

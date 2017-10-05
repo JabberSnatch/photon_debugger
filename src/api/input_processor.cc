@@ -281,6 +281,7 @@ LexicalAnalysis(std::ifstream &_file_stream)
 	for (;;)
 	{
 		std::stringstream	token_stream;
+		bool ignore_line = false;
 		
 		while (std::find(delimiters.begin(), delimiters.end(), _file_stream.get())
 			   != delimiters.end());
@@ -289,9 +290,20 @@ LexicalAnalysis(std::ifstream &_file_stream)
 		char buf;
 		while (std::find(delimiters.begin(), delimiters.end(), buf = _file_stream.get())
 			   == delimiters.end() && _file_stream.good())
+		{
 			token_stream << buf;
+			if (token_stream.str() == "//")
+			{
+				ignore_line = true;
+				while (_file_stream.get() != '\n');
+				break;
+			}
+		}
 
-		if (_file_stream.good())
+		if (ignore_line)
+		{
+		}
+		else if (_file_stream.good())
 		{
 			Token	token = StringToToken(token_stream.str());
 			tokens.push_back(token);

@@ -11,7 +11,7 @@
 #include "core/logger.h"
 #include "core/profiler.h"
 #include "core/rng.h"
-#include <random>
+#include "raytracer/samplers/hammersley_sampler.h"
 
 int main(int argc, char *argv[])
 {
@@ -44,6 +44,10 @@ int main(int argc, char *argv[])
 
 	return 0;
 #endif
+
+	uint64_t const base{ 2u }, const value{ 2048u };
+	maths::REDecimal vdCInverse = raytracer::HammersleySampler::vdCInverse(base, value);
+	maths::REDecimal radicalInverse = raytracer::HammersleySampler::RadicalInverse(base, value);
 
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");

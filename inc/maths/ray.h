@@ -5,6 +5,7 @@
 #include "maths/vector.h"
 #include "maths/point.h"
 #include "maths/bounds.h"
+#include "maths/redecimal.h"
 
 
 namespace maths {
@@ -36,12 +37,11 @@ struct Ray
 		Decimal t0{ 0._d }, t1{ tMax };
 		for (int i = 0; i < 3; ++i)
 		{
-			Decimal	inv_dir = 1._d / direction[i];
+			Decimal	const inv_dir = 1._d / direction[i];
 			Decimal	tNear = (_bounds.min[i] - origin[i]) * inv_dir;
 			Decimal tFar = (_bounds.max[i] - origin[i]) * inv_dir;
-
 			if (tNear > tFar) std::swap(tNear, tFar);
-
+			tFar *= 1._d + 2._d * gamma(3u);
 			t0 = maths::Max(t0, tNear);
 			t1 = maths::Min(t1, tFar);
 			if (t0 > t1) return false;
@@ -55,12 +55,11 @@ struct Ray
 		Decimal t0{ 0._d }, t1{ tMax };
 		for (int i = 0; i < 3; ++i)
 		{
-			Decimal	inv_dir = 1._d / direction[i];
+			Decimal	const inv_dir = 1._d / direction[i];
 			Decimal	tNear = (_bounds.min[i] - origin[i]) * inv_dir;
 			Decimal tFar = (_bounds.max[i] - origin[i]) * inv_dir;
-
 			if (tNear > tFar) std::swap(tNear, tFar);
-
+			tFar *= 1._d + 2._d * gamma(3u);
 			t0 = maths::Max(t0, tNear);
 			t1 = maths::Min(t1, tFar);
 			if (t0 > t1) return false;
@@ -75,17 +74,21 @@ struct Ray
 	bool DoesIntersect(Bounds<T, 3> const &_bounds, Vec3f const &_direction_inverse,
 					   Vector<int, 3> const &_is_negative) const
 	{
+		Decimal const error_bound_factor = 1._d + 2._d * gamma(3u);
 		Decimal t_min = (_bounds[_is_negative.x].x - origin.x) * _direction_inverse.x;
-		Decimal t_max = (_bounds[1 - _is_negative.x].x - origin.x) * _direction_inverse.x;
+		Decimal t_max = (_bounds[1 - _is_negative.x].x - origin.x) * _direction_inverse.x
+			* error_bound_factor;
 		Decimal const y_min = (_bounds[_is_negative.y].y - origin.y) * _direction_inverse.y;
-		Decimal const y_max = (_bounds[1 - _is_negative.y].y - origin.y) * _direction_inverse.y;
+		Decimal const y_max = (_bounds[1 - _is_negative.y].y - origin.y) * _direction_inverse.y
+			* error_bound_factor;
 		if (t_min > y_max || y_min > t_max)
 			return false;
 		t_min = Max(y_min, t_min);
 		t_max = Min(y_max, t_max);
 
 		Decimal const z_min = (_bounds[_is_negative.z].z - origin.z) * _direction_inverse.z;
-		Decimal const z_max = (_bounds[1 - _is_negative.z].z - origin.z) * _direction_inverse.z;
+		Decimal const z_max = (_bounds[1 - _is_negative.z].z - origin.z) * _direction_inverse.z
+			* error_bound_factor;
 		if (t_min > z_max || z_min > t_max)
 			return false;
 		t_min = Max(z_min, t_min);

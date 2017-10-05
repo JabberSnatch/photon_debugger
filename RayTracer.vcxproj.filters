@@ -147,6 +147,9 @@
     <ClInclude Include="inc\api\render_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\raytracer\samplers\hammersley_sampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">
@@ -228,6 +231,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\api\translation_state.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\raytracer\samplers\hammersley_sampler.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

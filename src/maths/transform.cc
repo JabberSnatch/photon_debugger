@@ -29,7 +29,7 @@ raytracer::SurfaceInteraction
 Transform::operator()(raytracer::SurfaceInteraction const &_v, OpDirection _dir) const
 {
 	raytracer::SurfaceInteraction result;
-	result.position = (*this)(_v.position, _dir);
+	result.position = (*this)(_v.position, _v.error_bounds, result.error_bounds, _dir);
 	result.time = _v.time;
 	result.wo = (*this)(_v.wo, _dir);
 	result.shape = _v.shape;
@@ -45,6 +45,25 @@ Transform::operator()(raytracer::SurfaceInteraction const &_v, OpDirection _dir)
 	result.shading.dndu = (*this)(_v.shading.dndu, _dir);
 	result.shading.dndv = (*this)(_v.shading.dndv, _dir);
 	return result;
+}
+
+
+Ray
+Transform::operator()(Ray const &_v,
+					  Vec3f &o_origin_error, Vec3f &o_direction_error,
+					  OpDirection _dir) const
+{
+	Point3f transformed_origin{ (*this)(_v.origin, o_origin_error, _dir) };
+	Vec3f const transformed_direction{ (*this)(_v.direction, o_direction_error, _dir) };
+	Decimal tMax = _v.tMax;
+	Decimal const sqr_length = SqrLength(transformed_direction);
+	if (sqr_length > 0._d)
+	{
+		Decimal const dt = Dot(Abs(transformed_direction), o_origin_error) / sqr_length;
+		transformed_origin += transformed_direction * dt;
+		tMax -= dt;
+	}
+	return Ray{ transformed_origin, transformed_direction, tMax, _v.time };
 }
 
 

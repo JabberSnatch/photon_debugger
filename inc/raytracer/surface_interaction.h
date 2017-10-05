@@ -23,12 +23,14 @@ class SurfaceInteraction
 public:
 	SurfaceInteraction() = default;
 	SurfaceInteraction(
-		maths::Point3f const &_p, maths::Decimal const &_t, maths::Vec3f const &_wo,
+		maths::Point3f const &_p, maths::Vec3f const &_e,
+		maths::Decimal const &_t, maths::Vec3f const &_wo,
 		Shape const *_shape, maths::Point2f const &_uv,
 		maths::Vec3f const &_dpdu, maths::Vec3f const &_dpdv,
 		maths::Norm3f const &_dndu, maths::Norm3f const &_dndv
 	) :
-		position{ _p }, time{ _t }, wo{ _wo },
+		position{ _p }, error_bounds{ _e },
+		time { _t }, wo{ _wo },
 		shape{ _shape }, uv{ _uv },
 		geometry{ 
 			maths::Normalized((maths::Norm3f)maths::Cross(_dpdu, _dpdv)),
@@ -65,6 +67,8 @@ public:
 	}
 
 	maths::Point3f		position;
+	maths::Vec3f		error_bounds;
+	//maths::Bounds3f		error_bounds;
 	maths::Decimal		time;
 	maths::Vec3f		wo;				// Light flow direction
 

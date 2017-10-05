@@ -1,7 +1,9 @@
 #include "raytracer/integrator.h"
 
 #include "core/logger.h"
+#include "maths/matrix.h"
 #include "maths/ray.h"
+#include "maths/transform.h"
 #include "raytracer/camera.h"
 #include "raytracer/film.h"
 #include "raytracer/primitive.h"
@@ -40,34 +42,116 @@ Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
 				 sample_index < sampler_->samples_per_pixel();
 				 ++sample_index, sampler_->StartNextSample())
 			{
-				static maths::Vec3f const
-					up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
 				maths::Vec2f const film_sample = sampler_->Get2D();
 				maths::Vec2f const sample_position = pixel_origin + film_sample;
 				maths::Vec2f const uv = sample_position * inv_resolution;
-				maths::Vec3f color{ 0._d, 0._d, 0._d };
 				maths::Ray ray = camera_->Ray(uv.u, uv.v, _t);
 				raytracer::SurfaceInteraction closest_hit_info;
 				for (raytracer::Primitive const *primitive : _scene)
 				{
 					primitive->Intersect(ray, closest_hit_info);
 				}
-				if (closest_hit_info.primitive != nullptr)
-				{
-					color = static_cast<maths::Vec3f>(closest_hit_info.shading.normal) * 0.5_d
-						+ maths::Vec3f(0.5_d);
-				}
-				else
-				{
-					color = maths::Lerp(down_color, up_color,
-										.5_d * maths::Normalized(ray.direction).z + .5_d);
-				}
+				maths::Vec3f const color{ Li(ray, closest_hit_info, _scene) };
 				color_accumulator += color;
 			}
-			maths::Vec3f const	Lo =
+			maths::Vec3f const	Li =
 				color_accumulator / static_cast<maths::Decimal>(sampler_->samples_per_pixel());
-			film.SetPixel(Lo, { x, y });
+			film.SetPixel(Li, { x, y });
 		}
+	}
+}
+
+
+void
+NormalIntegrator::Prepare()
+{
+}
+
+
+maths::Vec3f
+NormalIntegrator::Li(maths::Ray const &_ray,
+					 raytracer::SurfaceInteraction const &_hit,
+					 std::vector<Primitive*> const &_scene)
+{
+	static maths::Vec3f const up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
+	if (_hit.primitive != nullptr)
+	{
+		return maths::Normalized(static_cast<maths::Vec3f>(_hit.shading.normal) * 0.5_d + maths::Vec3f(0.5_d));
+	}
+	else
+	{
+		return maths::Lerp(down_color, up_color, .5_d * maths::Normalized(_ray.direction).z + .5_d);
+	}
+}
+
+
+AOIntegrator::AOIntegrator(uint64_t const _sample_count) :
+	Integrator(),
+	sample_count_{ _sample_count }
+{}
+
+
+void
+AOIntegrator::Prepare()
+{
+	sampler().ReserveArray2D(sample_count_);
+}
+
+
+maths::Vec3f
+AOIntegrator::Li(maths::Ray const &_ray,
+				 raytracer::SurfaceInteraction const &_hit,
+				 std::vector<Primitive*> const &_scene)
+{
+	if (_hit.primitive != nullptr)
+	{
+		maths::Vec3f occlusion{ maths::zero<maths::Vec3f> };
+		Sampler::Sample2DContainer_t const &samples = sampler().GetArray2D(sample_count_);
+		for (Sampler::Sample2DContainer_t::const_iterator scit = samples.cbegin();
+			 scit != samples.cend(); ++scit)
+		{
+			maths::Vec2f const &sample = *scit;
+			maths::Vec3f const sampled_direction = HemisphereMapping(sample);
+			maths::Vec3f const shading_normal{ _hit.shading.normal };
+			maths::Vec3f const wi =
+				_hit.shading.dpdu * sampled_direction.x +
+				_hit.shading.dpdv * sampled_direction.y +
+				shading_normal * sampled_direction.z;
+			YS_ASSERT(maths::Dot(wi, shading_normal) >= 0._d);
+			//
+			maths::Decimal const d = maths::Dot(maths::Abs(shading_normal), _hit.error_bounds);
+			maths::Vec3f const offset = (maths::Dot(wi, shading_normal) < 0) ?
+				-d * shading_normal : d * shading_normal;
+			maths::Point3f origin = _hit.position + offset * 2._d;
+			for (int i = 0; i < 3; ++i)
+			{
+				if (offset[i] > 0) origin[i] = maths::NextDecimalUp(origin[i]);
+				else if (offset[i] < 0) origin[i] = maths::NextDecimalDown(origin[i]);
+			}
+			//
+			maths::Ray ray{ origin, wi, maths::infinity<maths::Decimal>, _ray.time };
+			raytracer::SurfaceInteraction closest_hit_info;
+			for (raytracer::Primitive const *primitive : _scene)
+			{
+				primitive->Intersect(ray, closest_hit_info);
+			}
+			if (closest_hit_info.primitive == nullptr)
+			{
+				occlusion += maths::one<maths::Vec3f>;
+			}
+			else
+			{
+				if (closest_hit_info.primitive == _hit.primitive)
+				{
+					occlusion += maths::Vec3f{ 1._d, 0._d, 0._d };
+				}
+			}
+		}
+		return occlusion / static_cast<maths::Decimal>(samples.size());
+	}
+	else
+	{
+		return maths::one<maths::Vec3f>;
 	}
 }
 

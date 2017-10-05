@@ -13,6 +13,9 @@ namespace raytracer
 {
 
 
+maths::Vec3f HemisphereMapping(maths::Vec2f const &_uv);
+
+
 // Image >=> Pixel >=> Sample >=> Array >=> Dimension
 // Arrays are packed by type first and dimension second.
 // e.g. for a sampler with N samples per pixel

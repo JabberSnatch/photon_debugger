@@ -252,6 +252,7 @@
     <ClCompile Include="src\raytracer\primitive.cc" />
     <ClCompile Include="src\maths\quaternion.cc" />
     <ClCompile Include="src\raytracer\sampler.cc" />
+    <ClCompile Include="src\raytracer\samplers\hammersley_sampler.cc" />
     <ClCompile Include="src\raytracer\samplers\random_sampler.cc" />
     <ClCompile Include="src\raytracer_main.cc" />
     <ClCompile Include="src\maths\redecimal.cc" />
@@ -295,6 +296,7 @@
     <ClInclude Include="inc\maths\redecimal.h" />
     <ClInclude Include="inc\api\render_context.h" />
     <ClInclude Include="inc\raytracer\sampler.h" />
+    <ClInclude Include="inc\raytracer\samplers\hammersley_sampler.h" />
     <ClInclude Include="inc\raytracer\samplers\random_sampler.h" />
     <ClInclude Include="inc\raytracer\shape.h" />
     <ClInclude Include="inc\raytracer\shapes\sphere.h" />

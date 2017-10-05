@@ -98,6 +98,15 @@ Triangle::Intersect(maths::Ray const &_ray,
 	maths::Vec2f const		duv02 = uv0 - uv2, duv12 = uv1 - uv2;
 	maths::Vec3f const		dp02 = v0 - v2, dp12 = v1 - v2;
 
+	maths::Decimal const	x_abs_sum =
+		maths::Abs(b0 * p0.x) + maths::Abs(b1 * p1.x) + maths::Abs(b2 * p2.x);
+	maths::Decimal const	y_abs_sum =
+		maths::Abs(b0 * p0.y) + maths::Abs(b1 * p1.y) + maths::Abs(b2 * p2.y);
+	maths::Decimal const	z_abs_sum =
+		maths::Abs(b0 * p0.z) + maths::Abs(b1 * p1.z) + maths::Abs(b2 * p2.z);
+	maths::Vec3f const error_bounds =
+		maths::gamma(7) * maths::Vec3f{ x_abs_sum, y_abs_sum, z_abs_sum };
+
 	maths::Decimal const	matrix_determinant = duv02.x * duv12.y - duv02.y * duv12.x;
 	if (matrix_determinant != 0._d)
 	{
@@ -111,7 +120,7 @@ Triangle::Intersect(maths::Ray const &_ray,
 	maths::Point3f const	hit_point = b0 * v0 + maths::Vec3f(b1 * v1) + maths::Vec3f(b2 * v2);
 	maths::Point2f const	hit_uv = b0 * uv0 + maths::Vec2f(b1 * uv1) + maths::Vec2f(b2 * uv2);
 
-	_hit_info = SurfaceInteraction(hit_point, t, -_ray.direction, this, hit_uv,
+	_hit_info = SurfaceInteraction(hit_point, error_bounds, t, -_ray.direction, this, hit_uv,
 								   dpdu, dpdv, maths::Norm3f(0._d), maths::Norm3f(0._d));
 	_hit_info.geometry.normal = _hit_info.shading.normal =
 		maths::Norm3f(maths::Normalized(maths::Cross(dp02, dp12)));

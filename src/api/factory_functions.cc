@@ -64,8 +64,8 @@ raytracer::Sampler*
 MakeRandomSampler(api::RenderContext &_context, api::ParamSet const &_params)
 {
 	uint64_t const	seed = _params.FindUint("seed", std::random_device()());
-	uint64_t const	samples_per_pixel = _params.FindUint("sample_count", 1);
-	uint64_t const	dimensions_per_sample = _params.FindUint("dimension_count", 5);
+	uint64_t const	samples_per_pixel = _params.FindUint("sample_count", 1u);
+	uint64_t const	dimensions_per_sample = _params.FindUint("dimension_count", 5u);
 	raytracer::Sampler *const random_sampler = new (_context.mem_region())
 		raytracer::RandomSampler{ seed, samples_per_pixel, dimensions_per_sample };
 	return random_sampler;
@@ -76,7 +76,7 @@ ShapeCallbackContainer_t const &
 shape_callbacks()
 {
 	static ShapeCallbackContainer_t const callbacks {
-			{ "sphere", &MakeSphere },
+		{ "sphere", &MakeSphere },
 	};
 	return callbacks;
 }
