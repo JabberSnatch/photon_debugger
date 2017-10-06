@@ -254,6 +254,7 @@
     <ClCompile Include="src\raytracer\sampler.cc" />
     <ClCompile Include="src\raytracer\samplers\hammersley_sampler.cc" />
     <ClCompile Include="src\raytracer\samplers\random_sampler.cc" />
+    <ClCompile Include="src\raytracer\surface_interaction.cc" />
     <ClCompile Include="src\raytracer_main.cc" />
     <ClCompile Include="src\maths\redecimal.cc" />
     <ClCompile Include="src\raytracer\shape.cc" />

@@ -29,21 +29,21 @@ raytracer::SurfaceInteraction
 Transform::operator()(raytracer::SurfaceInteraction const &_v, OpDirection _dir) const
 {
 	raytracer::SurfaceInteraction result;
-	result.position = (*this)(_v.position, _v.error_bounds, result.error_bounds, _dir);
+	result.position = (*this)(_v.position, _v.position_error, result.position_error, _dir);
 	result.time = _v.time;
 	result.wo = (*this)(_v.wo, _dir);
 	result.shape = _v.shape;
 	result.uv = _v.uv;
-	result.geometry.normal = (*this)(_v.geometry.normal, _dir);
-	result.geometry.dpdu = (*this)(_v.geometry.dpdu, _dir);
-	result.geometry.dpdv = (*this)(_v.geometry.dpdv, _dir);
-	result.geometry.dndu = (*this)(_v.geometry.dndu, _dir);
-	result.geometry.dndv = (*this)(_v.geometry.dndv, _dir);
-	result.shading.normal = (*this)(_v.shading.normal, _dir);
-	result.shading.dpdu = (*this)(_v.shading.dpdu, _dir);
-	result.shading.dpdv = (*this)(_v.shading.dpdv, _dir);
-	result.shading.dndu = (*this)(_v.shading.dndu, _dir);
-	result.shading.dndv = (*this)(_v.shading.dndv, _dir);
+	result.geometry.SetNormal((*this)(_v.geometry.normal_quick(), _dir));
+	result.geometry.SetDpdu((*this)(_v.geometry.dpdu_quick(), _dir));
+	result.geometry.SetDpdv((*this)(_v.geometry.dpdv_quick(), _dir));
+	result.geometry.SetDndu((*this)(_v.geometry.dndu_quick(), _dir));
+	result.geometry.SetDndv((*this)(_v.geometry.dndv_quick(), _dir));
+	result.shading.SetNormal((*this)(_v.shading.normal_quick(), _dir));
+	result.shading.SetDpdu((*this)(_v.shading.dpdu_quick(), _dir));
+	result.shading.SetDpdv((*this)(_v.shading.dpdv_quick(), _dir));
+	result.shading.SetDndu((*this)(_v.shading.dndu_quick(), _dir));
+	result.shading.SetDndv((*this)(_v.shading.dndv_quick(), _dir));
 	return result;
 }
 

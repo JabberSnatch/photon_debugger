@@ -76,7 +76,7 @@ NormalIntegrator::Li(maths::Ray const &_ray,
 	static maths::Vec3f const up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
 	if (_hit.primitive != nullptr)
 	{
-		return maths::Normalized(static_cast<maths::Vec3f>(_hit.shading.normal) * 0.5_d + maths::Vec3f(0.5_d));
+		return static_cast<maths::Vec3f>(_hit.shading.normal()) * 0.5_d + maths::Vec3f(0.5_d);
 	}
 	else
 	{
@@ -112,14 +112,14 @@ AOIntegrator::Li(maths::Ray const &_ray,
 		{
 			maths::Vec2f const &sample = *scit;
 			maths::Vec3f const sampled_direction = HemisphereMapping(sample);
-			maths::Vec3f const shading_normal{ _hit.shading.normal };
-			maths::Vec3f const wi =
-				_hit.shading.dpdu * sampled_direction.x +
-				_hit.shading.dpdv * sampled_direction.y +
+			maths::Vec3f const shading_normal{ _hit.shading.normal() };
+			maths::Vec3f const wi = 
+				_hit.shading.dpdu() * sampled_direction.x +
+				_hit.shading.dpdv() * sampled_direction.y +
 				shading_normal * sampled_direction.z;
 			YS_ASSERT(maths::Dot(wi, shading_normal) >= 0._d);
 			//
-			maths::Decimal const d = maths::Dot(maths::Abs(shading_normal), _hit.error_bounds);
+			maths::Decimal const d = maths::Dot(maths::Abs(shading_normal), _hit.position_error);
 			maths::Vec3f const offset = (maths::Dot(wi, shading_normal) < 0) ?
 				-d * shading_normal : d * shading_normal;
 			maths::Point3f origin = _hit.position + offset * 2._d;

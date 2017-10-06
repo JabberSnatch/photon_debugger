@@ -120,68 +120,73 @@ Triangle::Intersect(maths::Ray const &_ray,
 	maths::Point3f const	hit_point = b0 * v0 + maths::Vec3f(b1 * v1) + maths::Vec3f(b2 * v2);
 	maths::Point2f const	hit_uv = b0 * uv0 + maths::Vec2f(b1 * uv1) + maths::Vec2f(b2 * uv2);
 
-	_hit_info = SurfaceInteraction(hit_point, error_bounds, t, -_ray.direction, this, hit_uv,
-								   dpdu, dpdv, maths::Norm3f(0._d), maths::Norm3f(0._d));
-	_hit_info.geometry.normal = _hit_info.shading.normal =
-		maths::Norm3f(maths::Normalized(maths::Cross(dp02, dp12)));
+	maths::Norm3f const flat_normal = maths::Norm3f{ maths::Normalized(maths::Cross(dp02, dp12)) };
+	maths::Norm3f geometry_normal = flat_normal;
+	SurfaceInteraction::GeometryProperties shading{
+		maths::Normalized(dpdu), maths::Normalized(dpdv), maths::Norm3f(0._d), maths::Norm3f(0._d)
+	};
 
 	bool const	mesh_has_normals = mesh_.has_normals();
 	bool const	mesh_has_tangents = mesh_.has_tangents();
 	if (mesh_has_normals || mesh_has_tangents)
 	{
-		// NOTE: I'm really into const variables right now. Let's bench this someday.
-		maths::Norm3f const		&n0 = (mesh_has_normals) ?
-			mesh_.normals[vertex_index_[0]] :
-			_hit_info.geometry.normal;
-		maths::Norm3f const		&n1 = (mesh_has_normals) ?
-			mesh_.normals[vertex_index_[1]] :
-			_hit_info.geometry.normal;
-		maths::Norm3f const		&n2 = (mesh_has_normals) ?
-			mesh_.normals[vertex_index_[2]] :
-			_hit_info.geometry.normal;
-
-		maths::Norm3f const		shading_normal = (mesh_has_normals) ?
-			maths::Normalized(b0 * n0 + b1 * n1 + b2 * n2) :
-			_hit_info.geometry.normal;
-
-		maths::Vec3f			shading_tangent = (mesh_has_tangents) ?
-			maths::Normalized(b0 * mesh_.tangents[vertex_index_[0]] +
-							  b1 * mesh_.tangents[vertex_index_[1]] +
-							  b2 * mesh_.tangents[vertex_index_[2]]) :
-			maths::Normalized(_hit_info.geometry.dpdu);
-
-		maths::Vec3f			shading_bitangent = maths::Cross(shading_normal, shading_tangent);
-		if (maths::SqrLength(shading_tangent) > 0._d)
+		//
+		if (mesh_has_normals)
 		{
-			shading_bitangent = maths::Normalized(shading_bitangent);
-			shading_tangent = maths::Cross(shading_bitangent, shading_normal);
+			maths::Norm3f const		&n0 = mesh_.normals[vertex_index_[0]];
+			maths::Norm3f const		&n1 = mesh_.normals[vertex_index_[1]];
+			maths::Norm3f const		&n2 = mesh_.normals[vertex_index_[2]];
+			shading.SetNormal(maths::Normalized(b0 * n0 + b1 * n1 + b2 * n2));
+			//
+			if (matrix_determinant != 0._d)
+			{
+				maths::Norm3f const		dn02 = n0 - n2;
+				maths::Norm3f const		dn12 = n1 - n2;
+				maths::Decimal const	matrix_determinant_inverse = 1._d / matrix_determinant;
+				shading.SetDndu((duv12.y * dn02 - duv02.y * dn12) * matrix_determinant_inverse);
+				shading.SetDndv((duv02.x * dn12 - duv12.x * dn02) * matrix_determinant_inverse);
+			}
+		}
+		if (mesh_has_tangents)
+		{
+			shading.SetDpdu(maths::Normalized(
+				b0 * mesh_.tangents[vertex_index_[0]] +
+				b1 * mesh_.tangents[vertex_index_[1]] +
+				b2 * mesh_.tangents[vertex_index_[2]]));
+		}
+		// NOTE: I suppose this line can be moved inside the condition, but still have to check
+		shading.SetDpdv(maths::Cross(shading.normal_quick(), shading.dpdu_quick()));
+		if (maths::SqrLength(shading.dpdu_quick()) > 0._d)
+		{
+			shading.SetDpdv(shading.dpdv());
+			shading.SetDpdu(maths::Cross(shading.dpdv_quick(), shading.normal_quick()));
 		}
 		else
-			maths::OrthonormalBasis((maths::Vec3f)shading_normal,
+		{
+			maths::Vec3f shading_tangent = shading.dpdu_quick();
+			maths::Vec3f shading_bitangent = shading.dpdv_quick();
+			maths::OrthonormalBasis((maths::Vec3f)shading.normal_quick(),
 									shading_tangent,
 									shading_bitangent);
-
-		maths::Norm3f			dndu(0._d), dndv(0._d);
-		if (matrix_determinant != 0._d && mesh_has_normals)
-		{
-			maths::Norm3f const		dn02 = n0 - n2;
-			maths::Norm3f const		dn12 = n1 - n2;
-			maths::Decimal const	matrix_determinant_inverse = 1._d / matrix_determinant;
-			dndu = (duv12.y * dn02 - duv02.y * dn12) * matrix_determinant_inverse;
-			dndv = (duv02.x * dn12 - duv12.x * dn02) * matrix_determinant_inverse;
+			shading.SetDpdu(shading_tangent);
+			shading.SetDpdv(shading_bitangent);
 		}
-
-		_hit_info.SetShadingGeometry(shading_tangent, shading_bitangent, dndu, dndv, true);
+		geometry_normal = maths::FaceForward(flat_normal, shading.normal_quick());
 	} // (mesh_has_normals || mesh_has_tangents)
-
-	if (mesh_has_normals)
-		_hit_info.geometry.normal = maths::FaceForward(_hit_info.geometry.normal,
-													   _hit_info.shading.normal);
 	else if (flip_normals ^ swaps_handedness)
-		_hit_info.geometry.normal = _hit_info.shading.normal = -_hit_info.geometry.normal;
+	{
+		geometry_normal = -geometry_normal;
+		shading.SetNormal(geometry_normal);
+	}
 
 	_tHit = t;
 
+	SurfaceInteraction::GeometryProperties const geometry{
+		geometry_normal, dpdu, dpdv, maths::Norm3f(0._d), maths::Norm3f(0._d)
+	};
+	_hit_info = SurfaceInteraction{
+		hit_point, error_bounds, t, -_ray.direction, this, hit_uv, geometry, shading
+	};
 	//if (maths::Dot(_ray.direction, _hit_info.shading.normal) > 0._d)
 	//	return false;
 

@@ -13,71 +13,63 @@ namespace raytracer {
 
 class SurfaceInteraction
 {
-	struct GeometryProperties
+public:
+	class GeometryProperties
 	{
-		maths::Norm3f	normal;
-		maths::Vec3f	dpdu, dpdv;		// Tangent, Cotangent
-		maths::Norm3f	dndu, dndv;
+		friend class SurfaceInteraction;
+	public:
+		GeometryProperties() = default;
+		GeometryProperties(maths::Norm3f const &_normal, 
+						   maths::Vec3f const &_dpdu, maths::Vec3f const &_dpdv,
+						   maths::Norm3f const &_dndu, maths::Norm3f const &_dndv);
+		GeometryProperties(maths::Vec3f const &_dpdu, maths::Vec3f const &_dpdv,
+						   maths::Norm3f const &_dndu, maths::Norm3f const &_dndv);
+		maths::Norm3f const normal() const;
+		maths::Norm3f const &normal_quick() const;
+		maths::Vec3f const dpdu() const;
+		maths::Vec3f const &dpdu_quick() const;
+		maths::Vec3f const dpdv() const;
+		maths::Vec3f const &dpdv_quick() const;
+		maths::Norm3f const dndu() const;
+		maths::Norm3f const &dndu_quick() const;
+		maths::Norm3f const dndv() const;
+		maths::Norm3f const &dndv_quick() const;
+		void SetNormal(maths::Norm3f const &_v);
+		void SetDpdu(maths::Vec3f const &_v);
+		void SetDpdv(maths::Vec3f const &_v);
+		void SetDndu(maths::Norm3f const &_v);
+		void SetDndv(maths::Norm3f const &_v);
+	private:
+		maths::Norm3f	normal_;
+		maths::Vec3f	dpdu_, dpdv_;		// Tangent, Cotangent
+		maths::Norm3f	dndu_, dndv_;
 	};
-
 public:
 	SurfaceInteraction() = default;
-	SurfaceInteraction(
-		maths::Point3f const &_p, maths::Vec3f const &_e,
-		maths::Decimal const &_t, maths::Vec3f const &_wo,
-		Shape const *_shape, maths::Point2f const &_uv,
-		maths::Vec3f const &_dpdu, maths::Vec3f const &_dpdv,
-		maths::Norm3f const &_dndu, maths::Norm3f const &_dndv
-	) :
-		position{ _p }, error_bounds{ _e },
-		time { _t }, wo{ _wo },
-		shape{ _shape }, uv{ _uv },
-		geometry{ 
-			maths::Normalized((maths::Norm3f)maths::Cross(_dpdu, _dpdv)),
-			_dpdu, _dpdv, _dndu, _dndv
-		},
-		shading{ geometry },
-		primitive{ nullptr }
-	{
-		if (shape != nullptr)
-			if (shape->flip_normals ^ shape->swaps_handedness)
-			{
-				geometry.normal = -geometry.normal;
-				shading.normal = -shading.normal;
-			}
-	}
-
+	SurfaceInteraction(maths::Point3f const &_p, maths::Vec3f const &_e,
+					   maths::Decimal const &_t, maths::Vec3f const &_wo,
+					   Shape const *_shape, maths::Point2f const &_uv,
+					   maths::Vec3f const &_dpdu, maths::Vec3f const &_dpdv,
+					   maths::Norm3f const &_dndu, maths::Norm3f const &_dndv);
+	SurfaceInteraction(maths::Point3f const &_p, maths::Vec3f const &_e,
+					   maths::Decimal const &_t, maths::Vec3f const &_wo,
+					   Shape const *const _shape, maths::Point2f const &_uv,
+					   GeometryProperties const &_geometry,
+					   GeometryProperties const &_shading);
 	// NOTE: if _is_authoritative the computed shading normal is interpreted as the "real"
 	//		 outside of the shape
 	void SetShadingGeometry(maths::Vec3f const &_dpdu, maths::Vec3f const &_dpdv,
 							maths::Norm3f const &_dndu, maths::Norm3f const &_dndv,
-							bool _is_authoritative)
-	{
-		shading = GeometryProperties{
-			maths::Normalized((maths::Norm3f)maths::Cross(_dpdu, _dpdv)),
-			_dpdu, _dpdv, _dndu, _dndv
-		};
-		if (shape != nullptr)
-			if (shape->flip_normals ^ shape->swaps_handedness)
-				shading.normal = -shading.normal;
-		if (_is_authoritative)
-			geometry.normal = maths::FaceForward(geometry.normal, shading.normal);
-		else
-			shading.normal = maths::FaceForward(shading.normal, geometry.normal);
-	}
-
+							bool _is_authoritative);
+public:
 	maths::Point3f		position;
-	maths::Vec3f		error_bounds;
-	//maths::Bounds3f		error_bounds;
+	maths::Vec3f		position_error;
 	maths::Decimal		time;
 	maths::Vec3f		wo;				// Light flow direction
-
 	Shape const			*shape;
 	maths::Point2f		uv;
-
 	GeometryProperties	geometry;		// True geometry properties
 	GeometryProperties	shading;		// Shading geometry
-
 	Primitive const		*primitive;
 };
 

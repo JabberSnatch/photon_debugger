@@ -87,7 +87,7 @@ Camera::Expose(Scene const &_scene, maths::Decimal _t)
 				primitive->Intersect(ray, closest_hit_info);
 
 			if (closest_hit_info.primitive != nullptr)
-				color = (maths::Vec3f)closest_hit_info.shading.normal * 0.5_d + maths::Vec3f(0.5_d);
+				color = (maths::Vec3f)closest_hit_info.shading.normal() * 0.5_d + maths::Vec3f(0.5_d);
 			else
 				color = maths::Lerp(down_color, up_color, .5_d * maths::Normalized(ray.direction).z + .5_d);
 
