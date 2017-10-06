@@ -27,7 +27,7 @@ public:
 		camera_{ nullptr },
 		film_{ nullptr },
 		sampler_{ nullptr },
-		integrator_{ new (mem_region()) raytracer::AOIntegrator(32u) },
+		integrator_{ nullptr },
 		primitives_{}
 	{}
 	void	Clear()
@@ -36,7 +36,7 @@ public:
 		film_ = nullptr;
 		camera_ = nullptr;
 		sampler_ = nullptr;
-		integrator_ = new (mem_region()) raytracer::AOIntegrator(32u);
+		integrator_ = nullptr;
 		primitives_.clear();
 	}
 	void	SetFilm(raytracer::Film *_f)
@@ -53,6 +53,10 @@ public:
 	{
 		sampler_ = _s;
 		integrator_->SetSampler(sampler_);
+	}
+	void	SetIntegrator(raytracer::Integrator *_i)
+	{
+		integrator_ = _i;
 	}
 	bool	GoodForRender() const
 	{

@@ -9,6 +9,7 @@
 #include "maths/transform.h"
 #include "raytracer/camera.h"
 #include "raytracer/film.h"
+#include "raytracer/integrator.h"
 #include "raytracer/sampler.h"
 #include "raytracer/samplers/random_sampler.h"
 #include "raytracer/shape.h"
@@ -16,6 +17,79 @@
 
 
 namespace api {
+
+raytracer::Camera *MakeCamera(api::RenderContext &_context, api::ParamSet const &_params);
+//
+raytracer::Film *MakeFilm(api::RenderContext &_context, api::ParamSet const &_params);
+//
+std::vector<raytracer::Shape*> MakeSphere(api::RenderContext &_context, 
+										  api::ParamSet const &_params);
+//
+raytracer::Sampler* MakeRandomSampler(api::RenderContext &_context,
+									  api::ParamSet const &_params);
+//
+raytracer::Integrator* MakeNormalIntegrator(api::RenderContext &_context,
+											api::ParamSet const &_params);
+raytracer::Integrator* MakeAOIntegrator(api::RenderContext &_context,
+										api::ParamSet const &_params);
+
+
+
+template <typename CallbackType>
+CallbackType const &
+LookupObjectFuncImpl_(std::string const &_id, NamedCallbackContainer_t<CallbackType> const &_container)
+{
+	using ContainerType = NamedCallbackContainer_t<CallbackType>;
+	typename ContainerType::const_iterator const msccit = _container.find(_id);
+	YS_ASSERT(msccit != _container.cend());
+	return msccit->second;
+}
+
+ShapeCallbackContainer_t const &
+shape_callbacks()
+{
+	static ShapeCallbackContainer_t const callbacks{
+		{ "sphere", &MakeSphere },
+	};
+	return callbacks;
+}
+MakeShapeCallback_t const &
+LookupShapeFunc(std::string const &_id)
+{
+	return LookupObjectFuncImpl_(_id, shape_callbacks());
+}
+
+
+SamplerCallbackContainer_t const &
+sampler_callbacks()
+{
+	static SamplerCallbackContainer_t const callbacks{
+		{ "random", &MakeRandomSampler },
+	};
+	return callbacks;
+}
+MakeSamplerCallback_t const &
+LookupSamplerFunc(std::string const &_id)
+{
+	return LookupObjectFuncImpl_(_id, sampler_callbacks());
+}
+
+
+IntegratorCallbackContainer_t const &
+integrator_callbacks()
+{
+	static IntegratorCallbackContainer_t const callbacks{
+		{ "ambient_occlusion", &MakeAOIntegrator },
+		{ "normal", &MakeNormalIntegrator },
+	};
+	return callbacks;
+}
+MakeIntegratorCallback_t const &
+LookupIntegratorFunc(std::string const &_id)
+{
+	return LookupObjectFuncImpl_(_id, integrator_callbacks());
+}
+
 
 
 raytracer::Camera*
@@ -72,41 +146,20 @@ MakeRandomSampler(api::RenderContext &_context, api::ParamSet const &_params)
 }
 
 
-ShapeCallbackContainer_t const &
-shape_callbacks()
+raytracer::Integrator*
+MakeNormalIntegrator(api::RenderContext &_context, api::ParamSet const &_params)
 {
-	static ShapeCallbackContainer_t const callbacks {
-		{ "sphere", &MakeSphere },
-	};
-	return callbacks;
+	raytracer::Integrator *const normal_integrator = new (_context.mem_region())
+		raytracer::NormalIntegrator{};
+	return normal_integrator;
 }
-
-MakeShapeCallback_t const &
-LookupShapeFunc(std::string const &_id)
+raytracer::Integrator*
+MakeAOIntegrator(api::RenderContext &_context, api::ParamSet const &_params)
 {
-	ShapeCallbackContainer_t const &callbacks = shape_callbacks();
-	ShapeCallbackContainer_t::const_iterator const msccit = callbacks.find(_id);
-	YS_ASSERT(msccit != callbacks.cend());
-	return msccit->second;
-}
-
-
-SamplerCallbackContainer_t const &
-sampler_callbacks()
-{
-	static SamplerCallbackContainer_t const callbacks{
-		{ "random_sampler", &MakeRandomSampler },
-	};
-	return callbacks;
-}
-
-MakeSamplerCallback_t const &
-LookupSamplerFunc(std::string const &_id)
-{
-	SamplerCallbackContainer_t const &callbacks = sampler_callbacks();
-	SamplerCallbackContainer_t::const_iterator const msccit = callbacks.find(_id);
-	YS_ASSERT(msccit != callbacks.cend());
-	return msccit->second;
+	uint64_t const	sample_count = _params.FindUint("sample_count", 1u);
+	raytracer::Integrator *const ao_integrator = new (_context.mem_region())
+		raytracer::AOIntegrator{ sample_count };
+	return ao_integrator;
 }
 
 

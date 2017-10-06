@@ -39,6 +39,7 @@ enum TokenId
 	kCamera,
 	kShape,
 	kSampler,
+	kIntegrator,
 	kScopeBegin,
 	kScopeEnd,
 	kParamBegin,
@@ -63,6 +64,7 @@ enum TokenId
 	kCameraGroup,
 	kShapeGroup,
 	kSamplerGroup,
+	kIntegratorGroup,
 	kOutputGroup,
 	kSceneGroup,
 
@@ -98,6 +100,7 @@ TokenTable_t const		token_table
 	{ "Camera", kCamera },
 	{ "Shape", kShape },
 	{ "Sampler", kSampler },
+	{ "Integrator", kIntegrator },
 	{ "{", kScopeBegin },
 	{ "}", kScopeEnd },
 	{ "[", kParamBegin }, 
@@ -128,6 +131,7 @@ ProductionRules_t const		production_rules
 		{ kCamera, { kCameraGroup, kSceneGroup } },
 		{ kShape, { kShapeGroup, kSceneGroup } },
 		{ kSampler, { kSamplerGroup, kSceneGroup } },
+		{ kIntegrator, { kIntegratorGroup, kSceneGroup } },
 		{ kDefault, { kEnd } }
 	} },
 
@@ -160,6 +164,9 @@ ProductionRules_t const		production_rules
 	} },
 	{ kSamplerGroup, {
 		{ kDefault, { kSampler, kString, kScopeBegin, kAttributeGroup, kScopeEnd } },
+	} },
+	{ kIntegratorGroup,{
+		{ kDefault, { kIntegrator, kString, kScopeBegin, kAttributeGroup, kScopeEnd } },
 	} },
 
 	{ kPropertiesGroup, {
@@ -206,6 +213,9 @@ void	ShapeGroup(TranslationState &_state,
 void	SamplerGroup(TranslationState &_state,
 					 std::vector<Token>::const_iterator _production_begin,
 					 std::vector<Token>::const_iterator _production_end);
+void	IntegratorGroup(TranslationState &_state,
+						std::vector<Token>::const_iterator _production_begin,
+						std::vector<Token>::const_iterator _production_end);
 void	FilmGroup(TranslationState &_state,
 				  std::vector<Token>::const_iterator _production_begin,
 				  std::vector<Token>::const_iterator _production_end);
@@ -239,6 +249,7 @@ TranslationTable_t	semantic_actions = {
 	{ kParamGroup, &api::ParamGroup },
 	{ kShapeGroup, &api::ShapeGroup },
 	{ kSamplerGroup, &api::SamplerGroup },
+	{ kIntegratorGroup, &api::IntegratorGroup },
 	{ kFilmGroup, &api::FilmGroup },
 	{ kCameraGroup, &api::CameraGroup },
 	{ kTranslateGroup, &api::TranslateGroup },
@@ -479,6 +490,7 @@ ParamGroup(TranslationState &_state,
 		   std::vector<Token>::const_iterator _production_end)
 {
 	YS_ASSERT(_production_begin->id == api::kString);
+	LOG_INFO(tools::kChannelParsing, "Parameter group ended, applying semantic action..");
 
 	std::string const	identifier = _production_begin->text;
 
@@ -540,6 +552,7 @@ ShapeGroup(TranslationState &_state,
 		   std::vector<Token>::const_iterator _production_begin,
 		   std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Shape group ended, applying semantic action..");
 	std::string const	shape_type = std::next(_production_begin, 1)->text;
 	_state.Shape(shape_type);
 }
@@ -548,14 +561,25 @@ SamplerGroup(TranslationState &_state,
 			 std::vector<Token>::const_iterator _production_begin,
 			 std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Sampler group ended, applying semantic action..");
 	std::string const	sampler_type = std::next(_production_begin, 1)->text;
 	_state.Sampler(sampler_type);
+}
+void
+IntegratorGroup(TranslationState &_state, 
+				std::vector<Token>::const_iterator _production_begin,
+				std::vector<Token>::const_iterator _production_end)
+{
+	LOG_INFO(tools::kChannelParsing, "Integrator group ended, applying semantic action..");
+	std::string const	integrator_type = std::next(_production_begin, 1)->text;
+	_state.Integrator(integrator_type);
 }
 void
 FilmGroup(TranslationState &_state,
 		  std::vector<Token>::const_iterator _production_begin,
 		  std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Film group ended, applying semantic action..");
 	_state.Film();
 }
 void
@@ -563,6 +587,7 @@ CameraGroup(TranslationState &_state,
 			std::vector<Token>::const_iterator _production_begin,
 			std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Camera group ended, applying semantic action..");
 	_state.Camera();
 }
 void
@@ -570,6 +595,7 @@ TranslateGroup(TranslationState &_state,
 			   std::vector<Token>::const_iterator _production_begin,
 			   std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Translate group ended, applying semantic action..");
 	std::vector<Token>::const_iterator const	it = std::next(_production_begin, 1);
 	_state.Translate({ maths::stof(it->text),
 					   maths::stof(std::next(it, 1)->text),
@@ -580,6 +606,7 @@ RotateGroup(TranslationState &_state,
 			std::vector<Token>::const_iterator _production_begin,
 			std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Rotate group ended, applying semantic action..");
 	std::vector<Token>::const_iterator const	it = std::next(_production_begin, 1);
 	_state.Rotate(maths::stof(it->text),
 				  { maths::stof(std::next(it, 1)->text),
@@ -591,6 +618,7 @@ ScaleGroup(TranslationState &_state,
 		   std::vector<Token>::const_iterator _production_begin,
 		   std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Scale group ended, applying semantic action..");
 	std::vector<Token>::const_iterator const	it = std::next(_production_begin, 1);
 	_state.Scale(maths::stof(it->text),
 				 maths::stof(std::next(it, 1)->text),
@@ -601,7 +629,7 @@ OutputGroup(TranslationState &_state,
 			std::vector<Token>::const_iterator _production_begin,
 			std::vector<Token>::const_iterator _production_end)
 {
-
+	LOG_ERROR(tools::kChannelParsing, "Output group ended, NO SEMANTIC ACTION");
 }
 
 void
@@ -609,6 +637,7 @@ IdentityTerminal(TranslationState &_state,
 				 std::vector<Token>::const_iterator _production_begin,
 				 std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "Identity terminal found, applying semantic action..");
 	_state.Identity();
 }
 void
@@ -616,6 +645,7 @@ ScopeBeginTerminal(TranslationState &_state,
 				   std::vector<Token>::const_iterator _production_begin,
 				   std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "ScopeBegin terminal found, applying semantic action..");
 	_state.ScopeBegin();
 }
 void
@@ -623,6 +653,7 @@ ScopeEndTerminal(TranslationState &_state,
 				 std::vector<Token>::const_iterator _production_begin,
 				 std::vector<Token>::const_iterator _production_end)
 {
+	LOG_INFO(tools::kChannelParsing, "ScopeEnd terminal found, applying semantic action..");
 	_state.ScopeEnd();
 }
 

@@ -31,6 +31,7 @@ private:
 		kCamera,
 		kShape,
 		kSampler,
+		kIntegrator,
 		kCount
 	};
 private:
@@ -47,6 +48,7 @@ public:
 	void	Camera();
 	void	Shape(std::string const &_type);
 	void	Sampler(std::string const &_type);
+	void	Integrator(std::string const &_type);
 	void	Identity();
 	void	Translate(maths::Vec3f const &_t);
 	void	Rotate(maths::Decimal _angle, maths::Vec3f const &_axis);

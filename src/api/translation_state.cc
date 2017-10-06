@@ -51,6 +51,11 @@ TranslationState::Sampler(std::string const &_type)
 	PushObjectDesc_(ObjectIdentifier::kSampler, _type);
 }
 void
+TranslationState::Integrator(std::string const &_type)
+{
+	PushObjectDesc_(ObjectIdentifier::kIntegrator, _type);
+}
+void
 TranslationState::Identity()
 {
 	transform_stack_.back() = maths::Transform{};
@@ -100,6 +105,16 @@ TranslationState::SceneEnd()
 void
 TranslationState::SceneSetup_()
 {
+	{ // NOTE: the integrator has to be created first, see render_context.h:45,50,55
+		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kIntegrator);
+		YS_ASSERT(!descriptors.empty());
+		ObjectDescriptor_t const &descriptor = descriptors.back();
+		std::string const &type = std::get<0>(descriptor);
+		ParamSet const &parameters = *std::get<1>(descriptor);
+		MakeIntegratorCallback_t const &callback = LookupIntegratorFunc(type);
+		raytracer::Integrator *integrator = callback(render_context_, parameters);
+		render_context_.SetIntegrator(integrator);
+	}
 	{
 		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kFilm);
 		YS_ASSERT(!descriptors.empty());

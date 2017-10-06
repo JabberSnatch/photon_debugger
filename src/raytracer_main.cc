@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	return 0;
 #endif
 
-	uint64_t const base{ 2u }, const value{ 2048u };
+	uint64_t const base{ 2u }, value{ 2048u };
 	maths::REDecimal vdCInverse = raytracer::HammersleySampler::vdCInverse(base, value);
 	maths::REDecimal radicalInverse = raytracer::HammersleySampler::RadicalInverse(base, value);
 
