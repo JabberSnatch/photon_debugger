@@ -53,6 +53,19 @@ ParamSet::PushBool(std::string const &_id, bool _v)
 }
 
 void
+ParamSet::PushString(std::string const &_id, std::string const &_v)
+{
+	using IteratorBoolPair_t = std::pair<StringMap_t::const_iterator, bool>;
+	IteratorBoolPair_t result = string_parameters_.emplace(_id, _v);
+	if (!result.second)
+	{
+		LOG_ERROR(tools::kChannelGeneral, "Tried to push a string on a pre-existing identifier");
+		YS_ASSERT(false);
+	}
+}
+
+
+void
 ParamSet::PushTransform(std::string const &_id, maths::Transform const &_transform)
 {
 	using IteratorBoolPair_t = std::pair<TransformMap_t::const_iterator, bool>;
@@ -116,6 +129,21 @@ ParamSet::FindBool(std::string const &_id, bool _default) const
 	return _default;
 }
 
+std::string const &
+ParamSet::FindString(std::string const &_id, std::string const &_default) const
+{
+	StringMap_t::const_iterator scit = string_parameters_.find(_id);
+	if (scit != string_parameters_.cend())
+	{
+		return scit->second;
+	}
+	else
+	{
+		return _default;
+	}
+}
+
+
 maths::Transform const &
 ParamSet::FindTransform(std::string const &_id, maths::Transform const &_default) const
 {
@@ -136,6 +164,7 @@ ParamSet::Clear()
 	float_parameters_.clear();
 	int_parameters_.clear();
 	bool_parameters_.clear();
+	string_parameters_.clear();
 	transforms_.clear();
 	region_.Clear();
 }

@@ -14,6 +14,8 @@
 #include "raytracer/samplers/random_sampler.h"
 #include "raytracer/shape.h"
 #include "raytracer/shapes/sphere.h"
+#include "raytracer/shapes/triangle.h"
+#include "raytracer/triangle_mesh.h"
 
 
 namespace api {
@@ -24,6 +26,8 @@ raytracer::Film *MakeFilm(api::RenderContext &_context, api::ParamSet const &_pa
 //
 std::vector<raytracer::Shape*> MakeSphere(api::RenderContext &_context, 
 										  api::ParamSet const &_params);
+std::vector<raytracer::Shape*> MakeTriangleMesh(api::RenderContext &_context,
+												api::ParamSet const &_params);
 //
 raytracer::Sampler* MakeRandomSampler(api::RenderContext &_context,
 									  api::ParamSet const &_params);
@@ -50,6 +54,7 @@ shape_callbacks()
 {
 	static ShapeCallbackContainer_t const callbacks{
 		{ "sphere", &MakeSphere },
+		{ "triangle_mesh", &MakeTriangleMesh },
 	};
 	return callbacks;
 }
@@ -131,6 +136,28 @@ MakeSphere(api::RenderContext &_context, api::ParamSet const &_params)
 	raytracer::Shape *const sphere_shape = new (_context.mem_region())
 		raytracer::Sphere{ world_transform, flip_normals, radius, z_min, z_max, phi_max };
 	return std::vector<raytracer::Shape*>{ sphere_shape };
+}
+std::vector<raytracer::Shape*>
+MakeTriangleMesh(api::RenderContext &_context, api::ParamSet const &_params)
+{
+	std::vector<raytracer::Shape*>	result{};
+	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
+	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
+	bool const				flip_normals = _params.FindBool("flip_normals", false);
+	std::string const		path = _params.FindString("path", "");
+	if (path != "")
+	{
+		raytracer::TriangleMesh *triangle_mesh = 
+			raytracer::ReadTriangleMeshFromFile(path, world_transform, _context.mem_region());
+		result.reserve(triangle_mesh->triangle_count);
+		for (int32_t face_index = 0; face_index < triangle_mesh->triangle_count; ++face_index)
+		{
+			result.emplace_back(new (_context.mem_region()) raytracer::Triangle(
+				world_transform, flip_normals, *triangle_mesh, face_index
+			));
+		}
+	}
+	return result;
 }
 
 

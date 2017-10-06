@@ -48,6 +48,8 @@ public:
 	template <uint32_t size>
 	void	PushBool(std::string const &_id, maths::VectorB<size> _v);
 
+	void	PushString(std::string const &_id, std::string const &_v);
+
 	void	PushTransform(std::string const &_id, maths::Transform const &_transform);
 
 	maths::Decimal FindFloat(std::string const &_id, maths::Decimal _default) const;
@@ -70,6 +72,8 @@ public:
 	maths::VectorB<size> FindBool(std::string const &_id,
 								  maths::VectorB<size> const &_default) const;
 
+	std::string const &FindString(std::string const &_id, std::string const &_default) const;
+
 	maths::Transform const &FindTransform(std::string const &_id,
 										  maths::Transform const &_default) const;
 
@@ -82,11 +86,13 @@ private:
 	using IntMap_t = ParamMap_t<int64_t>;
 	using UintMap_t = ParamMap_t<uint64_t>;
 	using BoolMap_t = ParamMap_t<bool>;
+	using StringMap_t = std::unordered_map<std::string, std::string>;
 	using TransformMap_t = std::unordered_map<std::string, maths::Transform const *const>;
 	FloatMap_t		float_parameters_;
 	IntMap_t		int_parameters_;
 	UintMap_t		uint_parameters_;
 	BoolMap_t		bool_parameters_;
+	StringMap_t		string_parameters_;
 	TransformMap_t	transforms_;
 
 	core::MemoryRegion region_;

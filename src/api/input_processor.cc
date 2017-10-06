@@ -180,6 +180,7 @@ ProductionRules_t const		production_rules
 
 	{ kDefinitionGroup, {
 		{ kType, { kType, kParamBegin, kValueGroup, kParamEnd } },
+		{ kString, { kString } },
 		{ kDefault, {} },
 	} },
 
@@ -494,52 +495,67 @@ ParamGroup(TranslationState &_state,
 
 	std::string const	identifier = _production_begin->text;
 
-	if (_production_end[-1].id != api::kString)
+	//if (_production_end[-1].id != api::kString)
+	int64_t const production_size = 
+		static_cast<int64_t>(std::distance(_production_begin, _production_end));
+	if (production_size > 1)
 	{
-		uint32_t	value_count = static_cast<uint32_t>(
-			std::count_if(_production_begin, _production_end,
-						  [](Token const &_t) -> bool { return _t.id == kNumber; }));
+		if (_production_begin[1].id == kType)
+		{
+			uint32_t	value_count = static_cast<uint32_t>(
+				std::count_if(_production_begin, _production_end,
+							  [](Token const &_t) -> bool { return _t.id == kNumber; }));
 
-		auto		cursor = 
-			std::find_if(_production_begin, _production_end,
-						 [](Token const &_t) -> bool { return _t.id == kParamBegin; });
+			auto		cursor = 
+				std::find_if(_production_begin, _production_end,
+							 [](Token const &_t) -> bool { return _t.id == kParamBegin; });
 
-		std::string	type_string = cursor[-1].text;
-		cursor++;
+			std::string	const type_string = cursor[-1].text;
+			cursor++;
 
-		if (type_string == "float")
-		{
-			maths::Decimal	*values = new maths::Decimal[value_count];
-			for (uint32_t i = 0; i < value_count; ++i)
-				values[i] = boost::lexical_cast<maths::Decimal>(cursor[i].text);
-			_state.param_set().PushFloat(identifier, values, value_count);
-		}
-		else if (type_string == "int")
-		{
-			int64_t			*values = new int64_t[value_count];
-			for (uint32_t i = 0; i < value_count; ++i)
-				values[i] = boost::lexical_cast<int64_t>(cursor[i].text);
-			_state.param_set().PushInt(identifier, values, value_count);
-		}
-		else if (type_string == "uint")
-		{
-			uint64_t		*values = new uint64_t[value_count];
-			for (uint32_t i = 0; i < value_count; ++i)
-				values[i] = boost::lexical_cast<uint64_t>(cursor[i].text);
-			_state.param_set().PushUint(identifier, values, value_count);
-		}
-		else if (type_string == "bool")
-		{
-			bool			*values = new bool[value_count];
-			for (uint32_t i = 0; i < value_count; ++i)
+			if (type_string == "float")
 			{
-				values[i] = (cursor[i].text == "true") ? true : false;
-				if (cursor[i].text != "true" && cursor[i].text != "false")
-					LOG_WARNING(tools::kChannelGeneral, "Illegal expression for boolean value. Expected true or false.");
+				maths::Decimal	*values = new maths::Decimal[value_count];
+				for (uint32_t i = 0; i < value_count; ++i)
+					values[i] = boost::lexical_cast<maths::Decimal>(cursor[i].text);
+				_state.param_set().PushFloat(identifier, values, value_count);
 			}
-			_state.param_set().PushBool(identifier, values, value_count);
+			else if (type_string == "int")
+			{
+				int64_t			*values = new int64_t[value_count];
+				for (uint32_t i = 0; i < value_count; ++i)
+					values[i] = boost::lexical_cast<int64_t>(cursor[i].text);
+				_state.param_set().PushInt(identifier, values, value_count);
+			}
+			else if (type_string == "uint")
+			{
+				uint64_t		*values = new uint64_t[value_count];
+				for (uint32_t i = 0; i < value_count; ++i)
+					values[i] = boost::lexical_cast<uint64_t>(cursor[i].text);
+				_state.param_set().PushUint(identifier, values, value_count);
+			}
+			else if (type_string == "bool")
+			{
+				bool			*values = new bool[value_count];
+				for (uint32_t i = 0; i < value_count; ++i)
+				{
+					values[i] = (cursor[i].text == "true") ? true : false;
+					if (cursor[i].text != "true" && cursor[i].text != "false")
+					{
+						LOG_WARNING(tools::kChannelGeneral, "Illegal expression for boolean value. Expected true or		false.");
+					}
+				}
+				_state.param_set().PushBool(identifier, values, value_count);
+			}
+		} // if (_production_begin[1].id == kType)
+		else
+		{
+			YS_ASSERT(_production_begin[1].id == kString);
+			YS_ASSERT(production_size == 2);
+			std::string const value = _production_begin[1].text;
+			_state.param_set().PushString(identifier, value);
 		}
-	}
+	} // if (production_size > 1)
 	else
 	{
 		// If we find a lone identifier, we treat it as a bool set to true

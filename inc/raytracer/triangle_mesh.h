@@ -8,6 +8,11 @@
 #include "maths/bounds.h"
 
 
+namespace core {
+class MemoryRegion;
+}
+
+
 namespace raytracer {
 
 struct TriangleMesh
@@ -35,8 +40,9 @@ struct TriangleMesh
 	maths::Bounds3f					world_bounds;
 };
 
-TriangleMesh	ReadTriangleMeshFromFile(std::string const &_path,
-										 maths::Transform const &_world_transform);
+TriangleMesh	*ReadTriangleMeshFromFile(std::string const &_path, 
+										  maths::Transform const &_world_transform,
+										  core::MemoryRegion &_mem_region);
 
 } // namespace raytracer
 

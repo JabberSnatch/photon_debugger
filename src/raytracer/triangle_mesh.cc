@@ -6,8 +6,9 @@
 
 #include "globals.h"
 #include "common_macros.h"
-#include "core/profiler.h"
 #include "core/logger.h"
+#include "core/memory_region.h"
+#include "core/profiler.h"
 #include "maths/transform.h"
 #include "maths/vector.h"
 #include "maths/point.h"
@@ -58,10 +59,12 @@ TriangleMesh::TriangleMesh(maths::Transform const &_world_transform, int32_t _tr
 	}
 }
 
-TriangleMesh
+TriangleMesh *
 ReadTriangleMeshFromFile(std::string const &_path,
-						 maths::Transform const &_world_transform)
+						 maths::Transform const &_world_transform,
+						 core::MemoryRegion &_mem_region)
 {
+	// TODO: Add _path validation
 	uint32_t const		load_flags =
 		aiProcess_Triangulate |
 		aiProcess_PreTransformVertices | 
@@ -123,6 +126,9 @@ ReadTriangleMeshFromFile(std::string const &_path,
 			if (load_normals)
 			{
 				aiVector3D const	&normal = in_normals[i];
+				maths::Decimal const x = std::isnan(normal.x) ? 0._d : normal.x;
+				maths::Decimal const y = std::isnan(normal.y) ? 0._d : normal.y;
+				maths::Decimal const z = std::isnan(normal.z) ? 0._d : normal.z;
 				out_normals.emplace_back(normal.x, normal.y, normal.z);
 			}
 		}
@@ -136,8 +142,10 @@ ReadTriangleMeshFromFile(std::string const &_path,
 	LOG(tools::kChannelGeneral, tools::kLevelInfo, info_message);
 #endif
 
-	return TriangleMesh(_world_transform, out_triangle_count, out_indices, out_vertices,
-						(load_normals ? &out_normals : nullptr));
+	return new (_mem_region) TriangleMesh(
+		_world_transform, out_triangle_count, out_indices, out_vertices, 
+		(load_normals ? &out_normals : nullptr)
+	);
 }
 
 } // namespace raytracer

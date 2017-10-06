@@ -12,6 +12,7 @@
 #include "raytracer/primitive.h"
 #include "raytracer/sampler.h"
 #include "raytracer/integrator.h"
+#include "raytracer/bvh_accelerator.h"
 
 namespace api {
 
@@ -64,8 +65,19 @@ public:
 	}
 	void	RenderAndWrite(std::string const &_path)
 	{
+		constexpr uint32_t bvh_node_max_size = 20;
 		integrator_->Prepare();
-		integrator_->Integrate(primitives_, 0._d);
+		if (primitives_.size() > bvh_node_max_size)
+		{
+			LOG_INFO(tools::kChannelGeneral, "Primitive count exceeded threshold, building BVH");
+			raytracer::Primitive *const bvh =
+				new (mem_region()) raytracer::BvhAccelerator(primitives_, bvh_node_max_size);
+			integrator_->Integrate({ bvh }, 0._d);
+		}
+		else
+		{
+			integrator_->Integrate(primitives_, 0._d);
+		}
 		camera_->WriteToFile(_path);
 	}
 
