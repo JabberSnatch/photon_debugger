@@ -81,12 +81,12 @@ int main(int argc, char *argv[])
 			std::stringstream string;
 			string <<
 				timer.name() << " : " << std::endl <<
-				timer.call_count() << call_string << std::endl <<
-				"real time : [ " <<
+				"	" << timer.call_count() << call_string << std::endl <<
+				"	real time : [ " <<
 				timer.total_time() << " : " << timer.worst_time() << " + " <<
 				timer.average_time() << " - " <<
 				timer.best_time() << " ] " << std::endl <<
-				"cycles :    [ " <<
+				"	cycles :    [ " <<
 				timer.total_cycles() << " : " << timer.worst_cycles() << " + " <<
 				timer.average_cycles() << " - " <<
 				timer.best_cycles() << " ]";

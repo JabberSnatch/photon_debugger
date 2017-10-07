@@ -2,6 +2,7 @@
 
 #include <random>
 
+#include "boost/filesystem.hpp"
 #include "boost/numeric/conversion/cast.hpp"
 
 #include "api/param_set.h"
@@ -110,7 +111,7 @@ MakeCamera(api::RenderContext &_context, api::ParamSet const &_params)
 	maths::Decimal const	fov = _params.FindFloat("fov", 60._d);
 
 	return new (_context.mem_region()) raytracer::Camera{
-		position, lookat, up, fov, *_context.film() };
+		position, lookat, up, fov, _context.film() };
 }
 
 raytracer::Film*
@@ -144,18 +145,47 @@ MakeTriangleMesh(api::RenderContext &_context, api::ParamSet const &_params)
 	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
 	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
 	bool const				flip_normals = _params.FindBool("flip_normals", false);
-	std::string const		path = _params.FindString("path", "");
-	if (path != "")
+	std::string const		path_string = _params.FindString("path", "");
+	if (path_string != "")
 	{
-		raytracer::TriangleMesh *triangle_mesh = 
-			raytracer::ReadTriangleMeshFromFile(path, world_transform, _context.mem_region());
-		result.reserve(triangle_mesh->triangle_count);
-		for (int32_t face_index = 0; face_index < triangle_mesh->triangle_count; ++face_index)
+		boost::filesystem::path path(path_string);
+		if (path.is_relative())
 		{
-			result.emplace_back(new (_context.mem_region()) raytracer::Triangle(
-				world_transform, flip_normals, *triangle_mesh, face_index
-			));
+			path = boost::filesystem::current_path() / path;
+			YS_ASSERT(path.is_absolute());
 		}
+		//
+		if (boost::filesystem::exists(path))
+		{
+			raytracer::TriangleMesh *triangle_mesh = 
+				raytracer::ReadTriangleMeshFromFile(path.generic_string(), 
+													world_transform, 
+													_context.mem_region());
+			if (triangle_mesh)
+			{
+				result.reserve(triangle_mesh->triangle_count);
+				for (int32_t face_index = 0; face_index < triangle_mesh->triangle_count; ++face_index)
+				{
+					result.emplace_back(new (_context.mem_region()) raytracer::Triangle(
+						world_transform, flip_normals, *triangle_mesh, face_index
+					));
+				}
+			}
+			else
+			{
+				LOG_ERROR(tools::kChannelGeneral,
+						  "Failed to load a triangle mesh at path : " + path.generic_string());
+			}
+		}
+		else
+		{
+			LOG_ERROR(tools::kChannelGeneral,
+					  "No file found to create a triangle mesh at path : " + path.generic_string());
+		}
+	}
+	else
+	{
+		LOG_WARNING(tools::kChannelGeneral, "Declared a triangle mesh without a path");
 	}
 	return result;
 }

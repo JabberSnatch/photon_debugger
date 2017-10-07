@@ -239,6 +239,9 @@
     <ClCompile Include="src\raytracer\surface_interaction.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\api\render_context.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="inc\maths\bounds.inl">

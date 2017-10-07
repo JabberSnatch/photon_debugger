@@ -7,10 +7,8 @@
 #include "core/nonmovable.h"
 #include "core/noncopyable.h"
 #include "core/memory_region.h"
+#include "maths/transform.h"
 
-namespace maths {
-class Transform;
-} // namespace maths
 
 
 namespace api {
