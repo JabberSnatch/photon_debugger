@@ -457,6 +457,7 @@ using Vec2f = Vector2<Decimal>;
 using Vec3f = Vector3<Decimal>;
 using Vec4f = Vector4<Decimal>;
 using Vec2i = Vector2<int64_t>;
+using Vec2u = Vector2<uint64_t>;
 
 template <typename T> using Normal3 = Normal<T, 3>;
 using Norm3f = Normal3<Decimal>;

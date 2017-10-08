@@ -58,6 +58,9 @@ public:
 	void	SceneBegin();
 	void	SceneEnd();
 	ParamSet	&param_set() { return *parameters_; }
+public:
+	api::RenderContext	&render_context() { return render_context_; }
+	std::string			&output_path() { return output_path_; }
 private:
 	void	SceneSetup_();
 	void	PushObjectDesc_(ObjectIdentifier const _id, std::string const &_name);

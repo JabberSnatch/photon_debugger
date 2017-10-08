@@ -29,6 +29,7 @@ public:
 	void	SetSampler(raytracer::Sampler *_s);
 	void	SetIntegrator(raytracer::Integrator *_i);
 	void	AddPrimitive(raytracer::Primitive *_prim);
+public:
 	bool	GoodForRender() const;
 	void	RenderAndWrite(std::string const &_path);
 public:

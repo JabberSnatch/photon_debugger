@@ -7,6 +7,7 @@
 #include "algorithms.h"
 #include "primes.h"
 #include "api/input_processor.h"
+#include "api/translation_state.h"
 #include "benchmarks/bench_logger.h"
 #include "core/logger.h"
 #include "core/profiler.h"
@@ -44,24 +45,17 @@ int main(int argc, char *argv[])
 
 	return 0;
 #endif
-
-	uint64_t const base{ 2u }, value{ 2048u };
-	maths::REDecimal vdCInverse = raytracer::HammersleySampler::vdCInverse(base, value);
-	maths::REDecimal radicalInverse = raytracer::HammersleySampler::RadicalInverse(base, value);
-
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 	globals::logger.BindPath(tools::kChannelParsing, "parsing.log");
 
+	// TODO: Implement $ ./RayTracer.exe _JUNK/magikarp.txt
+	std::string absolute_path{};
 	if (argc > 1)
 	{
 		std::string const input_file{ argv[1] };
-		std::string const absolute_path = boost::filesystem::absolute(input_file).string();
-		if (boost::filesystem::exists(absolute_path))
-		{
-			api::ProcessInputFile(absolute_path);
-		}
-		else
+		absolute_path = boost::filesystem::absolute(input_file).generic_string();
+		if (!boost::filesystem::exists(absolute_path))
 		{
 			std::cout << "No such file as " << absolute_path << std::endl;
 		}
@@ -70,6 +64,20 @@ int main(int argc, char *argv[])
 	{
 		std::cout << "Please provide a path to an input file as first argument." << std::endl;
 	}
+
+	{
+		api::TranslationState translation_state{};
+		if (!absolute_path.empty() && boost::filesystem::exists(absolute_path))
+		{
+			api::ProcessInputFile(absolute_path, translation_state);
+		}
+		//
+		if (translation_state.render_context().GoodForRender())
+		{
+			translation_state.render_context().RenderAndWrite(translation_state.output_path());
+		}
+	}
+
 
 	globals::profiler_aggregate.GrabTimers(globals::profiler);
 	{

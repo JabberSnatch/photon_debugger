@@ -42,7 +42,7 @@ Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
 				 sample_index < sampler_->samples_per_pixel();
 				 ++sample_index, sampler_->StartNextSample())
 			{
-				maths::Vec2f const film_sample = sampler_->Get2D();
+				maths::Vec2f const film_sample = sampler_->GetNext<2u>();//Get2D();
 				maths::Vec2f const sample_position = pixel_origin + film_sample;
 				maths::Vec2f const uv = sample_position * inv_resolution;
 				maths::Ray ray = camera_->Ray(uv.u, uv.v, _t);
@@ -94,7 +94,7 @@ AOIntegrator::AOIntegrator(uint64_t const _sample_count) :
 void
 AOIntegrator::Prepare()
 {
-	sampler().ReserveArray2D(sample_count_);
+	sampler().ReserveArray<2u>(sample_count_);
 }
 
 
@@ -106,7 +106,7 @@ AOIntegrator::Li(maths::Ray const &_ray,
 	if (_hit.primitive != nullptr)
 	{
 		maths::Vec3f occlusion{ maths::zero<maths::Vec3f> };
-		Sampler::Sample2DContainer_t const &samples = sampler().GetArray2D(sample_count_);
+		Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(sample_count_);
 		for (Sampler::Sample2DContainer_t::const_iterator scit = samples.cbegin();
 			 scit != samples.cend(); ++scit)
 		{

@@ -9,7 +9,7 @@
 namespace api {
 
 
-TranslationState::TranslationState() :
+TranslationState::TranslationState():
 	workdir_{ boost::filesystem::current_path().string() },
 	output_path_{ boost::filesystem::absolute("image.png", workdir_).string() },
 	render_context_{},
@@ -97,8 +97,6 @@ void
 TranslationState::SceneEnd()
 {
 	SceneSetup_();
-	if (render_context_.GoodForRender())
-		render_context_.RenderAndWrite(output_path_);
 }
 
 

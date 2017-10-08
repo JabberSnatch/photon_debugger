@@ -5,9 +5,12 @@
 #include <string>
 
 
+
 namespace api {
 
-bool	ProcessInputFile(std::string const &_path);
+class TranslationState;
+
+bool ProcessInputFile(std::string const &_path, TranslationState &_state);
 
 } // namespace api
 

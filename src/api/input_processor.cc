@@ -272,15 +272,18 @@ Token				StringToToken(std::string const &_string);
 
 
 bool
-ProcessInputFile(std::string const &_path)
+ProcessInputFile(std::string const &_path, TranslationState &_state)
 {
 	std::ifstream file_stream(_path);
+	//
 	std::vector<Token> const input_string = LexicalAnalysis(file_stream);
+	//
 	boost::filesystem::path const input_path{ boost::filesystem::absolute(_path) };
-	TranslationState translation_state{};
-	translation_state.Workdir(input_path.parent_path().string());
-	translation_state.Output(input_path.stem().string() + ".png");
-	return SyntaxAnalysis(input_string, translation_state);
+	_state.Workdir(input_path.parent_path().string());
+	_state.Output(input_path.stem().string() + ".png");
+	//
+	bool const result = SyntaxAnalysis(input_string, _state);
+	return result;
 }
 
 

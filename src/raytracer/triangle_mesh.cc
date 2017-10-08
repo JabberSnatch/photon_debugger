@@ -1,5 +1,7 @@
 #include "raytracer/triangle_mesh.h"
 
+#include <sstream>
+
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
@@ -57,6 +59,14 @@ TriangleMesh::TriangleMesh(maths::Transform const &_world_transform, int32_t _tr
 		YS_ASSERT(_uv->size() == vertices.size());
 		uv.insert(uv.begin(), _uv->begin(), _uv->end());
 	}
+
+	std::stringstream message_stream{};
+	message_stream << "WORLD_BOUNDS : " << std::endl <<
+		"	" << world_bounds.min.x << "; " << world_bounds.min.y << "; " << world_bounds.min.z <<
+		std::endl <<
+		"	" << world_bounds.max.x << "; " << world_bounds.max.y << "; " << world_bounds.max.z <<
+		std::endl;
+	LOG_INFO(tools::kChannelGeneral, message_stream.str());
 }
 
 TriangleMesh *

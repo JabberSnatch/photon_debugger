@@ -11,8 +11,9 @@ RandomSampler::RandomSampler(uint64_t const _seed,
 	Sampler(_seed, _samples_per_pixel, _dimensions_per_sample)
 {}
 
+
 void
-RandomSampler::Fill1DSampleVector(Sample1DContainer_t &_sample_vector)
+RandomSampler::Fill1DSampleVector(Sample1DContainer_t &_sample_vector, uint64_t const)
 {
 	for (Sample1DContainer_t::iterator dit = _sample_vector.begin();
 		 dit != _sample_vector.end(); ++dit)
@@ -23,7 +24,7 @@ RandomSampler::Fill1DSampleVector(Sample1DContainer_t &_sample_vector)
 
 
 void
-RandomSampler::Fill2DSampleVector(Sample2DContainer_t &_sample_vector)
+RandomSampler::Fill2DSampleVector(Sample2DContainer_t &_sample_vector, uint64_t const)
 {
 	for (Sample2DContainer_t::iterator dit = _sample_vector.begin();
 		 dit != _sample_vector.end(); ++dit)
