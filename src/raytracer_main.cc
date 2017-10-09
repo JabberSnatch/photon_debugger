@@ -12,7 +12,6 @@
 #include "core/logger.h"
 #include "core/profiler.h"
 #include "core/rng.h"
-#include "raytracer/samplers/hammersley_sampler.h"
 
 int main(int argc, char *argv[])
 {

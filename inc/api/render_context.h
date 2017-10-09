@@ -44,6 +44,9 @@ private:
 	raytracer::Sampler					*sampler_ = nullptr;
 	raytracer::Integrator				*integrator_ = nullptr;
 	std::vector<raytracer::Primitive*>	primitives_;
+	//
+public:
+	std::string workdir; // To be removed, at some point in the future
 };
 
 

@@ -151,7 +151,8 @@ MakeTriangleMesh(api::RenderContext &_context, api::ParamSet const &_params)
 		boost::filesystem::path path(path_string);
 		if (path.is_relative())
 		{
-			path = boost::filesystem::current_path() / path;
+			boost::filesystem::path workdir(_context.workdir);
+			path = workdir / path;
 			YS_ASSERT(path.is_absolute());
 		}
 		//
