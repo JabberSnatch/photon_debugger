@@ -29,12 +29,12 @@ Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
 	film.image_is_flipped = true;
 
 	maths::Vec2f const inv_resolution = { 1._d / film.resolution().w, 1._d / film.resolution().h };
-	for (int32_t y = 0; y < film.resolution().h; ++y)
+	for (int64_t y = 0; y < film.resolution().h; ++y)
 	{
 		std::cout << "row " << y << std::endl;
-		for (int32_t x = 0; x < film.resolution().w; ++x)
+		for (int64_t x = 0; x < film.resolution().w; ++x)
 		{
-			sampler_->StartPixel({ x, y });
+			sampler_->StartPixel({ static_cast<uint64_t>(x), static_cast<uint64_t>(y) });
 			maths::Vec2f const pixel_origin =
 				{ static_cast<maths::Decimal>(x), static_cast<maths::Decimal>(y) };
 			maths::Vec3f color_accumulator{ maths::zero<maths::Vec3f> };
@@ -62,6 +62,12 @@ Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
 }
 
 
+NormalIntegrator::NormalIntegrator(bool const _remap, bool const _absolute) :
+	Integrator{},
+	remap_{ _remap }, absolute_{ _absolute }
+{}
+
+
 void
 NormalIntegrator::Prepare()
 {
@@ -74,14 +80,24 @@ NormalIntegrator::Li(maths::Ray const &_ray,
 					 std::vector<Primitive*> const &_scene)
 {
 	static maths::Vec3f const up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
+	maths::Vec3f result(0._d);
 	if (_hit.primitive != nullptr)
 	{
-		return static_cast<maths::Vec3f>(_hit.shading.normal()) * 0.5_d + maths::Vec3f(0.5_d);
+		result = static_cast<maths::Vec3f>(_hit.shading.normal());
+		if (remap_)
+		{
+			result = result * 0.5_d + maths::Vec3f(0.5_d);
+		}
+		if (absolute_)
+		{
+			result = maths::Abs(result);
+		}
 	}
 	else
 	{
-		return maths::Lerp(down_color, up_color, .5_d * maths::Normalized(_ray.direction).z + .5_d);
+		result = maths::Lerp(down_color, up_color, .5_d * maths::Normalized(_ray.direction).z + .5_d);
 	}
+	return result;
 }
 
 

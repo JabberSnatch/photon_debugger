@@ -207,8 +207,10 @@ MakeRandomSampler(api::RenderContext &_context, api::ParamSet const &_params)
 raytracer::Integrator*
 MakeNormalIntegrator(api::RenderContext &_context, api::ParamSet const &_params)
 {
+	bool const	remap = _params.FindBool("remap", false);
+	bool const	absolute = _params.FindBool("absolute", false);
 	raytracer::Integrator *const normal_integrator = new (_context.mem_region())
-		raytracer::NormalIntegrator{};
+		raytracer::NormalIntegrator{ remap, absolute };
 	return normal_integrator;
 }
 raytracer::Integrator*

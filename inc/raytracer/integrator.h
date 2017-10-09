@@ -42,11 +42,15 @@ class NormalIntegrator final :
 	public Integrator
 {
 public:
+	NormalIntegrator(bool const _remap, bool const _absolute);
 	void Prepare() override;
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,
 					raytracer::SurfaceInteraction const &_hit,
 					std::vector<Primitive*> const &_scene) override;
+private:
+	bool remap_;
+	bool absolute_;
 };
 
 
