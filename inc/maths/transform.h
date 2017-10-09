@@ -146,7 +146,7 @@ template <typename T>
 Normal<T, 3>
 Transform::operator()(Normal<T, 3> const &_v, OpDirection _dir) const
 {
-	Mat4x4f	const &m = (_dir == kForward) ? m_ : mInv_;
+	Mat4x4f	const &m = (_dir == kInverse) ? m_ : mInv_;
 
 	return Normal<T, 3>{
 		m[0][0] * _v.x + m[1][0] * _v.y + m[2][0] * _v.z,
