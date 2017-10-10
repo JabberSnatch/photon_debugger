@@ -65,7 +65,7 @@ public:
 			uint64_t const _samples_per_pixel, uint64_t const _dimensions_per_sample);
 public:
 	template <uint64_t PackSize> StorageType_t<PackSize> GetNext();
-	void StartPixel(maths::Point2i const &_position);
+	void StartPixel(maths::Vec2u const &_position);
 	bool StartNextSample();
 	bool SetSampleNumber(uint64_t _sample_num);
 public:
@@ -73,19 +73,27 @@ public:
 	template <uint64_t PackSize> void ReserveArray(uint64_t const _size);
 public:
 	virtual uint64_t RoundSampleCount(uint64_t const _count) { return _count; }
+	virtual void Fill1DPrimarySampleVector(Sample1DContainer_t &_sample_vector,
+										   uint64_t const _sample_index)
+	{ Fill1DSampleVector(_sample_vector, _sample_index); }
+	virtual void Fill2DPrimarySampleVector(Sample2DContainer_t &_sample_vector,
+										   uint64_t const _sample_index)
+	{ Fill2DSampleVector(_sample_vector, _sample_index); }
 	virtual void Fill1DSampleVector(Sample1DContainer_t &_sample_vector,
 									uint64_t const _sample_index) = 0;
 	virtual void Fill2DSampleVector(Sample2DContainer_t &_sample_vector,
 									uint64_t const _sample_index) = 0;
 public:
 	uint64_t samples_per_pixel() const { return samples_per_pixel_; }
+private:
+	virtual void OnArrayReserved_(uint64_t const _dimension_count) {};
 protected:
 	template <uint64_t PackSize>
 	uint64_t SampleIndexFromArrayIndex(uint64_t const _array_index) const;
 protected:
 	core::RNG &rng() { return rng_; }
 	uint64_t dimensions_per_sample() const { return dimensions_per_sample_; }
-	maths::Point2i const &current_pixel() const { return current_pixel_; }
+	maths::Vec2u const &current_pixel() const { return current_pixel_; }
 	uint64_t current_sample() const;
 	uint64_t first_extension_index() const { return samples_per_pixel(); }
 	template <uint64_t PackSize> uint64_t extension_count() const;
@@ -98,7 +106,7 @@ private:
 	core::RNG					rng_;
 	uint64_t const				samples_per_pixel_;
 	uint64_t const				dimensions_per_sample_;
-	maths::Point2i				current_pixel_;
+	maths::Vec2u				current_pixel_;
 	uint64_t					current_sample_;
 private:
 	template <uint64_t PackSize> uint64_t &current_dimension_();

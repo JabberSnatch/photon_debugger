@@ -18,7 +18,8 @@ struct Ray
 		origin{ _o }, direction{ _d }, tMax{ _tMax }, time{ _time }
 	{}
 	inline Point3f operator()(Decimal _t) const { return origin + direction * _t; }
-	inline bool HasNaNs() const { return origin.HasNaNs() || direction.HasNaNs() || std::isnan(tMax); }
+	inline bool HasNaNs() const { return 
+		maths::HasNaNs(origin) || maths::HasNaNs(direction) || std::isnan(tMax); }
 
 	Point3f			origin;
 	Vec3f			direction;

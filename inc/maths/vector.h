@@ -119,8 +119,6 @@ struct Vector<T, 4> final
 		struct { T	r, g, b, a; };
 	};
 
-	bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w); }
-
 	T operator[](uint32_t _i) const { return e[_i]; };
 	T& operator[](uint32_t _i) { return e[_i]; };
 };
@@ -159,8 +157,6 @@ struct Vector<T, 3> final
 		struct { T	x, y, z; };
 		struct { T	r, g, b; };
 	};
-
-	bool HasNaNs() const { return std::isnan(x) || std::isnan(y) || std::isnan(z); }
 
 	T operator[](uint32_t _i) const { return e[_i]; };
 	T& operator[](uint32_t _i) { return e[_i]; };
@@ -201,8 +197,6 @@ struct Vector<T, 2> final
 		struct { T	u, v; };
 		struct { T	w, h; };
 	};
-
-	bool HasNaNs() const { return std::isnan(x) || std::isnan(y); }
 
 	T operator[](uint32_t _i) const { return e[_i]; };
 	T& operator[](uint32_t _i) { return e[_i]; };

@@ -13,6 +13,7 @@
 #include "raytracer/integrator.h"
 #include "raytracer/sampler.h"
 #include "raytracer/samplers/random_sampler.h"
+#include "raytracer/samplers/halton_sampler.h"
 #include "raytracer/shape.h"
 #include "raytracer/shapes/sphere.h"
 #include "raytracer/shapes/triangle.h"
@@ -31,6 +32,8 @@ std::vector<raytracer::Shape*> MakeTriangleMesh(api::RenderContext &_context,
 												api::ParamSet const &_params);
 //
 raytracer::Sampler* MakeRandomSampler(api::RenderContext &_context,
+									  api::ParamSet const &_params);
+raytracer::Sampler* MakeHaltonSampler(api::RenderContext &_context,
 									  api::ParamSet const &_params);
 //
 raytracer::Integrator* MakeNormalIntegrator(api::RenderContext &_context,
@@ -71,6 +74,7 @@ sampler_callbacks()
 {
 	static SamplerCallbackContainer_t const callbacks{
 		{ "random", &MakeRandomSampler },
+		{ "halton", &MakeHaltonSampler }
 	};
 	return callbacks;
 }
@@ -201,6 +205,17 @@ MakeRandomSampler(api::RenderContext &_context, api::ParamSet const &_params)
 	raytracer::Sampler *const random_sampler = new (_context.mem_region())
 		raytracer::RandomSampler{ seed, samples_per_pixel, dimensions_per_sample };
 	return random_sampler;
+}
+raytracer::Sampler*
+MakeHaltonSampler(api::RenderContext &_context, api::ParamSet const &_params)
+{
+	uint64_t const	seed = _params.FindUint("seed", std::random_device()());
+	uint64_t const	samples_per_pixel = _params.FindUint("sample_count", 1u);
+	uint64_t const	dimensions_per_sample = _params.FindUint("dimension_count", 5u);
+	maths::Vec2u const	tile_resolution = _params.FindUint<2>("tile_resolution", { 128u, 128u });
+	raytracer::Sampler *const halton_sampler = new (_context.mem_region())
+		raytracer::HaltonSampler{ seed, samples_per_pixel, dimensions_per_sample, tile_resolution };
+	return halton_sampler;
 }
 
 

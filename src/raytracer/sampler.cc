@@ -67,7 +67,7 @@ template Sampler::Storage2D_t Sampler::GetNext<2u>();
 
 
 void
-Sampler::StartPixel(maths::Point2i const &_position)
+Sampler::StartPixel(maths::Vec2u const &_position)
 {
 	current_pixel_ = _position;
 	current_sample_ = 0u;
@@ -83,7 +83,14 @@ Sampler::StartPixel(maths::Point2i const &_position)
 				std::distance(arrays_<kPackSize>().begin(), svit));
 			SampleContainer_t<kPackSize> &sample_vector = *svit;
 			uint64_t const sample_index = SampleIndexFromArrayIndex<kPackSize>(array_index);
-			Fill1DSampleVector(sample_vector, sample_index);
+			if (array_index < samples_per_pixel())
+			{
+				Fill1DPrimarySampleVector(sample_vector, sample_index);
+			}
+			else
+			{
+				Fill1DSampleVector(sample_vector, sample_index);
+			}
 		}
 	}
 	{
@@ -95,7 +102,14 @@ Sampler::StartPixel(maths::Point2i const &_position)
 				std::distance(arrays_<kPackSize>().begin(), svit));
 			SampleContainer_t<kPackSize> &sample_vector = *svit;
 			uint64_t const sample_index = SampleIndexFromArrayIndex<kPackSize>(array_index);
-			Fill2DSampleVector(sample_vector, sample_index);
+			if (array_index < samples_per_pixel())
+			{
+				Fill2DPrimarySampleVector(sample_vector, sample_index);
+			}
+			else
+			{
+				Fill2DSampleVector(sample_vector, sample_index);
+			}
 		}
 	}
 }
@@ -148,6 +162,7 @@ Sampler::ReserveArray(uint64_t const _size)
 		SampleContainer_t<PackSize>(static_cast<size_t>(_size))
 	);
 	arrays_<PackSize>().insert(arrays_<PackSize>().end(), arrays.begin(), arrays.end());
+	OnArrayReserved_(_size * PackSize);
 }
 template void Sampler::ReserveArray<1u>(uint64_t const _size);
 template void Sampler::ReserveArray<2u>(uint64_t const _size);

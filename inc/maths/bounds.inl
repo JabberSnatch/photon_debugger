@@ -80,7 +80,7 @@ Bounds<T, n>::Offset(Point<T, n> const &_p) const
 	for (uint32_t i = 0; i < n; ++i)
 		if (d[i] > zero<T>)
 			result[i] /= d[i];
-	YS_ASSERT(!result.HasNaNs());
+	YS_ASSERT(!HasNaNs(result));
 	return result;
 }
 

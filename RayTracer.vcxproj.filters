@@ -147,7 +147,7 @@
     <ClInclude Include="inc\api\render_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\raytracer\samplers\hammersley_sampler.h">
+    <ClInclude Include="inc\raytracer\samplers\halton_sampler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -233,13 +233,13 @@
     <ClCompile Include="src\api\translation_state.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\raytracer\samplers\hammersley_sampler.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\raytracer\surface_interaction.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\api\render_context.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\raytracer\samplers\halton_sampler.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

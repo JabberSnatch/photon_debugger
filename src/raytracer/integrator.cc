@@ -42,7 +42,7 @@ Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
 				 sample_index < sampler_->samples_per_pixel();
 				 ++sample_index, sampler_->StartNextSample())
 			{
-				maths::Vec2f const film_sample = sampler_->GetNext<2u>();//Get2D();
+				maths::Vec2f const film_sample = sampler_->GetNext<2u>();
 				maths::Vec2f const sample_position = pixel_origin + film_sample;
 				maths::Vec2f const uv = sample_position * inv_resolution;
 				maths::Ray ray = camera_->Ray(uv.u, uv.v, _t);
