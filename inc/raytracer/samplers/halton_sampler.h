@@ -21,6 +21,9 @@ class HaltonSampler :
 {
 private:
 	using PrimesVector_t = std::vector<uint64_t>;
+	using OffsetsVector_t = std::vector<uint64_t>;
+	using Permutation_t = std::vector<uint64_t>;
+	using PermutationsVector_t = std::vector<Permutation_t>;
 public:
 	static uint64_t InverseRadicalInverse(uint64_t const _base,
 										  uint64_t const _inverse,
@@ -30,12 +33,18 @@ public:
 	static uint64_t ModularInverse(int64_t const _a, int64_t const _m);
 private:
 	static constexpr uint64_t kReservedPrimesCount_ = 1024u;
-	static PrimesVector_t &primes_vector_();
-	static void ExtendPrimesSequence_(PrimesVector_t &_primes_vector, uint64_t const _count);
+	static PrimesVector_t &primes_();
+	static PermutationsVector_t &permutations_();
+	static PermutationsVector_t &inverse_permutations_();
+	static void ExtendPrimesSequence_(PrimesVector_t &_primes,
+									  uint64_t const _count);
+	static void AppendNextFaurePermutations_(PermutationsVector_t &_permutations, 
+											 PermutationsVector_t &_inverse_permutations,
+											 uint64_t const _next_base);
 public:
-	HaltonSampler(uint64_t const _seed,
-					  uint64_t const _samples_per_pixel, uint64_t const _dimensions_per_sample,
-					  maths::Vec2u const &_tile_resolution);
+	HaltonSampler(uint64_t const _seed, 
+				  uint64_t const _samples_per_pixel, uint64_t const _dimensions_per_sample,
+				  maths::Vec2u const &_tile_resolution);
 	void Fill1DPrimarySampleVector(Sample1DContainer_t &_sample_vector,
 								   uint64_t const _sample_index) override;
 	void Fill2DPrimarySampleVector(Sample2DContainer_t &_sample_vector,

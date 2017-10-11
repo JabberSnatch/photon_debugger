@@ -22,9 +22,9 @@ HaltonSampler::InverseRadicalInverse(uint64_t const _base,
 	uint64_t remainder = _inverse;
 	for (uint64_t digit_index = 0u; digit_index < _source_digits_count; ++digit_index)
 	{
-		uint64_t digit = remainder % _base;
+		uint64_t const digit = remainder % _base;
 		remainder /= _base;
-		result = result * _base + digit;
+		result = result * _base + inverse_permutations_()[_base - 1u][digit];
 	}
 	return result;
 }
@@ -37,13 +37,15 @@ HaltonSampler::RadicalInverse(uint64_t const _base, uint64_t const _value)
 	uint64_t reversed_digits = 0;
 	maths::Decimal inv_base_n = 1._d;
 	uint64_t working_value = _value;
+	uint64_t count = 0u;
 	while (working_value)
 	{
 		uint64_t const next = working_value / _base;
 		uint64_t const digit = working_value - next * _base;
-		reversed_digits = reversed_digits * _base + digit;
+		reversed_digits = reversed_digits * _base + permutations_()[_base - 1u][digit];
 		inv_base_n *= inv_base;
 		working_value = next;
+		++count;
 	}
 	maths::Decimal result = static_cast<maths::Decimal>(reversed_digits) * inv_base_n;
 	YS_ASSERT(result <= maths::almost_one<maths::Decimal>);
@@ -79,42 +81,116 @@ HaltonSampler::ModularInverse(int64_t const _a, int64_t const _m)
 
 
 HaltonSampler::PrimesVector_t &
-HaltonSampler::primes_vector_()
+HaltonSampler::primes_()
 {
-	static std::vector<uint64_t> result;
+	static PrimesVector_t result{ 2u };
+	return result;
+}
+
+
+HaltonSampler::PermutationsVector_t &
+HaltonSampler::permutations_()
+{
+	static PermutationsVector_t result{ {0u}, {0u, 1u} };
+	return result;
+}
+
+
+HaltonSampler::PermutationsVector_t &
+HaltonSampler::inverse_permutations_()
+{
+	static PermutationsVector_t result{ {0u}, {0u, 1u} };
 	return result;
 }
 
 
 void
-HaltonSampler::ExtendPrimesSequence_(PrimesVector_t &_primes_vector, uint64_t const _count)
+HaltonSampler::ExtendPrimesSequence_(PrimesVector_t &_primes,
+									 uint64_t const _count)
 {
 	TIMED_SCOPE(HaltonSampler_ExtendPrimesSequence);
-	if (_count > 0 && _primes_vector.empty())
-	{
-		_primes_vector.emplace_back(2u);
-	}
 	//
-	uint64_t const primes_count = boost::numeric_cast<uint64_t>(_primes_vector.size());
+	uint64_t const primes_count = boost::numeric_cast<uint64_t>(_primes.size());
 	for (uint64_t prime_index = primes_count; prime_index < _count; ++prime_index)
 	{
-		uint64_t candidate_prime = _primes_vector.back() + 1u;
-		PrimesVector_t::const_iterator pcit = _primes_vector.cbegin();
+		uint64_t candidate_prime = _primes.back() + 1u;
+		PrimesVector_t::const_iterator pcit = _primes.cbegin();
 		uint64_t candidate_divisor = 0u;
-		while ((pcit != _primes_vector.cend()) && (candidate_divisor * 2u < candidate_prime))
+		while ((pcit != _primes.cend()) && (candidate_divisor * 2u < candidate_prime))
 		{
 			candidate_divisor = *pcit;
 			if (candidate_prime % candidate_divisor == 0u)
 			{
 				++candidate_prime;
-				pcit = _primes_vector.cbegin();
+				pcit = _primes.cbegin();
 			}
 			else
 			{
 				++pcit;
 			}
 		}
-		_primes_vector.emplace_back(candidate_prime);
+		_primes.emplace_back(candidate_prime);
+	}
+}
+
+
+void
+HaltonSampler::AppendNextFaurePermutations_(PermutationsVector_t &_permutations,
+											PermutationsVector_t &_inverse_permutations,
+											uint64_t const _next_base)
+{
+	// "Good Permutations for Extreme Discrepancy" Henri Faure 1991
+	_permutations.reserve(_permutations.size() + _next_base);
+	_inverse_permutations.reserve(_inverse_permutations.size() + _next_base);
+	uint64_t const last_base = static_cast<uint64_t>(_permutations.size());
+	for (uint64_t base = last_base + 1u; base <= _next_base; ++base)
+	{
+		_permutations.push_back(std::move(Permutation_t(base)));
+		_inverse_permutations.push_back(std::move(Permutation_t(base)));
+		Permutation_t &sigma = _permutations.back();
+		Permutation_t &inv_sigma = _inverse_permutations.back();
+		if ((base & 1u) == 0u)
+		{
+			// general case :
+			// s.t(l) = c*s(h) + t(k)
+			// l = k*b + h; h <= b-1, k <= c-1
+			// here, s = t and t = I
+			// t.I(l) = 2*t(h) + I(k)
+			// b = c
+			// k = (0 | 1)
+			// if l < c => k = 0, h = l
+			// if l >= c => k = 1, h = l - c
+			uint64_t const c = base / 2u;
+			Permutation_t const &tau = _permutations[c - 1u];
+			for (uint64_t l = 0u; l < base; ++l)
+			{
+				uint64_t const Ik = (l < c) ? 0u : 1u;
+				uint64_t const h = (l < c) ? l : (l - c);
+				sigma[l] = 2u * tau[h] + Ik;
+				inv_sigma[sigma[l]] = l;
+			}
+		}
+		else
+		{
+			uint64_t const c = (base - 1u) / 2u;
+			Permutation_t const &tau = _permutations[2u * c - 1u];
+			sigma[c] = c;
+			inv_sigma[c] = c;
+			for (uint64_t digit = 0u; digit < c; ++digit)
+			{
+				uint64_t const index = digit;
+				uint64_t const increment = (tau[index] < c) ? 0u : 1u;
+				sigma[digit] = tau[index] + increment;
+				inv_sigma[sigma[digit]] = digit;
+			}
+			for (uint64_t digit = c + 1; digit < base; ++digit)
+			{
+				uint64_t const index = digit - 1u;
+				uint64_t const increment = (tau[index] < c) ? 0u : 1u;
+				sigma[digit] = tau[index] + increment;
+				inv_sigma[sigma[digit]] = digit;
+			}
+		}
 	}
 }
 
@@ -130,12 +206,13 @@ HaltonSampler::HaltonSampler(uint64_t const _seed,
 	mj_{ 0u, 0u },
 	mj_modular_inverses_{ 0u, 0u }
 {
-	std::vector<uint64_t> &primes = primes_vector_();
+	std::vector<uint64_t> &primes = primes_();
 	if (boost::numeric_cast<uint64_t>(primes.capacity()) < kReservedPrimesCount_)
 	{
 		primes.reserve(kReservedPrimesCount_);
 	}
 	ExtendPrimesSequence_(primes, _dimensions_per_sample * 2u);
+	AppendNextFaurePermutations_(permutations_(), inverse_permutations_(), primes_().back());
 	//
 	// precomputed values for Gruenschloss enumeration method
 	while (tile_resolution_.x > boost::numeric_cast<uint64_t>(std::pow(2u, enum_exponents_.x)))
@@ -208,7 +285,8 @@ void
 HaltonSampler::OnArrayReserved_(uint64_t const _dimension_count)
 {
 	LOG_INFO(tools::kChannelGeneral, "Requested primes sequence extension to " + std::to_string(_dimension_count) + " primes");
-	ExtendPrimesSequence_(primes_vector_(), _dimension_count);
+	ExtendPrimesSequence_(primes_(), _dimension_count);
+	AppendNextFaurePermutations_(permutations_(), inverse_permutations_(), primes_().back());
 }
 
 
@@ -276,11 +354,11 @@ HaltonSampler::SampleCurrentPixel_(uint64_t const _sample_index) const
 maths::Decimal
 HaltonSampler::SampleDimension_(uint64_t const _sample_index, uint64_t const _dimension) const
 {
-	static std::vector<uint64_t> &primes = primes_vector_();
+	static std::vector<uint64_t> &primes = primes_();
 	maths::Decimal result = maths::infinity<maths::Decimal>;
 	YS_ASSERT(primes.size() >= _dimension);
 	uint64_t const prime_base = primes[_dimension];
-	result = RadicalInverse(prime_base, _sample_index);
+	result = RadicalInverse(prime_base, _sample_index + 1u);
 	return result;
 }
 

@@ -126,6 +126,7 @@ AOIntegrator::Li(maths::Ray const &_ray,
 		for (Sampler::Sample2DContainer_t::const_iterator scit = samples.cbegin();
 			 scit != samples.cend(); ++scit)
 		{
+			int64_t const index = std::distance(samples.cbegin(), scit);
 			maths::Vec2f const &sample = *scit;
 			maths::Vec3f const sampled_direction = HemisphereMapping(sample);
 			maths::Vec3f const shading_normal{ _hit.shading.normal() };
@@ -133,7 +134,7 @@ AOIntegrator::Li(maths::Ray const &_ray,
 				_hit.shading.dpdu() * sampled_direction.x +
 				_hit.shading.dpdv() * sampled_direction.y +
 				shading_normal * sampled_direction.z;
-			YS_ASSERT(maths::Dot(wi, shading_normal) >= 0._d);
+			YS_ASSERT(maths::Dot(wi, shading_normal) > 0._d);
 			//
 			maths::Decimal const d = maths::Dot(maths::Abs(shading_normal), _hit.position_error);
 			maths::Vec3f const offset = (maths::Dot(wi, shading_normal) < 0) ?

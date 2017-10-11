@@ -69,6 +69,7 @@ template Sampler::Storage2D_t Sampler::GetNext<2u>();
 void
 Sampler::StartPixel(maths::Vec2u const &_position)
 {
+	TIMED_SCOPE(Sampler_StartPixel);
 	current_pixel_ = _position;
 	current_sample_ = 0u;
 	current_dimension_1D_ = current_dimension_2D_ = 0u;
