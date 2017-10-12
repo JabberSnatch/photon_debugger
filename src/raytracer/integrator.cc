@@ -101,9 +101,10 @@ NormalIntegrator::Li(maths::Ray const &_ray,
 }
 
 
-AOIntegrator::AOIntegrator(uint64_t const _sample_count) :
+AOIntegrator::AOIntegrator(uint64_t const _sample_count, bool const _use_shading_geometry) :
 	Integrator(),
-	sample_count_{ _sample_count }
+	sample_count_{ _sample_count },
+	use_shading_geometry_{ _use_shading_geometry }
 {}
 
 
@@ -129,16 +130,20 @@ AOIntegrator::Li(maths::Ray const &_ray,
 			int64_t const index = std::distance(samples.cbegin(), scit);
 			maths::Vec2f const &sample = *scit;
 			maths::Vec3f const sampled_direction = HemisphereMapping(sample);
-			maths::Vec3f const shading_normal{ _hit.shading.normal() };
+			raytracer::SurfaceInteraction::GeometryProperties const &geometry =
+				(!use_shading_geometry_) ? _hit.geometry : _hit.shading;
+			maths::Vec3f const normal{ geometry.normal() };
+			maths::Vec3f const dpdu{ geometry.dpdu() };
+			maths::Vec3f const dpdv{ geometry.dpdv() };
 			maths::Vec3f const wi = 
-				_hit.shading.dpdu() * sampled_direction.x +
-				_hit.shading.dpdv() * sampled_direction.y +
-				shading_normal * sampled_direction.z;
+				dpdu * sampled_direction.x +
+				dpdv * sampled_direction.y +
+				normal * sampled_direction.z;
 			YS_ASSERT(maths::Dot(wi, shading_normal) > 0._d);
 			//
-			maths::Decimal const d = maths::Dot(maths::Abs(shading_normal), _hit.position_error);
-			maths::Vec3f const offset = (maths::Dot(wi, shading_normal) < 0) ?
-				-d * shading_normal : d * shading_normal;
+			maths::Decimal const d = maths::Dot(maths::Abs(normal), _hit.position_error);
+			maths::Vec3f const offset = (maths::Dot(wi, normal) < 0) ?
+				-d * normal : d * normal;
 			maths::Point3f origin = _hit.position + offset * 2._d;
 			for (int i = 0; i < 3; ++i)
 			{

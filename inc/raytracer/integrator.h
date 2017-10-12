@@ -58,7 +58,7 @@ class AOIntegrator final :
 	public Integrator
 {
 public:
-	AOIntegrator(uint64_t const _sample_count);
+	AOIntegrator(uint64_t const _sample_count, bool const _use_shading_geometry);
 	void Prepare() override;
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,
@@ -66,6 +66,7 @@ private:
 					std::vector<Primitive*> const &_scene) override;
 private:
 	uint64_t sample_count_;
+	bool use_shading_geometry_;
 };
 
 

@@ -232,8 +232,9 @@ raytracer::Integrator*
 MakeAOIntegrator(api::RenderContext &_context, api::ParamSet const &_params)
 {
 	uint64_t const	sample_count = _params.FindUint("sample_count", 1u);
+	bool const	shading_geometry = _params.FindBool("shading_geometry", false);
 	raytracer::Integrator *const ao_integrator = new (_context.mem_region())
-		raytracer::AOIntegrator{ sample_count };
+		raytracer::AOIntegrator{ sample_count, shading_geometry };
 	return ao_integrator;
 }
 
