@@ -285,6 +285,8 @@ template <typename T, uint32_t n>
 uint32_t MinimumDimension(Vector<T, n> const &_v);
 template <typename T, uint32_t n>
 uint32_t MaximumDimension(Vector<T, n> const &_v);
+template <typename T, uint32_t n>
+T MaximumComponent(Vector<T, n> const &_v);
 
 template <typename T, uint32_t n, typename... Indices>
 Vector<T, n> Swizzle(Vector<T, n> const &_v, Indices... _indices);

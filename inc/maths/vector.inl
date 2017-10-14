@@ -362,6 +362,17 @@ MaximumDimension(Vector<T, n> const &_v)
 
 	return result;
 }
+template <typename T, uint32_t n>
+T
+MaximumComponent(Vector<T, n> const &_v)
+{
+	T  result = zero<T>;
+	for (uint32_t i = 0; i < n; ++i)
+	{
+		result = maths::Max(result, _v[i]);
+	}
+	return result;
+}
 
 template <typename T, uint32_t n, typename... Indices>
 Vector<T, n>

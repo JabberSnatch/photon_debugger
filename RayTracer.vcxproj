@@ -229,7 +229,8 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>robocopy $(OutDir) $(SolutionDir)WorkingDirectories\$(ProjectName)\ $(TargetFileName)</Command>
+      <Command>robocopy $(OutDir) $(SolutionDir)WorkingDirectories\$(ProjectName)\ $(TargetFileName)
+set ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -252,7 +253,8 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>robocopy $(OutDir) $(SolutionDir)WorkingDirectories\$(ProjectName)\ $(TargetFileName)</Command>
+      <Command>robocopy $(OutDir) $(SolutionDir)WorkingDirectories\$(ProjectName)\ $(TargetFileName)
+set ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

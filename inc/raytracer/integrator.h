@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "maths/maths.h"
+#include "maths/vector.h"
 
 
 namespace raytracer {
@@ -57,6 +58,11 @@ private:
 class AOIntegrator final :
 	public Integrator
 {
+private:
+	static constexpr maths::Vec3f kOccludedColor = { maths::zero<maths::Vec3f> };
+	static constexpr maths::Vec3f kUnoccludedColor = { maths::one<maths::Vec3f> };
+	static constexpr maths::Vec3f kSecondaryRaySelfHitColor = { 0._d, 0._d, 1._d };
+	static constexpr maths::Vec3f kPrimaryRaySelfHitColor = { 1._d, 0._d, 0._d };
 public:
 	AOIntegrator(uint64_t const _sample_count, bool const _use_shading_geometry);
 	void Prepare() override;

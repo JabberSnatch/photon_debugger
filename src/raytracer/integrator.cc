@@ -115,11 +115,28 @@ AOIntegrator::Prepare()
 }
 
 
+maths::Point3f
+OffsetOriginFromErrorBounds(maths::Point3f const &_position,
+							maths::Vec3f const &_normal,
+							maths::Vec3f const &_position_error)
+{
+	maths::Decimal const d = maths::Dot(maths::Abs(_normal), _position_error);
+	maths::Vec3f const offset = d * _normal;
+	maths::Point3f result = _position + offset * 2._d;
+	for (int i = 0; i < 3; ++i)
+	{
+		if (offset[i] > 0._d) result[i] = maths::NextDecimalUp(result[i]);
+		else if (offset[i] < 0._d) result[i] = maths::NextDecimalDown(result[i]);
+	}
+	return result;
+}
+
 maths::Vec3f
 AOIntegrator::Li(maths::Ray const &_ray,
 				 raytracer::SurfaceInteraction const &_hit,
 				 std::vector<Primitive*> const &_scene)
 {
+	TIMED_SCOPE(AOIntegrator_Li);
 	if (_hit.primitive != nullptr)
 	{
 		maths::Vec3f occlusion{ maths::zero<maths::Vec3f> };
@@ -135,37 +152,119 @@ AOIntegrator::Li(maths::Ray const &_ray,
 			maths::Vec3f const normal{ geometry.normal() };
 			maths::Vec3f const dpdu{ geometry.dpdu() };
 			maths::Vec3f const dpdv{ geometry.dpdv() };
-			maths::Vec3f const wi = 
+			maths::Vec3f const wi =
 				dpdu * sampled_direction.x +
 				dpdv * sampled_direction.y +
 				normal * sampled_direction.z;
-			YS_ASSERT(maths::Dot(wi, shading_normal) > 0._d);
+			YS_ASSERT(maths::Dot(wi, normal) > 0._d);
 			//
-			maths::Decimal const d = maths::Dot(maths::Abs(normal), _hit.position_error);
-			maths::Vec3f const offset = (maths::Dot(wi, normal) < 0) ?
-				-d * normal : d * normal;
-			maths::Point3f origin = _hit.position + offset * 2._d;
-			for (int i = 0; i < 3; ++i)
-			{
-				if (offset[i] > 0) origin[i] = maths::NextDecimalUp(origin[i]);
-				else if (offset[i] < 0) origin[i] = maths::NextDecimalDown(origin[i]);
-			}
-			//
-			maths::Ray ray{ origin, wi, maths::infinity<maths::Decimal>, _ray.time };
-			raytracer::SurfaceInteraction closest_hit_info;
-			for (raytracer::Primitive const *primitive : _scene)
-			{
-				primitive->Intersect(ray, closest_hit_info);
-			}
-			if (closest_hit_info.primitive == nullptr)
-			{
-				occlusion += maths::one<maths::Vec3f>;
+			maths::Point3f origin{ maths::zero<maths::Point3f> };
+			bool cast_primary_ray = false;
+			bool fixed_shading_normal_self_hitting = false;
+			if (use_shading_geometry_)
+			{	// if we're using shading geometry, we have to account for a wi pointing underneath
+				// the geometry's surface
+				maths::Vec3f const geometry_normal{ _hit.geometry.normal() };
+				if (maths::Dot(wi, geometry_normal) >= 0._d)
+				{ // easy case, just use the standard ray
+					cast_primary_ray = true;
+					//origin = OffsetOriginFromErrorBounds(_hit.position, normal, _hit.position_error);
+					origin = OffsetOriginFromErrorBounds(_hit.position, geometry_normal, _hit.position_error);
+				}
+				else
+				{ // cast a ray from underneath the primitive surface
+					maths::Point3f const secondary_ray_origin =
+						OffsetOriginFromErrorBounds(_hit.position,
+													-geometry_normal,
+													_hit.position_error);
+					maths::Ray secondary_ray{ secondary_ray_origin, wi,
+						maths::infinity<maths::Decimal>, _ray.time };
+					raytracer::SurfaceInteraction hit_info;
+					for (raytracer::Primitive const *primitive : _scene)
+					{
+						primitive->Intersect(secondary_ray, hit_info);
+					}
+					if (hit_info.primitive != nullptr)
+					{ // found something, we might be on its inside or its outside
+						maths::Vec3f const hit_geometry_normal{ hit_info.geometry.normal() };
+						if (maths::Dot(hit_geometry_normal, wi) > 0._d)
+						{ // inside case, compute the origin of the AO ray
+							maths::Vec3f const hit_shading_normal{ hit_info.shading.normal() };
+							cast_primary_ray = true;
+							fixed_shading_normal_self_hitting = true;
+							origin = OffsetOriginFromErrorBounds(hit_info.position,
+																 hit_shading_normal,
+																 hit_info.position_error);
+						}
+						else
+						{ // outside case, this is a valid AO result
+							if (hit_info.primitive != _hit.primitive)
+							{
+								occlusion += kOccludedColor;
+							}
+							else
+							{ // this is an error
+								occlusion += kSecondaryRaySelfHitColor;
+								LOG_WARNING(tools::kChannelGeneral, "Secondary ray self-hit");
+							}
+						}
+					}
+					else
+					{ // nothing found, this is an unoccluded result
+						occlusion += kUnoccludedColor;
+					}
+				} // if (maths::Dot(wi, geometry_normal) < 0._d)
 			}
 			else
+			{ // shading geometry is disabled, no risk of getting a self-hit
+				cast_primary_ray = true;
+				origin = OffsetOriginFromErrorBounds(_hit.position, normal, _hit.position_error);
+			}
+			//
+			if (cast_primary_ray)
 			{
-				if (closest_hit_info.primitive == _hit.primitive)
+				maths::Ray ray{ origin, wi, maths::infinity<maths::Decimal>, _ray.time };
+				raytracer::SurfaceInteraction closest_hit_info;
+				for (raytracer::Primitive const *primitive : _scene)
 				{
-					occlusion += maths::Vec3f{ 1._d, 0._d, 0._d };
+					primitive->Intersect(ray, closest_hit_info);
+				}
+				if (closest_hit_info.primitive == nullptr)
+				{
+					occlusion += kUnoccludedColor;
+				}
+				else
+				{
+					if (closest_hit_info.primitive != _hit.primitive)
+					{
+						occlusion += kOccludedColor;
+					}
+					else
+					{ // this is an error
+						occlusion += kPrimaryRaySelfHitColor;
+						if (!fixed_shading_normal_self_hitting)
+						{
+							LOG_WARNING(tools::kChannelGeneral, "Primary ray self-hit");
+							LOG_INFO(tools::kChannelGeneral, "	wi.normal : " +
+									 std::to_string(maths::Dot(wi, normal)));
+							LOG_INFO(tools::kChannelGeneral, "	wi.geometry_normal : " + 
+									 std::to_string(maths::Dot(wi, _hit.geometry.normal())));
+							std::string const origin_position_string = "	" +
+								std::to_string(origin.x) + "; " +
+								std::to_string(origin.y) + "; " +
+								std::to_string(origin.z);
+							LOG_INFO(tools::kChannelGeneral, origin_position_string);
+							std::string const hit_position_string = "	" +
+								std::to_string(closest_hit_info.position.x) + "; " +
+								std::to_string(closest_hit_info.position.y) + "; " +
+								std::to_string(closest_hit_info.position.z);
+							LOG_INFO(tools::kChannelGeneral, hit_position_string);
+						}
+						else
+						{
+							LOG_ERROR(tools::kChannelGeneral, "Fixed shading normal but still self-hit");
+						}
+					}
 				}
 			}
 		}
@@ -173,7 +272,7 @@ AOIntegrator::Li(maths::Ray const &_ray,
 	}
 	else
 	{
-		return maths::one<maths::Vec3f>;
+		return kUnoccludedColor;
 	}
 }
 

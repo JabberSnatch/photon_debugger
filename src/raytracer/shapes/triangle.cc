@@ -67,9 +67,9 @@ Triangle::Intersect(maths::Ray const &_ray,
 	// (p1.x - p0.x)(-p0.y) - (-p0.x)(p1.y - p0.y)
 	// p0.y*p0.x - p1.x*p0.y - (p0.y*p0.x - p0.x*p1.y)
 	// p0.x*p1.y - p1.x*p0.y
-	maths::Decimal const	e0 = p1.x*p2.y - p2.x*p1.y;
-	maths::Decimal const	e1 = p2.x*p0.y - p0.x*p2.y;
-	maths::Decimal const	e2 = p0.x*p1.y - p1.x*p0.y;
+	maths::Decimal	e0 = p1.x*p2.y - p2.x*p1.y;
+	maths::Decimal	e1 = p2.x*p0.y - p0.x*p2.y;
+	maths::Decimal	e2 = p0.x*p1.y - p1.x*p0.y;
 	// NOTE: If any of these is zero, we don't know for sure whether we hit the triangle or not.
 	if (e0 == 0._d || e1 == 0._d || e2 == 0._d)
 		return false;
@@ -92,6 +92,28 @@ Triangle::Intersect(maths::Ray const &_ray,
 	maths::Decimal const	b1 = e1 * e_sum_inverse;
 	maths::Decimal const	b2 = e2 * e_sum_inverse;
 	maths::Decimal const	t = t_scaled * e_sum_inverse;
+
+	// Should definitely investigate more on this. 
+	// Reference is PBR, 3.9.6, Pharr et al
+	maths::Decimal const	maxXt = maths::MaximumComponent(maths::Abs(
+		maths::Vec3f{ p0.x, p1.x, p2.x }));
+	maths::Decimal const	maxYt = maths::MaximumComponent(maths::Abs(
+		maths::Vec3f{ p0.y, p1.y, p2.y }));
+	maths::Decimal const	maxZt = maths::MaximumComponent(maths::Abs(
+		maths::Vec3f{ p0.z, p1.z, p2.z }));
+	maths::Decimal const	deltaX = maths::gamma(5u) * (maxXt + maxZt);
+	maths::Decimal const	deltaY = maths::gamma(5u) * (maxYt + maxZt);
+	maths::Decimal const	deltaZ = maths::gamma(3u) * maxZt;
+	maths::Decimal const	deltaE = 2._d * (maths::gamma(2u) * maxXt * maxYt +
+											 deltaY * maxXt +
+											 deltaX * maxYt);
+	maths::Decimal const	maxE = maths::MaximumComponent(maths::Abs(
+		maths::Vec3f{ e0, e1, e2 }));
+	maths::Decimal const	deltaT = 3._d * (maths::gamma(3u) * maxE * maxZt +
+											 deltaE * maxZt +
+											 deltaZ * maxE) * maths::Abs(e_sum_inverse);
+	if (t <= deltaT)
+		return false;
 
 	maths::Vec3f			dpdu, dpdv;
 	maths::Point2f const	uv0{ uv(0) }, uv1{ uv(1) }, uv2{ uv(2) };
