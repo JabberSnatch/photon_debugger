@@ -56,10 +56,6 @@ public:
 private:
 	void OnArrayReserved_(uint64_t const _dimension_count) override;
 private:
-	void Fill1DRange_(Sample1DContainer_t &_sample_vector, uint64_t const _sample_index,
-					  uint64_t const _begin, uint64_t const _end);
-	void Fill2DRange_(Sample2DContainer_t &_sample_vector, uint64_t const _sample_index,
-					  uint64_t const _begin, uint64_t const _end);
 	maths::Vec2f SampleCurrentPixel_(uint64_t const _sample_index) const;
 	maths::Decimal SampleDimension_(uint64_t const _sample_index, uint64_t const _dimension) const;
 private:

@@ -248,7 +248,10 @@ HaltonSampler::Fill1DPrimarySampleVector(Sample1DContainer_t &_sample_vector,
 	_sample_vector[0] = pixel_sample.x;
 	_sample_vector[1] = pixel_sample.y;
 	uint64_t const value_count = boost::numeric_cast<uint64_t>(_sample_vector.size());
-	Fill1DRange_(_sample_vector, _sample_index, 2u, value_count);
+	for (uint64_t value_index = 2u; value_index < value_count; ++value_index)
+	{
+		_sample_vector[value_index] = SampleDimension_(_sample_index, value_index);
+	}
 }
 
 
@@ -259,7 +262,14 @@ HaltonSampler::Fill2DPrimarySampleVector(Sample2DContainer_t &_sample_vector,
 	maths::Vec2f const pixel_sample = SampleCurrentPixel_(_sample_index);
 	_sample_vector[0] = pixel_sample;
 	uint64_t const value_count = boost::numeric_cast<uint64_t>(_sample_vector.size());
-	Fill2DRange_(_sample_vector, _sample_index, 1u, value_count);
+	for (uint64_t value_index = 1u; value_index < value_count; ++value_index)
+	{
+		uint64_t const first_dimension = value_index * 2u;
+		_sample_vector[value_index] = maths::Vec2f{
+			SampleDimension_(_sample_index, first_dimension),
+			SampleDimension_(_sample_index, first_dimension + 1)
+		};
+	}
 }
 
 
@@ -268,7 +278,10 @@ HaltonSampler::Fill1DSampleVector(Sample1DContainer_t &_sample_vector,
 								  uint64_t const _sample_index)
 {
 	uint64_t const value_count = boost::numeric_cast<uint64_t>(_sample_vector.size());
-	Fill1DRange_(_sample_vector, _sample_index, 0u, value_count);
+	for (uint64_t value_index = 0u; value_index < value_count; ++value_index)
+	{
+		_sample_vector[value_index] = SampleDimension_(_sample_index * value_count + value_index, 0u);
+	}
 }
 
 
@@ -277,7 +290,14 @@ HaltonSampler::Fill2DSampleVector(Sample2DContainer_t &_sample_vector,
 								  uint64_t const _sample_index)
 {
 	uint64_t const value_count = boost::numeric_cast<uint64_t>(_sample_vector.size());
-	Fill2DRange_(_sample_vector, _sample_index, 0u, value_count);
+	for (uint64_t value_index = 0u; value_index < value_count; ++value_index)
+	{
+		uint64_t const first_dimension = value_index * 2u;
+		_sample_vector[value_index] = maths::Vec2f{
+			SampleDimension_(_sample_index * value_count + value_index, 0u),
+			SampleDimension_(_sample_index * value_count + value_index, 1u)
+		};
+	}
 }
 
 
@@ -287,34 +307,6 @@ HaltonSampler::OnArrayReserved_(uint64_t const _dimension_count)
 	LOG_INFO(tools::kChannelGeneral, "Requested primes sequence extension to " + std::to_string(_dimension_count) + " primes");
 	ExtendPrimesSequence_(primes_(), _dimension_count);
 	AppendNextFaurePermutations_(permutations_(), inverse_permutations_(), primes_().back());
-}
-
-
-void
-HaltonSampler::Fill1DRange_(Sample1DContainer_t &_sample_vector, uint64_t const _sample_index,
-							uint64_t const _begin, uint64_t const _end)
-{
-	YS_ASSERT(_end <= boost::numeric_cast<uint64_t>(_sample_vector.size()));
-	for (uint64_t value_index = _begin; value_index < _end; ++value_index)
-	{
-		_sample_vector[value_index] = SampleDimension_(_sample_index, value_index);
-	}
-}
-
-
-void
-HaltonSampler::Fill2DRange_(Sample2DContainer_t &_sample_vector, uint64_t const _sample_index,
-							uint64_t const _begin, uint64_t const _end)
-{
-	YS_ASSERT(_end <= boost::numeric_cast<uint64_t>(_sample_vector.size()));
-	for (uint64_t value_index = _begin; value_index < _end; ++value_index)
-	{
-		uint64_t const first_dimension = value_index * 2u;
-		_sample_vector[value_index] = maths::Vec2f{
-			SampleDimension_(_sample_index, first_dimension),
-			SampleDimension_(_sample_index, first_dimension + 1)
-		};
-	}
 }
 
 

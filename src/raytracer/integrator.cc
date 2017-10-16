@@ -1,5 +1,10 @@
 #include "raytracer/integrator.h"
 
+
+#include <iomanip>
+#include <sstream>
+
+
 #include "core/logger.h"
 #include "maths/matrix.h"
 #include "maths/ray.h"
@@ -47,16 +52,18 @@ Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
 				maths::Vec2f const uv = sample_position * inv_resolution;
 				maths::Ray ray = camera_->Ray(uv.u, uv.v, _t);
 				raytracer::SurfaceInteraction closest_hit_info;
+				bool intersected = false;
 				for (raytracer::Primitive const *primitive : _scene)
 				{
-					primitive->Intersect(ray, closest_hit_info);
+					bool const ret_intersect = primitive->Intersect(ray, closest_hit_info);
+					intersected = ret_intersect || intersected;
 				}
-				maths::Vec3f const color{ Li(ray, closest_hit_info, _scene) };
+				maths::Vec3f const color = Li(ray, closest_hit_info, _scene);
 				color_accumulator += color;
 			}
-			maths::Vec3f const	Li =
+			maths::Vec3f const	final_color =
 				color_accumulator / static_cast<maths::Decimal>(sampler_->samples_per_pixel());
-			film.SetPixel(Li, { x, y });
+			film.SetPixel(final_color, { x, y });
 		}
 	}
 }
@@ -180,11 +187,13 @@ AOIntegrator::Li(maths::Ray const &_ray,
 					maths::Ray secondary_ray{ secondary_ray_origin, wi,
 						maths::infinity<maths::Decimal>, _ray.time };
 					raytracer::SurfaceInteraction hit_info;
+					bool intersected = false;
 					for (raytracer::Primitive const *primitive : _scene)
 					{
-						primitive->Intersect(secondary_ray, hit_info);
+						bool const ret_intersect = primitive->Intersect(secondary_ray, hit_info);
+						intersected = ret_intersect || intersected;
 					}
-					if (hit_info.primitive != nullptr)
+					if (hit_info.primitive != nullptr && intersected)
 					{ // found something, we might be on its inside or its outside
 						maths::Vec3f const hit_geometry_normal{ hit_info.geometry.normal() };
 						if (maths::Dot(hit_geometry_normal, wi) > 0._d)
@@ -225,11 +234,13 @@ AOIntegrator::Li(maths::Ray const &_ray,
 			{
 				maths::Ray ray{ origin, wi, maths::infinity<maths::Decimal>, _ray.time };
 				raytracer::SurfaceInteraction closest_hit_info;
+				bool intersected = false;
 				for (raytracer::Primitive const *primitive : _scene)
 				{
-					primitive->Intersect(ray, closest_hit_info);
+					bool const ret_intersect = primitive->Intersect(ray, closest_hit_info);
+					intersected = ret_intersect || intersected;
 				}
-				if (closest_hit_info.primitive == nullptr)
+				if (closest_hit_info.primitive == nullptr || !intersected)
 				{
 					occlusion += kUnoccludedColor;
 				}
@@ -249,16 +260,25 @@ AOIntegrator::Li(maths::Ray const &_ray,
 									 std::to_string(maths::Dot(wi, normal)));
 							LOG_INFO(tools::kChannelGeneral, "	wi.geometry_normal : " + 
 									 std::to_string(maths::Dot(wi, _hit.geometry.normal())));
-							std::string const origin_position_string = "	" +
-								std::to_string(origin.x) + "; " +
-								std::to_string(origin.y) + "; " +
-								std::to_string(origin.z);
-							LOG_INFO(tools::kChannelGeneral, origin_position_string);
-							std::string const hit_position_string = "	" +
-								std::to_string(closest_hit_info.position.x) + "; " +
-								std::to_string(closest_hit_info.position.y) + "; " +
-								std::to_string(closest_hit_info.position.z);
-							LOG_INFO(tools::kChannelGeneral, hit_position_string);
+							auto const precision = std::setprecision(std::numeric_limits<double>::digits10 + 1);
+							std::ostringstream camera_hit_position_stream;
+							camera_hit_position_stream << "	" << precision <<
+								_hit.position.x << "; " <<
+								_hit.position.y << "; " <<
+								_hit.position.z;
+							LOG_INFO(tools::kChannelGeneral, camera_hit_position_stream.str());
+							std::ostringstream origin_position_stream;
+							origin_position_stream << "	" << precision <<
+								origin.x << "; " <<
+								origin.y << "; " <<
+								origin.z;
+							LOG_INFO(tools::kChannelGeneral, origin_position_stream.str());
+							std::ostringstream hit_position_stream;
+							hit_position_stream << "	" << precision <<
+								closest_hit_info.position.x << "; " <<
+								closest_hit_info.position.y << "; " <<
+								closest_hit_info.position.z;
+							LOG_INFO(tools::kChannelGeneral, hit_position_stream.str());
 						}
 						else
 						{

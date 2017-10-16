@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 			tools::Timer const &timer = it->second;
 			char const *call_string = (timer.call_count() > 1) ? " calls. " : " call. ";
 			std::stringstream string;
-			string <<
+			string << "\n" << 
 				timer.name() << " : " << std::endl <<
 				"	" << timer.call_count() << call_string << std::endl <<
 				"	real time : [ " <<
