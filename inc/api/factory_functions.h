@@ -25,19 +25,17 @@ class Sampler;
 namespace api {
 
 class ParamSet;
-class RenderContext;
+class ResourceContext;
 
 
 template <typename ObjectType>
 using MakeObjectCallback_t =
-	std::function<ObjectType*(api::RenderContext &_context, ParamSet const &_params)>;
+	std::function<ObjectType*(api::ResourceContext &_context, ParamSet const &_params)>;
 template <typename CallbackType>
 using NamedCallbackContainer_t = std::unordered_map<std::string, CallbackType>;
 
 
-using MakeShapeCallback_t = std::function<
-	std::vector<raytracer::Shape*>(api::RenderContext &_context, ParamSet const &_params)
->;
+using MakeShapeCallback_t = MakeObjectCallback_t<raytracer::Shape>;
 using MakeSamplerCallback_t = MakeObjectCallback_t<raytracer::Sampler>;
 using MakeIntegratorCallback_t = MakeObjectCallback_t<raytracer::Integrator>;
 using ShapeCallbackContainer_t = NamedCallbackContainer_t<MakeShapeCallback_t>;
@@ -53,8 +51,8 @@ MakeSamplerCallback_t const &LookupSamplerFunc(std::string const &_id);
 MakeIntegratorCallback_t const &LookupIntegratorFunc(std::string const &_id);
 
 
-raytracer::Camera* MakeCamera(api::RenderContext &_context, api::ParamSet const &_params);
-raytracer::Film* MakeFilm(api::RenderContext &_context, api::ParamSet const &_params);
+raytracer::Camera* MakeCamera(api::ResourceContext &_context, api::ParamSet const &_params);
+raytracer::Film* MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params);
 
 
 } // namespace api

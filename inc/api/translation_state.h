@@ -7,6 +7,7 @@
 
 #include "api/param_set.h"
 #include "api/render_context.h"
+#include "api/resource_context.h"
 #include "api/transform_cache.h"
 #include "core/noncopyable.h"
 #include "core/nonmovable.h"
@@ -25,28 +26,16 @@ class TranslationState final :
 	private core::nonmovable
 {
 private:
-	enum class ObjectIdentifier
-	{
-		kFilm = 0,
-		kCamera,
-		kShape,
-		kSampler,
-		kIntegrator,
-		kCount
-	};
-private:
 	using TransformStack_t = std::vector<maths::Transform>;
-	using ObjectDescriptor_t = std::tuple<std::string, ParamSet*>;
-	using ObjectDescriptorContainer_t = std::vector<ObjectDescriptor_t>;
-	using SceneDescription_t = 
-		std::array<ObjectDescriptorContainer_t, static_cast<unsigned>(ObjectIdentifier::kCount)>;
 public:
 	TranslationState();
 	void	Workdir(std::string const &_absolute_path);
 	void	Output(std::string const &_relative_path);
+	void	ObjectId(std::string const &_object_id);
 	void	Film();
 	void	Camera();
 	void	Shape(std::string const &_type);
+	void	Light(std::string const &_type);
 	void	Sampler(std::string const &_type);
 	void	Integrator(std::string const &_type);
 	void	Identity();
@@ -63,17 +52,17 @@ public:
 	std::string			&output_path() { return output_path_; }
 private:
 	void	SceneSetup_();
-	void	PushObjectDesc_(ObjectIdentifier const _id, std::string const &_name);
-	ObjectDescriptorContainer_t &object_desc_vector_(ObjectIdentifier const _id);
+	void	PushObjectDesc_(ResourceContext::ObjectType const _type,
+							std::string const &_subtype_id);
 private:
-	std::string			workdir_;
-	std::string			output_path_;
-	api::RenderContext	render_context_;
-	uint32_t			scope_depth_;
-	TransformStack_t	transform_stack_;
-	core::MemoryRegion	mem_region_;
-	ParamSet			*parameters_;
-	SceneDescription_t	scene_desc_;
+	std::string				workdir_;
+	std::string				output_path_;
+	api::RenderContext		render_context_;
+	api::ResourceContext	resource_context_;
+	uint32_t				scope_depth_;
+	TransformStack_t		transform_stack_;
+	std::string				cached_object_id_;
+	ParamSet				*parameters_;
 };
 
 

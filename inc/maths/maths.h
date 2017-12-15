@@ -125,10 +125,18 @@ constexpr maths::DecimalBits operator "" _db(unsigned long long _v) { return mat
 namespace maths
 {
 
+static constexpr Decimal machine_epsilon = std::numeric_limits<Decimal>::epsilon() * 0.5_d;
+// NOTE: Higham (2002, section 3.1) bounding term for (1+-Epsilon)^n for n*Epsilon < 1
+constexpr Decimal gamma(uint32_t _n) { return (_n * machine_epsilon) / (1._d - _n * machine_epsilon); }
+// assuming _ksi is in [0, 1[, returns the corresponding value on the [0, 1] interval
+constexpr Decimal ExtendToOne(Decimal const _ksi) { return _ksi + _ksi * machine_epsilon; }
+
+
 template <typename T> static constexpr T lowest_value = std::numeric_limits<T>::lowest();
 template <typename T> static constexpr T highest_value = std::numeric_limits<T>::max();
 template <typename T> static constexpr T infinity = std::numeric_limits<T>::infinity();
-template <typename T> static constexpr T almost_one = one<T> -std::numeric_limits<T>::epsilon();
+template <typename T> static constexpr T almost_one = one<T> - machine_epsilon;
+
 
 template <typename T> static constexpr T pi = T(3.14159235658979323846);
 

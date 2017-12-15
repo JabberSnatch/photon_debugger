@@ -45,6 +45,10 @@ public:
 		maths::Norm3f	dndu_, dndv_;
 	};
 public:
+	static maths::Point3f OffsetOriginFromErrorBounds(maths::Point3f const &_position,
+													  maths::Vec3f const &_normal,
+													  maths::Vec3f const &_position_error);
+public:
 	SurfaceInteraction() = default;
 	SurfaceInteraction(maths::Point3f const &_p, maths::Vec3f const &_e,
 					   maths::Decimal const &_t, maths::Vec3f const &_wo,
@@ -61,6 +65,8 @@ public:
 	void SetShadingGeometry(maths::Vec3f const &_dpdu, maths::Vec3f const &_dpdv,
 							maths::Norm3f const &_dndu, maths::Norm3f const &_dndv,
 							bool _is_authoritative);
+	maths::Point3f OffsetOriginFromErrorBounds(maths::Vec3f const &_w) const;
+	maths::Ray SpawnRay(maths::Vec3f const &_w) const;
 public:
 	maths::Point3f		position;
 	maths::Vec3f		position_error;

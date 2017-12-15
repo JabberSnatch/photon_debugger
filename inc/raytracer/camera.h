@@ -27,6 +27,7 @@ public:
 	void		WriteToFile(std::string const &_path) const;
 	maths::Ray	Ray(maths::Decimal _u, maths::Decimal _v, maths::Decimal _time) const;
 
+	Film		&film() { return film_; }
 	//void		SetFilm(Film *_film) { film_ = _film; }
 
 private:

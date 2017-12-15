@@ -4,21 +4,21 @@
 #include "globals.h"
 #include "core/profiler.h"
 #include "core/logger.h"
-#include "raytracer/triangle_mesh.h"
 #include "maths/bounds.h"
 #include "maths/transform.h"
 #include "maths/vector.h"
+#include "raytracer/triangle_mesh_data.h"
 #include "raytracer/surface_interaction.h"
 
 namespace raytracer {
 
 Triangle::Triangle(maths::Transform const &_world_transform, bool _flip_normals,
-				   TriangleMesh const &_mesh, int32_t _face_index) :
+				   TriangleMeshData const &_mesh_data, int32_t _face_index) :
 	Shape(_world_transform, _flip_normals),
-	mesh_{ _mesh }
+	mesh_data_{ _mesh_data }
 {
-	YS_ASSERT(_face_index < mesh_.triangle_count);
-	vertex_index_ = &mesh_.indices[TriangleMesh::IndexOffset(_face_index)];
+	YS_ASSERT(_face_index < mesh_data_.triangle_count);
+	vertex_index_ = &mesh_data_.indices[TriangleMeshData::IndexOffset(_face_index)];
 }
 
 bool
@@ -28,9 +28,9 @@ Triangle::Intersect(maths::Ray const &_ray,
 {
 	TIMED_SCOPE(Triangle_Intersect);
 
-	maths::Point3f const	&v0 = mesh_.vertices[vertex_index_[0]];
-	maths::Point3f const	&v1 = mesh_.vertices[vertex_index_[1]];
-	maths::Point3f const	&v2 = mesh_.vertices[vertex_index_[2]];
+	maths::Point3f const	&v0 = mesh_data_.vertices[vertex_index_[0]];
+	maths::Point3f const	&v1 = mesh_data_.vertices[vertex_index_[1]];
+	maths::Point3f const	&v2 = mesh_data_.vertices[vertex_index_[2]];
 
 	maths::Point3f	p0 = v0;
 	maths::Point3f	p1 = v1;
@@ -148,16 +148,16 @@ Triangle::Intersect(maths::Ray const &_ray,
 		maths::Normalized(dpdu), maths::Normalized(dpdv), maths::Norm3f(0._d), maths::Norm3f(0._d)
 	};
 
-	bool const	mesh_has_normals = mesh_.has_normals();
-	bool const	mesh_has_tangents = mesh_.has_tangents();
+	bool const	mesh_has_normals = mesh_data_.has_normals();
+	bool const	mesh_has_tangents = mesh_data_.has_tangents();
 	if (mesh_has_normals || mesh_has_tangents)
 	{
 		//
 		if (mesh_has_normals)
 		{
-			maths::Norm3f const		&n0 = mesh_.normals[vertex_index_[0]];
-			maths::Norm3f const		&n1 = mesh_.normals[vertex_index_[1]];
-			maths::Norm3f const		&n2 = mesh_.normals[vertex_index_[2]];
+			maths::Norm3f const		&n0 = mesh_data_.normals[vertex_index_[0]];
+			maths::Norm3f const		&n1 = mesh_data_.normals[vertex_index_[1]];
+			maths::Norm3f const		&n2 = mesh_data_.normals[vertex_index_[2]];
 			shading.SetNormal(maths::Normalized(b0 * n0 + b1 * n1 + b2 * n2));
 			//
 			if (matrix_determinant != 0._d)
@@ -172,9 +172,9 @@ Triangle::Intersect(maths::Ray const &_ray,
 		if (mesh_has_tangents)
 		{
 			shading.SetDpdu(maths::Normalized(
-				b0 * mesh_.tangents[vertex_index_[0]] +
-				b1 * mesh_.tangents[vertex_index_[1]] +
-				b2 * mesh_.tangents[vertex_index_[2]]));
+				b0 * mesh_data_.tangents[vertex_index_[0]] +
+				b1 * mesh_data_.tangents[vertex_index_[1]] +
+				b2 * mesh_data_.tangents[vertex_index_[2]]));
 		}
 		// NOTE: I suppose this line can be moved inside the condition, but still have to check
 		shading.SetDpdv(maths::Cross(shading.normal_quick(), shading.dpdu_quick()));
@@ -214,6 +214,8 @@ Triangle::Intersect(maths::Ray const &_ray,
 
 	return true;
 }
+
+
 bool
 Triangle::DoesIntersect(maths::Ray const &_ray) const
 {
@@ -222,12 +224,55 @@ Triangle::DoesIntersect(maths::Ray const &_ray) const
 	return false;
 }
 
+
+maths::Vec2f
+UniformSampleTriangle(maths::Vec2f const &_ksi)
+{
+	maths::Decimal const ksi1_sqrt = std::sqrt(maths::ExtendToOne(_ksi.x));
+	return maths::Vec2f(1._d - ksi1_sqrt, maths::ExtendToOne(_ksi.y) * ksi1_sqrt);
+}
+
+Shape::SurfacePoint
+Triangle::SampleSurface(maths::Vec2f const &_ksi) const
+{
+	maths::Point3f position{};
+	maths::Norm3f normal{};
+	maths::Vec3f position_error{};
+	maths::Vec2f const barycentric = UniformSampleTriangle(_ksi);
+	maths::Decimal const barycentric_z = 1._d - barycentric.x - barycentric.y;
+	maths::Point3f const &p0 = mesh_data_.vertices[vertex_index_[0]];
+	maths::Point3f const &p1 = mesh_data_.vertices[vertex_index_[1]];
+	maths::Point3f const &p2 = mesh_data_.vertices[vertex_index_[2]];
+	maths::Vec3f const b0{ barycentric.x * p0 };
+	maths::Vec3f const b1{ barycentric.y * p1 };
+	maths::Vec3f const b2{ barycentric_z * p2 };
+	position = maths::Point3f{ b0 + b1 + b2 };
+	if (mesh_data_.has_normals())
+	{
+		normal = maths::Normalized(
+			barycentric.x * mesh_data_.normals[vertex_index_[0]] +
+			barycentric.y * mesh_data_.normals[vertex_index_[1]] +
+			barycentric_z * mesh_data_.normals[vertex_index_[2]]);
+	}
+	else
+	{
+		normal = maths::Norm3f{ maths::Normalized(maths::Cross(p1 - p0, p2 - p0)) };
+	}
+	if (flip_normals)
+	{
+		normal = -normal;
+	}
+	position_error = maths::gamma(6u) * (maths::Abs(b0) + maths::Abs(b1) + maths::Abs(b2));
+	return SurfacePoint{ position, normal, position_error };
+}
+
+
 maths::Decimal
 Triangle::Area() const
 {
-	maths::Point3f const	&p0 = mesh_.vertices[vertex_index_[0]];
-	maths::Point3f const	&p1 = mesh_.vertices[vertex_index_[1]];
-	maths::Point3f const	&p2 = mesh_.vertices[vertex_index_[2]];
+	maths::Point3f const	&p0 = mesh_data_.vertices[vertex_index_[0]];
+	maths::Point3f const	&p1 = mesh_data_.vertices[vertex_index_[1]];
+	maths::Point3f const	&p2 = mesh_data_.vertices[vertex_index_[2]];
 	return .5_d * maths::Length(maths::Cross(p1 - p0, p2 - p0));
 }
 
@@ -236,10 +281,10 @@ Triangle::ObjectBounds() const
 {
 	return maths::Union(
 		maths::Bounds3f{
-			world_transform(mesh_.vertices[vertex_index_[0]], maths::Transform::kInverse),
-			world_transform(mesh_.vertices[vertex_index_[1]], maths::Transform::kInverse)
+			world_transform(mesh_data_.vertices[vertex_index_[0]], maths::Transform::kInverse),
+			world_transform(mesh_data_.vertices[vertex_index_[1]], maths::Transform::kInverse)
 		},
-		world_transform(mesh_.vertices[vertex_index_[2]], maths::Transform::kInverse)
+		world_transform(mesh_data_.vertices[vertex_index_[2]], maths::Transform::kInverse)
 	);
 }
 maths::Bounds3f
@@ -247,10 +292,10 @@ Triangle::WorldBounds() const
 {
 	return maths::Union(
 		maths::Bounds3f{
-			mesh_.vertices[vertex_index_[0]],
-			mesh_.vertices[vertex_index_[1]]
+			mesh_data_.vertices[vertex_index_[0]],
+			mesh_data_.vertices[vertex_index_[1]]
 		},
-		mesh_.vertices[vertex_index_[2]]
+		mesh_data_.vertices[vertex_index_[2]]
 	);
 }
 
@@ -258,8 +303,8 @@ maths::Point2f
 Triangle::uv(uint32_t _index) const
 {
 	YS_ASSERT(_index < 3u);
-	if (mesh_.has_uv())
-		return mesh_.uv[vertex_index_[_index]];
+	if (mesh_data_.has_uvs())
+		return mesh_data_.uvs[vertex_index_[_index]];
 	else
 		return maths::Point2f(_index < 1u ? 0._d : 1._d, _index < 2u ? 0._d : 1._d);
 }

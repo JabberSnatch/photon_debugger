@@ -11,11 +11,6 @@ namespace maths
 {
 
 
-static constexpr Decimal machine_epsilon = std::numeric_limits<Decimal>::epsilon() * 0.5_d;
-// NOTE: Higham (2002, section 3.1) bounding term for (1+-Epsilon)^n for n*Epsilon < 1
-constexpr Decimal gamma(uint32_t _n) { return (_n * machine_epsilon) / (1._d - _n * machine_epsilon); }
-
-
 // Short for Running Error Decimal
 struct REDecimal
 {

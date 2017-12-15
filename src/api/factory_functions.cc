@@ -6,7 +6,7 @@
 #include "boost/numeric/conversion/cast.hpp"
 
 #include "api/param_set.h"
-#include "api/render_context.h"
+#include "api/resource_context.h"
 #include "maths/transform.h"
 #include "raytracer/camera.h"
 #include "raytracer/film.h"
@@ -17,28 +17,26 @@
 #include "raytracer/shape.h"
 #include "raytracer/shapes/sphere.h"
 #include "raytracer/shapes/triangle.h"
-#include "raytracer/triangle_mesh.h"
+#include "raytracer/shapes/triangle_mesh.h"
 
 
 namespace api {
 
-raytracer::Camera *MakeCamera(api::RenderContext &_context, api::ParamSet const &_params);
+raytracer::Camera *MakeCamera(api::ResourceContext &_context, api::ParamSet const &_params);
 //
-raytracer::Film *MakeFilm(api::RenderContext &_context, api::ParamSet const &_params);
+raytracer::Film *MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params);
 //
-std::vector<raytracer::Shape*> MakeSphere(api::RenderContext &_context, 
-										  api::ParamSet const &_params);
-std::vector<raytracer::Shape*> MakeTriangleMesh(api::RenderContext &_context,
-												api::ParamSet const &_params);
+raytracer::Shape* MakeSphere(api::ResourceContext &_context, api::ParamSet const &_params);
+raytracer::Shape* MakeTriangleMesh(api::ResourceContext &_context, api::ParamSet const &_params);
 //
-raytracer::Sampler* MakeRandomSampler(api::RenderContext &_context,
+raytracer::Sampler* MakeRandomSampler(api::ResourceContext &_context,
 									  api::ParamSet const &_params);
-raytracer::Sampler* MakeHaltonSampler(api::RenderContext &_context,
+raytracer::Sampler* MakeHaltonSampler(api::ResourceContext &_context,
 									  api::ParamSet const &_params);
 //
-raytracer::Integrator* MakeNormalIntegrator(api::RenderContext &_context,
+raytracer::Integrator* MakeNormalIntegrator(api::ResourceContext &_context,
 											api::ParamSet const &_params);
-raytracer::Integrator* MakeAOIntegrator(api::RenderContext &_context,
+raytracer::Integrator* MakeAOIntegrator(api::ResourceContext &_context,
 										api::ParamSet const &_params);
 
 
@@ -103,7 +101,7 @@ LookupIntegratorFunc(std::string const &_id)
 
 
 raytracer::Camera*
-MakeCamera(api::RenderContext &_context, api::ParamSet const &_params)
+MakeCamera(api::ResourceContext &_context, api::ParamSet const &_params)
 {
 	maths::Point3f const	position = static_cast<maths::Point3f>(
 		_params.FindFloat<3>("position", { 0._d, 0._d, 0._d })
@@ -113,13 +111,15 @@ MakeCamera(api::RenderContext &_context, api::ParamSet const &_params)
 		);
 	maths::Vec3f const		up = _params.FindFloat<3>("up", { 0._d, 0._d, 1._d });
 	maths::Decimal const	fov = _params.FindFloat("fov", 60._d);
-
+	//
+	ResourceContext::ObjectDescriptor const &film_desc =
+		_context.GetAnyDescOfType(ResourceContext::ObjectType::kFilm);
 	return new (_context.mem_region()) raytracer::Camera{
-		position, lookat, up, fov, _context.film() };
+		position, lookat, up, fov, _context.Fetch<raytracer::Film>(film_desc.unique_id) };
 }
 
 raytracer::Film*
-MakeFilm(api::RenderContext &_context, api::ParamSet const &_params)
+MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params)
 {
 	maths::Vec2i const		resolution = _params.FindInt<2>("resolution", { 800, 600 });
 	maths::Decimal const	side = _params.FindFloat("side", .036_d);
@@ -128,8 +128,8 @@ MakeFilm(api::RenderContext &_context, api::ParamSet const &_params)
 }
 
 
-std::vector<raytracer::Shape*>
-MakeSphere(api::RenderContext &_context, api::ParamSet const &_params)
+raytracer::Shape*
+MakeSphere(api::ResourceContext &_context, api::ParamSet const &_params)
 {
 	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
 	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
@@ -140,12 +140,12 @@ MakeSphere(api::RenderContext &_context, api::ParamSet const &_params)
 	maths::Decimal const	phi_max = _params.FindFloat("phi_max", 360._d);
 	raytracer::Shape *const sphere_shape = new (_context.mem_region())
 		raytracer::Sphere{ world_transform, flip_normals, radius, z_min, z_max, phi_max };
-	return std::vector<raytracer::Shape*>{ sphere_shape };
+	return sphere_shape;
 }
-std::vector<raytracer::Shape*>
-MakeTriangleMesh(api::RenderContext &_context, api::ParamSet const &_params)
+raytracer::Shape*
+MakeTriangleMesh(api::ResourceContext &_context, api::ParamSet const &_params)
 {
-	std::vector<raytracer::Shape*>	result{};
+	raytracer::Shape* result = nullptr;
 	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
 	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
 	bool const				flip_normals = _params.FindBool("flip_normals", false);
@@ -155,28 +155,18 @@ MakeTriangleMesh(api::RenderContext &_context, api::ParamSet const &_params)
 		boost::filesystem::path path(path_string);
 		if (path.is_relative())
 		{
-			boost::filesystem::path workdir(_context.workdir);
+			boost::filesystem::path workdir(_context.workdir());
 			path = workdir / path;
 			YS_ASSERT(path.is_absolute());
 		}
 		//
 		if (boost::filesystem::exists(path))
 		{
-			raytracer::TriangleMesh *triangle_mesh = 
-				raytracer::ReadTriangleMeshFromFile(path.generic_string(), 
-													world_transform, 
-													_context.mem_region());
-			if (triangle_mesh)
-			{
-				result.reserve(triangle_mesh->triangle_count);
-				for (int32_t face_index = 0; face_index < triangle_mesh->triangle_count; ++face_index)
-				{
-					result.emplace_back(new (_context.mem_region()) raytracer::Triangle(
-						world_transform, flip_normals, *triangle_mesh, face_index
-					));
-				}
-			}
-			else
+			result = raytracer::ReadTriangleMeshFromFile(path.generic_string(),
+														 world_transform,
+														 flip_normals,
+														 _context.mem_region());
+			if (!result)
 			{
 				LOG_ERROR(tools::kChannelGeneral,
 						  "Failed to load a triangle mesh at path : " + path.generic_string());
@@ -197,7 +187,7 @@ MakeTriangleMesh(api::RenderContext &_context, api::ParamSet const &_params)
 
 
 raytracer::Sampler*
-MakeRandomSampler(api::RenderContext &_context, api::ParamSet const &_params)
+MakeRandomSampler(api::ResourceContext &_context, api::ParamSet const &_params)
 {
 	uint64_t const	seed = _params.FindUint("seed", std::random_device()());
 	uint64_t const	samples_per_pixel = _params.FindUint("sample_count", 1u);
@@ -207,7 +197,7 @@ MakeRandomSampler(api::RenderContext &_context, api::ParamSet const &_params)
 	return random_sampler;
 }
 raytracer::Sampler*
-MakeHaltonSampler(api::RenderContext &_context, api::ParamSet const &_params)
+MakeHaltonSampler(api::ResourceContext &_context, api::ParamSet const &_params)
 {
 	uint64_t const	seed = _params.FindUint("seed", std::random_device()());
 	uint64_t const	samples_per_pixel = _params.FindUint("sample_count", 1u);
@@ -220,8 +210,9 @@ MakeHaltonSampler(api::RenderContext &_context, api::ParamSet const &_params)
 
 
 raytracer::Integrator*
-MakeNormalIntegrator(api::RenderContext &_context, api::ParamSet const &_params)
+MakeNormalIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 {
+	// REFACTOR: Integrator should lookup its dependecies upon construction
 	bool const	remap = _params.FindBool("remap", false);
 	bool const	absolute = _params.FindBool("absolute", false);
 	raytracer::Integrator *const normal_integrator = new (_context.mem_region())
@@ -229,7 +220,7 @@ MakeNormalIntegrator(api::RenderContext &_context, api::ParamSet const &_params)
 	return normal_integrator;
 }
 raytracer::Integrator*
-MakeAOIntegrator(api::RenderContext &_context, api::ParamSet const &_params)
+MakeAOIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 {
 	uint64_t const	sample_count = _params.FindUint("sample_count", 1u);
 	bool const	shading_geometry = _params.FindBool("shading_geometry", false);

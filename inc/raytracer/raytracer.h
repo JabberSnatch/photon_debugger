@@ -17,7 +17,7 @@ class Shape;
 class Sphere;
 class Triangle;
 
-struct TriangleMesh;
+class TriangleMesh;
 
 class Primitive;
 class GeometryPrimitive;

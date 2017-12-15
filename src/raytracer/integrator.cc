@@ -21,7 +21,7 @@ namespace raytracer {
 
 
 void
-Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
+Integrator::Integrate(Scene const &_scene, maths::Decimal _t)
 {
 	TIMED_SCOPE(Integrator_Integrate);
 
@@ -53,7 +53,7 @@ Integrator::Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t)
 				maths::Ray ray = camera_->Ray(uv.u, uv.v, _t);
 				raytracer::SurfaceInteraction closest_hit_info;
 				bool intersected = false;
-				for (raytracer::Primitive const *primitive : _scene)
+				for (raytracer::Primitive const *primitive : _scene._primitives)
 				{
 					bool const ret_intersect = primitive->Intersect(ray, closest_hit_info);
 					intersected = ret_intersect || intersected;
@@ -84,7 +84,7 @@ NormalIntegrator::Prepare()
 maths::Vec3f
 NormalIntegrator::Li(maths::Ray const &_ray,
 					 raytracer::SurfaceInteraction const &_hit,
-					 std::vector<Primitive*> const &_scene)
+					 Scene const &_scene)
 {
 	static maths::Vec3f const up_color{ 0._d, 0._d, 1._d }, down_color{ 0._d, 1._d, 0._d };
 	maths::Vec3f result(0._d);
@@ -122,26 +122,10 @@ AOIntegrator::Prepare()
 }
 
 
-maths::Point3f
-OffsetOriginFromErrorBounds(maths::Point3f const &_position,
-							maths::Vec3f const &_normal,
-							maths::Vec3f const &_position_error)
-{
-	maths::Decimal const d = maths::Dot(maths::Abs(_normal), _position_error);
-	maths::Vec3f const offset = d * _normal;
-	maths::Point3f result = _position + offset * 2._d;
-	for (int i = 0; i < 3; ++i)
-	{
-		if (offset[i] > 0._d) result[i] = maths::NextDecimalUp(result[i]);
-		else if (offset[i] < 0._d) result[i] = maths::NextDecimalDown(result[i]);
-	}
-	return result;
-}
-
 maths::Vec3f
 AOIntegrator::Li(maths::Ray const &_ray,
 				 raytracer::SurfaceInteraction const &_hit,
-				 std::vector<Primitive*> const &_scene)
+				 Scene const &_scene)
 {
 	TIMED_SCOPE(AOIntegrator_Li);
 	if (_hit.primitive != nullptr)
@@ -175,20 +159,22 @@ AOIntegrator::Li(maths::Ray const &_ray,
 				if (maths::Dot(wi, geometry_normal) >= 0._d)
 				{ // easy case, just use the standard ray
 					cast_primary_ray = true;
-					//origin = OffsetOriginFromErrorBounds(_hit.position, normal, _hit.position_error);
-					origin = OffsetOriginFromErrorBounds(_hit.position, geometry_normal, _hit.position_error);
+					origin =
+						SurfaceInteraction::OffsetOriginFromErrorBounds(_hit.position,
+																		geometry_normal,
+																		_hit.position_error);
 				}
 				else
 				{ // cast a ray from underneath the primitive surface
 					maths::Point3f const secondary_ray_origin =
-						OffsetOriginFromErrorBounds(_hit.position,
-													-geometry_normal,
-													_hit.position_error);
+						SurfaceInteraction::OffsetOriginFromErrorBounds(_hit.position,
+																		-geometry_normal,
+																		_hit.position_error);
 					maths::Ray secondary_ray{ secondary_ray_origin, wi,
 						maths::infinity<maths::Decimal>, _ray.time };
 					raytracer::SurfaceInteraction hit_info;
 					bool intersected = false;
-					for (raytracer::Primitive const *primitive : _scene)
+					for (raytracer::Primitive const *primitive : _scene._primitives)
 					{
 						bool const ret_intersect = primitive->Intersect(secondary_ray, hit_info);
 						intersected = ret_intersect || intersected;
@@ -201,9 +187,8 @@ AOIntegrator::Li(maths::Ray const &_ray,
 							maths::Vec3f const hit_shading_normal{ hit_info.shading.normal() };
 							cast_primary_ray = true;
 							fixed_shading_normal_self_hitting = true;
-							origin = OffsetOriginFromErrorBounds(hit_info.position,
-																 hit_shading_normal,
-																 hit_info.position_error);
+							origin = SurfaceInteraction::OffsetOriginFromErrorBounds(
+								hit_info.position, hit_shading_normal, hit_info.position_error);
 						}
 						else
 						{ // outside case, this is a valid AO result
@@ -227,7 +212,8 @@ AOIntegrator::Li(maths::Ray const &_ray,
 			else
 			{ // shading geometry is disabled, no risk of getting a self-hit
 				cast_primary_ray = true;
-				origin = OffsetOriginFromErrorBounds(_hit.position, normal, _hit.position_error);
+				origin = SurfaceInteraction::OffsetOriginFromErrorBounds(
+					_hit.position, normal, _hit.position_error);
 			}
 			//
 			if (cast_primary_ray)
@@ -235,7 +221,7 @@ AOIntegrator::Li(maths::Ray const &_ray,
 				maths::Ray ray{ origin, wi, maths::infinity<maths::Decimal>, _ray.time };
 				raytracer::SurfaceInteraction closest_hit_info;
 				bool intersected = false;
-				for (raytracer::Primitive const *primitive : _scene)
+				for (raytracer::Primitive const *primitive : _scene._primitives)
 				{
 					bool const ret_intersect = primitive->Intersect(ray, closest_hit_info);
 					intersected = ret_intersect || intersected;

@@ -11,6 +11,7 @@
 
 namespace raytracer {
 
+
 Sphere::Sphere(maths::Transform const &_world_transform, bool _flip_normals,
 			   maths::Decimal _radius, maths::Decimal _z_min, maths::Decimal _z_max,
 			   maths::Decimal _phi_max) :
@@ -22,6 +23,7 @@ Sphere::Sphere(maths::Transform const &_world_transform, bool _flip_normals,
 	theta_max{ std::acos(maths::Clamp(z_max / radius, -1._d, 1._d)) },
 	phi_max{ maths::Radians(maths::Clamp(_phi_max, 0._d, 360._d)) }
 {}
+
 
 bool
 Sphere::Intersect(maths::Ray const &_ray,
@@ -154,11 +156,131 @@ Sphere::DoesIntersect(maths::Ray const &_ray) const
 	return false;
 }
 
+
 maths::Decimal
 Sphere::Area() const
 {
 	return phi_max * radius * (z_max - z_min);
 }
+
+
+maths::Vec3f
+UniformSampleSphere(maths::Vec2f const &_ksi)
+{
+	maths::Decimal const ksi1 = maths::ExtendToOne(_ksi.x);
+	maths::Decimal const ksi2 = maths::ExtendToOne(_ksi.y);
+	maths::Decimal const sin_theta = 2._d * std::sqrt(ksi1 * (1._d - ksi1));
+	maths::Decimal const phi = 2._d * maths::pi<maths::Decimal> * ksi2;
+	maths::Decimal const z = 1._d - 2._d * ksi1;
+	YS_ASSERT(z >= -1._d);
+	YS_ASSERT(z <= 1._d);
+	maths::Vec3f const result{ sin_theta * std::cos(phi), sin_theta * std::sin(phi), z };
+	return result;
+}
+
+Shape::SurfacePoint
+Sphere::SampleSurface(maths::Vec2f const &_ksi) const
+{
+	YS_ASSERT(z_max == radius && z_min == -radius);
+	YS_ASSERT(phi_max == maths::Radians(360._d));
+	YS_ASSERT(theta_max == maths::Radians(90._d));
+	YS_ASSERT(theta_min == maths::Radians(-90._d));
+	maths::Point3f const base_position =
+		maths::Point3f(0._d) + radius * UniformSampleSphere(_ksi);
+	maths::Norm3f const base_normal = maths::Normalized(
+		world_transform(maths::Norm3f{ base_position.x, base_position.y, base_position.z }));
+	maths::Norm3f const normal = (flip_normals) ? -base_normal : base_normal;
+	maths::Point3f const reproj_position{
+		base_position * (radius / maths::Distance(base_position, maths::Point3f(0._d))) };
+	maths::Vec3f const base_position_error =
+		maths::gamma(5u) * maths::Abs(maths::Vec3f{ reproj_position });
+	maths::Vec3f position_error(0._d);
+	maths::Point3f const position =
+		world_transform(reproj_position, base_position_error, position_error);
+	return SurfacePoint{ position, normal, position_error };
+}
+
+
+maths::Vec3f
+SphericalToVector(maths::Decimal const _sin_theta, maths::Decimal const _cos_theta,
+				  maths::Decimal const _phi,
+				  maths::Vec3f const &_x, maths::Vec3f const &_y, maths::Vec3f const &_z)
+{
+	return _sin_theta * std::cos(_phi) * _x + _sin_theta * std::sin(_phi) * _y + _cos_theta * _z;
+}
+
+Shape::SurfacePoint
+Sphere::SampleVisibleSurface(SurfaceInteraction const &_origin, maths::Vec2f const &_ksi) const
+{
+	YS_ASSERT(z_max == radius && z_min == -radius);
+	YS_ASSERT(phi_max == maths::Radians(360._d));
+	YS_ASSERT(theta_max == maths::Radians(90._d));
+	YS_ASSERT(theta_min == maths::Radians(-90._d));
+	maths::Point3f const center_world = world_transform(maths::Point3f(0._d));
+	maths::Vec3f const origin_to_sphere = center_world - _origin.position;
+	maths::Vec3f const osw = maths::Normalized(origin_to_sphere);
+	maths::Point3f const origin = _origin.OffsetOriginFromErrorBounds(osw);
+	maths::Decimal const sqr_radius = radius * radius;
+	if (maths::SqrDistance(origin, center_world) <= sqr_radius)
+		return SampleSurface(_ksi);
+	maths::Decimal const sqr_sin_theta_max =
+		sqr_radius / maths::SqrDistance(_origin.position, center_world);
+	maths::Decimal const cos_theta_max =
+		std::sqrt(maths::Max(0._d, 1._d - sqr_sin_theta_max));
+	maths::Decimal const cos_theta = (1._d - _ksi.x) + _ksi.x * cos_theta_max;
+	maths::Decimal const sin_theta = std::sqrt(maths::Max(0._d, 1._d - cos_theta * cos_theta));
+	maths::Decimal const phi = _ksi.y * 2._d * maths::pi<maths::Decimal>;
+	maths::Decimal const sqr_distance_to_sphere = maths::SqrLength(origin_to_sphere);
+	maths::Decimal const distance_to_sphere = std::sqrt(sqr_distance_to_sphere);
+	maths::Decimal const distance_to_sample =
+		distance_to_sphere * cos_theta - std::sqrt(maths::Max(0._d,
+			sqr_radius - sqr_distance_to_sphere * sin_theta * sin_theta));
+	maths::Decimal const sqr_distance_to_sample = distance_to_sample * distance_to_sample;
+	maths::Decimal const cos_alpha =
+		(sqr_distance_to_sphere + sqr_radius - sqr_distance_to_sample) /
+		(2._d * distance_to_sphere * radius);
+	maths::Decimal const sin_alpha =
+		std::sqrt(maths::Max(0._d, 1._d - cos_alpha * cos_alpha));
+	maths::Vec3f basis_x, basis_y;
+	maths::OrthonormalBasis(osw, basis_x, basis_y);
+	maths::Norm3f const base_normal{ SphericalToVector(sin_theta, cos_theta, phi,
+													   -basis_x, -basis_y, -osw) };
+	maths::Point3f const base_position = radius *
+		maths::Point3f{ base_normal.x, base_normal.y, base_normal.z };
+	maths::Norm3f const normal = world_transform((flip_normals) ? -base_normal : base_normal);
+	maths::Point3f const reproj_position{
+		base_position * (radius / maths::Distance(base_position, maths::Point3f(0._d))) };
+	maths::Vec3f const base_position_error =
+		maths::gamma(5u) * maths::Abs(maths::Vec3f{ reproj_position });
+	maths::Vec3f position_error(0._d);
+	maths::Point3f const position =
+		world_transform(reproj_position, base_position_error, position_error);
+	return SurfacePoint{ position, normal, position_error };
+}
+
+
+maths::Decimal
+UniformConePdf(maths::Decimal _cos_theta_max)
+{
+	return 1._d / (2._d * maths::pi<maths::Decimal> * (1._d - _cos_theta_max));
+}
+
+maths::Decimal
+Sphere::VisibleSurfacePdf(SurfaceInteraction const &_origin, maths::Vec3f const &_wi) const
+{
+	maths::Point3f const center_world = world_transform(maths::Point3f(0._d));
+	maths::Vec3f const origin_to_center = center_world - _origin.position;
+	maths::Point3f const origin =
+		_origin.OffsetOriginFromErrorBounds(origin_to_center);
+	maths::Decimal const sqr_radius = radius * radius;
+	if (maths::SqrDistance(origin, center_world) <= sqr_radius)
+		return Shape::VisibleSurfacePdf(_origin, _wi);
+	maths::Decimal const sqr_sin_theta_max = sqr_radius / maths::SqrLength(origin_to_center);
+	maths::Decimal const cos_theta_max = std::sqrt(maths::Max(0._d, 1._d - sqr_sin_theta_max));
+	maths::Decimal result = UniformConePdf(cos_theta_max);
+	return result;
+}
+
 
 maths::Bounds3f
 Sphere::ObjectBounds() const

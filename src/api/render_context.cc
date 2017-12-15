@@ -5,32 +5,31 @@ namespace api
 
 
 RenderContext::RenderContext() :
-	mem_region_{},
-	transform_cache_{},
 	camera_{ nullptr },
-	film_{ nullptr },
 	sampler_{ nullptr },
 	integrator_{ nullptr },
 	primitives_{}
 {}
 
 
+RenderContext::RenderContext(raytracer::Camera &_camera,
+							 raytracer::Sampler &_sampler,
+							 raytracer::Integrator &_integrator,
+							 PrimitiveContainer_t &_primitives) :
+	camera_{ &_camera },
+	sampler_{ &_sampler },
+	integrator_{ &_integrator },
+	primitives_{ _primitives }
+{}
+
+
 void
 RenderContext::Clear()
 {
-	mem_region_.Clear();
-	film_ = nullptr;
 	camera_ = nullptr;
 	sampler_ = nullptr;
 	integrator_ = nullptr;
 	primitives_.clear();
-}
-
-
-void
-RenderContext::SetFilm(raytracer::Film *_f)
-{
-	film_ = _f;
 }
 
 
@@ -65,29 +64,19 @@ RenderContext::AddPrimitive(raytracer::Primitive *_prim)
 bool
 RenderContext::GoodForRender() const
 {
-	return (camera_ && film_ && sampler_ && integrator_);
+	return (camera_ && sampler_ && integrator_);
 }
 
 
 void
 RenderContext::RenderAndWrite(std::string const &_path)
 {
-	integrator_->SetFilm(film_);
+	// REFACTOR: Still some work to do here, as soon as Integrator is constructed from its dependencies
+	integrator_->SetFilm(&(camera_->film()));
 	integrator_->SetCamera(camera_);
 	integrator_->SetSampler(sampler_);
-	constexpr uint32_t bvh_node_max_size = 20;
 	integrator_->Prepare();
-	if (primitives_.size() > bvh_node_max_size)
-	{
-		LOG_INFO(tools::kChannelGeneral, "Primitive count exceeded threshold, building BVH");
-		raytracer::Primitive *const bvh =
-			new (mem_region()) raytracer::BvhAccelerator(primitives_, bvh_node_max_size);
-		integrator_->Integrate({ bvh }, 0._d);
-	}
-	else
-	{
-		integrator_->Integrate(primitives_, 0._d);
-	}
+	integrator_->Integrate({ primitives_, {} }, 0._d);
 	camera_->WriteToFile(_path);
 }
 

@@ -35,9 +35,11 @@ enum TokenId
 	kNone,
 
 	kOutput,
+	kObjectId,
 	kFilm,
 	kCamera,
 	kShape,
+	kLight,
 	kSampler,
 	kIntegrator,
 	kScopeBegin,
@@ -60,9 +62,11 @@ enum TokenId
 	kTranslateGroup,
 	kRotateGroup,
 	kScaleGroup,
+	kObjectIdGroup,
 	kFilmGroup,
 	kCameraGroup,
 	kShapeGroup,
+	kLightGroup,
 	kSamplerGroup,
 	kIntegratorGroup,
 	kOutputGroup,
@@ -96,9 +100,11 @@ using ProductionStack_t = std::vector<ProductionMetadata>;
 TokenTable_t const		token_table
 {
 	{ "Output", kOutput },
+	{ "ID", kObjectId },
 	{ "Film", kFilm },
 	{ "Camera", kCamera },
 	{ "Shape", kShape },
+	{ "Light", kLight },
 	{ "Sampler", kSampler },
 	{ "Integrator", kIntegrator },
 	{ "{", kScopeBegin },
@@ -130,6 +136,7 @@ ProductionRules_t const		production_rules
 		{ kFilm, { kFilmGroup, kSceneGroup } },
 		{ kCamera, { kCameraGroup, kSceneGroup } },
 		{ kShape, { kShapeGroup, kSceneGroup } },
+		{ kLight, { kLightGroup, kSceneGroup } },
 		{ kSampler, { kSamplerGroup, kSceneGroup } },
 		{ kIntegrator, { kIntegratorGroup, kSceneGroup } },
 		{ kDefault, { kEnd } }
@@ -151,6 +158,10 @@ ProductionRules_t const		production_rules
 		{ kDefault, { kScale, kNumber, kNumber, kNumber } },
 	} },
 
+	{ kObjectIdGroup, {
+		{ kDefault, { kObjectId, kString } },
+	} },
+
 	{ kFilmGroup, {
 		{ kDefault, { kFilm, kScopeBegin, kPropertiesGroup, kScopeEnd } },
 	} },
@@ -161,6 +172,9 @@ ProductionRules_t const		production_rules
 
 	{ kShapeGroup, {
 		{ kDefault, { kShape, kString, kScopeBegin, kAttributeGroup, kScopeEnd } },
+	} },
+	{ kLightGroup, {
+		{ kDefault, { kLight, kString, kScopeBegin, kAttributeGroup, kScopeEnd } },
 	} },
 	{ kSamplerGroup, {
 		{ kDefault, { kSampler, kString, kScopeBegin, kAttributeGroup, kScopeEnd } },
@@ -194,6 +208,7 @@ ProductionRules_t const		production_rules
 		{ kRotate, { kRotateGroup, kAttributeGroup } },
 		{ kScale, { kScaleGroup, kAttributeGroup } },
 		{ kTransformIdentity, { kTransformIdentity, kAttributeGroup } },
+		{ kObjectId, { kObjectIdGroup, kAttributeGroup } },
 
 		{ kString, { kParamGroup, kAttributeGroup } },
 		{ kDefault, {} },
@@ -208,7 +223,13 @@ using TranslationTable_t = std::unordered_map<TokenId, TranslationCallback_t>;
 void	ParamGroup(TranslationState &_state, 
 				   std::vector<Token>::const_iterator _production_begin,
 				   std::vector<Token>::const_iterator _production_end);
+void	ObjectIdGroup(TranslationState &_state,
+					  std::vector<Token>::const_iterator _production_begin,
+					  std::vector<Token>::const_iterator _production_end);
 void	ShapeGroup(TranslationState &_state, 
+				   std::vector<Token>::const_iterator _production_begin,
+				   std::vector<Token>::const_iterator _production_end);
+void	LightGroup(TranslationState &_state,
 				   std::vector<Token>::const_iterator _production_begin,
 				   std::vector<Token>::const_iterator _production_end);
 void	SamplerGroup(TranslationState &_state,
@@ -248,7 +269,9 @@ void	ScopeEndTerminal(TranslationState &_state,
 
 TranslationTable_t	semantic_actions = {
 	{ kParamGroup, &api::ParamGroup },
+	{ kObjectIdGroup, &api::ObjectIdGroup },
 	{ kShapeGroup, &api::ShapeGroup },
+	{ kLightGroup, &api::LightGroup },
 	{ kSamplerGroup, &api::SamplerGroup },
 	{ kIntegratorGroup, &api::IntegratorGroup },
 	{ kFilmGroup, &api::FilmGroup },
@@ -567,6 +590,16 @@ ParamGroup(TranslationState &_state,
 }
 
 void
+ObjectIdGroup(TranslationState &_state,
+			  std::vector<Token>::const_iterator _production_begin,
+			  std::vector<Token>::const_iterator _production_end)
+{
+	LOG_INFO(tools::kChannelParsing, "ObjectId group ended, applying semantic action..");
+	std::string const	object_id = std::next(_production_begin, 1)->text;
+	_state.ObjectId(object_id);
+}
+
+void
 ShapeGroup(TranslationState &_state,
 		   std::vector<Token>::const_iterator _production_begin,
 		   std::vector<Token>::const_iterator _production_end)
@@ -574,6 +607,15 @@ ShapeGroup(TranslationState &_state,
 	LOG_INFO(tools::kChannelParsing, "Shape group ended, applying semantic action..");
 	std::string const	shape_type = std::next(_production_begin, 1)->text;
 	_state.Shape(shape_type);
+}
+void
+LightGroup(TranslationState &_state,
+		   std::vector<Token>::const_iterator _production_begin,
+		   std::vector<Token>::const_iterator _production_end)
+{
+	LOG_INFO(tools::kChannelParsing, "Light group ended, applying semantic action..");
+	std::string const	light_type = std::next(_production_begin, 1)->text;
+	_state.Light(light_type);
 }
 void
 SamplerGroup(TranslationState &_state,

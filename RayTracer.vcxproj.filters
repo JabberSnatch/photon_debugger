@@ -78,9 +78,6 @@
     <ClInclude Include="inc\raytracer\surface_interaction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\raytracer\triangle_mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inc\core\alloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -150,6 +147,21 @@
     <ClInclude Include="inc\raytracer\samplers\halton_sampler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\raytracer\light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\integrators\direct_lighting_integrator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\api\resource_context.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\shapes\triangle_mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\raytracer\triangle_mesh_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\raytracer_main.cc">
@@ -177,9 +189,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\raytracer\shape.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\raytracer\triangle_mesh.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\maths\transform.cc">
@@ -240,6 +249,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\raytracer\samplers\halton_sampler.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\raytracer\light.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\raytracer\integrators\direct_lighting_integrator.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\raytracer\triangle_mesh_data.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\raytracer\shapes\triangle_mesh.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\api\resource_context.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

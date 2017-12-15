@@ -20,7 +20,10 @@ GeometryPrimitive::Intersect(maths::Ray &_ray, SurfaceInteraction &_hit_info) co
 		return false;
 
 	_ray.tMax = t_hit;
-	_hit_info.primitive = this;
+	if (_hit_info.primitive == nullptr)
+	{
+		_hit_info.primitive = this;
+	}
 
 	return true;
 }

@@ -12,17 +12,24 @@ namespace raytracer {
 
 class Camera;
 class Film;
+class Light;
 class Sampler;
-class Primitive;
 class SurfaceInteraction;
+class Primitive;
 
 
 class Integrator
 {
 public:
+	struct Scene
+	{
+		std::vector<Primitive const *> const &_primitives;
+		std::vector<Light const *> const &_lights;
+	};
+public:
 	virtual ~Integrator() = default;
 	virtual void Prepare() = 0;
-	void Integrate(std::vector<Primitive*> const &_scene, maths::Decimal _t);
+	void Integrate(Scene const &_scene, maths::Decimal _t);
 	void SetCamera(Camera *_camera) { camera_ = _camera; }
 	void SetFilm(Film *_film) { film_ = _film; }
 	void SetSampler(Sampler *_sampler) { sampler_ = _sampler; }
@@ -31,7 +38,7 @@ protected:
 private:
 	virtual maths::Vec3f Li(maths::Ray const &_ray,
 							raytracer::SurfaceInteraction const &_hit,
-							std::vector<Primitive*> const &_scene) = 0;
+							Scene const &_scene) = 0;
 private:
 	Camera *camera_ = nullptr;
 	Film *film_ = nullptr;
@@ -48,7 +55,7 @@ public:
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,
 					raytracer::SurfaceInteraction const &_hit,
-					std::vector<Primitive*> const &_scene) override;
+					Scene const &_scene) override;
 private:
 	bool remap_;
 	bool absolute_;
@@ -69,7 +76,7 @@ public:
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,
 					raytracer::SurfaceInteraction const &_hit,
-					std::vector<Primitive*> const &_scene) override;
+					Scene const &_scene) override;
 private:
 	uint64_t sample_count_;
 	bool use_shading_geometry_;

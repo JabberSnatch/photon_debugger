@@ -123,14 +123,18 @@ uint64_t RNG::Get64b(uint64_t _max)
 
 float RNG::GetSingle()
 {
-	constexpr float factor = (1.f - std::numeric_limits<float>::epsilon()) / std::numeric_limits<uint32_t>::max();
+	constexpr float factor =
+		(1.f - (.5f * std::numeric_limits<float>::epsilon())) /
+		std::numeric_limits<uint32_t>::max();
 	return static_cast<float>(Get32b()) * factor;
 }
 
 
 double RNG::GetDouble()
 {
-	constexpr double factor = (1.0 - std::numeric_limits<double>::epsilon()) / std::numeric_limits<uint64_t>::max();
+	constexpr double factor =
+		(1.0 - (.5 * std::numeric_limits<double>::epsilon())) /
+		std::numeric_limits<uint64_t>::max();
 	return static_cast<double>(Get64b()) * factor;
 }
 

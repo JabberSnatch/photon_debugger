@@ -24,7 +24,7 @@ class BvhAccelerator
 	struct LinearBvhNode;
 
 public:
-	using PrimitiveArray_t = std::vector<Primitive*>;
+	using PrimitiveArray_t = std::vector<Primitive const*>;
 
 	BvhAccelerator(PrimitiveArray_t const &_primitives,
 				   uint32_t _node_max_size);

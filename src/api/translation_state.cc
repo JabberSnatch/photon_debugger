@@ -3,6 +3,7 @@
 #include "boost/filesystem.hpp"
 
 #include "api/factory_functions.h"
+#include "api/render_context.h"
 #include "maths/transform.h"
 
 
@@ -12,10 +13,9 @@ namespace api {
 TranslationState::TranslationState():
 	workdir_{ boost::filesystem::current_path().string() },
 	output_path_{ boost::filesystem::absolute("image.png", workdir_).string() },
-	render_context_{},
+	resource_context_{}, render_context_{},
 	scope_depth_{ 1 }, transform_stack_{ maths::Transform{} },
-	mem_region_{}, parameters_{new (mem_region_) ParamSet()},
-	scene_desc_{}
+	cached_object_id_{ "" }, parameters_{ nullptr }
 {}
 void
 TranslationState::Workdir(std::string const &_absolute_path)
@@ -29,32 +29,58 @@ TranslationState::Output(std::string const &_relative_path)
 	output_path_ = boost::filesystem::absolute(_relative_path, workdir_).string();
 }
 void
+TranslationState::ObjectId(std::string const &_object_id)
+{
+	bool const is_object_id_free = resource_context_.IsUniqueIdFree(_object_id);
+	if (is_object_id_free)
+	{
+		if (cached_object_id_.empty())
+		{
+			cached_object_id_ = _object_id;
+		}
+		else
+		{
+			// Ideally, the parser should be in charge of catching this error
+			LOG_ERROR(tools::kChannelParsing, "An object has more than one ID field, ignored the latest");
+		}
+	}
+	else
+	{
+		LOG_ERROR(tools::kChannelParsing, "ObjectID " + _object_id + " is already used");
+	}
+}
+void
 TranslationState::Film()
 {
-	PushObjectDesc_(ObjectIdentifier::kFilm, "");
+	PushObjectDesc_(ResourceContext::ObjectType::kFilm, "");
 }
 void
 TranslationState::Camera()
 {
-	PushObjectDesc_(ObjectIdentifier::kCamera, "");
+	PushObjectDesc_(ResourceContext::ObjectType::kCamera, "");
 }
 void
 TranslationState::Shape(std::string const &_type)
 {
 	maths::Transform const &transform =
-		render_context_.transform_cache().Lookup(transform_stack_.back());
+		resource_context_.transform_cache().Lookup(transform_stack_.back());
 	param_set().PushTransform("world_transform", transform);
-	PushObjectDesc_(ObjectIdentifier::kShape, _type);
+	PushObjectDesc_(ResourceContext::ObjectType::kShape, _type);
+}
+void
+TranslationState::Light(std::string const &_type)
+{
+	PushObjectDesc_(ResourceContext::ObjectType::kLight, _type);
 }
 void
 TranslationState::Sampler(std::string const &_type)
 {
-	PushObjectDesc_(ObjectIdentifier::kSampler, _type);
+	PushObjectDesc_(ResourceContext::ObjectType::kSampler, _type);
 }
 void
 TranslationState::Integrator(std::string const &_type)
 {
-	PushObjectDesc_(ObjectIdentifier::kIntegrator, _type);
+	PushObjectDesc_(ResourceContext::ObjectType::kIntegrator, _type);
 }
 void
 TranslationState::Identity()
@@ -79,6 +105,7 @@ TranslationState::Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z)
 void
 TranslationState::ScopeBegin()
 {
+	parameters_ = new (resource_context_.mem_region()) ParamSet();
 	transform_stack_.push_back(transform_stack_.back());
 	scope_depth_++;
 }
@@ -87,7 +114,7 @@ TranslationState::ScopeEnd()
 {
 	scope_depth_--;
 	transform_stack_.pop_back();
-	param_set().Clear();
+	cached_object_id_.clear();
 }
 void
 TranslationState::SceneBegin()
@@ -104,72 +131,55 @@ TranslationState::SceneEnd()
 void
 TranslationState::SceneSetup_()
 {
-	{ // NOTE: the integrator has to be created first, see render_context.h:45,50,55
-		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kIntegrator);
-		YS_ASSERT(!descriptors.empty());
-		ObjectDescriptor_t const &descriptor = descriptors.back();
-		std::string const &type = std::get<0>(descriptor);
-		ParamSet const &parameters = *std::get<1>(descriptor);
-		MakeIntegratorCallback_t const &callback = LookupIntegratorFunc(type);
-		raytracer::Integrator *integrator = callback(render_context_, parameters);
-		render_context_.SetIntegrator(integrator);
-	}
+	ResourceContext::ObjectDescriptor const &integrator_desc =
+		resource_context_.GetAnyDescOfType(ResourceContext::ObjectType::kIntegrator);
+	ResourceContext::ObjectDescriptor const &camera_desc =
+		resource_context_.GetAnyDescOfType(ResourceContext::ObjectType::kCamera);
+	ResourceContext::ObjectDescriptor const &sampler_desc =
+		resource_context_.GetAnyDescOfType(ResourceContext::ObjectType::kSampler);
+	ResourceContext::ObjectDescriptorContainer_t shape_descs =
+		resource_context_.GetAllDescsOfType(ResourceContext::ObjectType::kShape);
+	//
+	raytracer::Integrator	&integrator =
+		resource_context_.Fetch<raytracer::Integrator>(integrator_desc.unique_id);
+	raytracer::Camera		&camera =
+		resource_context_.Fetch<raytracer::Camera>(camera_desc.unique_id);
+	raytracer::Sampler		&sampler =
+		resource_context_.Fetch<raytracer::Sampler>(sampler_desc.unique_id);
+	RenderContext::PrimitiveContainer_t primitives{};
+	primitives.reserve(shape_descs.size());
+	std::transform(shape_descs.cbegin(), shape_descs.cend(), std::back_inserter(primitives),
+				   [this](ResourceContext::ObjectDescriptor const *_object_desc) {
+		raytracer::Shape const &shape =
+			resource_context_.Fetch<raytracer::Shape>(_object_desc->unique_id);
+		return new (resource_context_.mem_region()) raytracer::GeometryPrimitive(shape);
+	});
+	//
+	constexpr uint32_t kBvhNodeMaxSize = 20;
+	if (primitives.size() > kBvhNodeMaxSize)
 	{
-		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kFilm);
-		YS_ASSERT(!descriptors.empty());
-		ParamSet const &parameters = *std::get<1>(descriptors.back());
-		raytracer::Film *film = MakeFilm(render_context_, parameters);
-		render_context_.SetFilm(film);
+		LOG_INFO(tools::kChannelGeneral, "Primitive count exceeded threshold, building BVH");
+		raytracer::Primitive *const bvh =
+			new (resource_context_.mem_region()) raytracer::BvhAccelerator(primitives, 
+																		   kBvhNodeMaxSize);
+		primitives.clear();
+		primitives.emplace_back(bvh);
 	}
+	else
 	{
-		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kCamera);
-		YS_ASSERT(!descriptors.empty());
-		ParamSet const &parameters = *std::get<1>(descriptors.back());
-		raytracer::Camera *camera = MakeCamera(render_context_, parameters);
-		render_context_.SetCamera(camera);
 	}
-	{
-		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kSampler);
-		YS_ASSERT(!descriptors.empty());
-		ObjectDescriptor_t const &descriptor = descriptors.back();
-		std::string const &type = std::get<0>(descriptor);
-		ParamSet const &parameters = *std::get<1>(descriptor);
-		MakeSamplerCallback_t const &callback = LookupSamplerFunc(type);
-		raytracer::Sampler *sampler = callback(render_context_, parameters);
-		render_context_.SetSampler(sampler);
-	}
-	{
-		ObjectDescriptorContainer_t &descriptors = object_desc_vector_(ObjectIdentifier::kShape);
-		for (ObjectDescriptorContainer_t::const_iterator odcit = descriptors.cbegin();
-			 odcit != descriptors.cend(); ++odcit)
-		{
-			ObjectDescriptor_t const &descriptor = *odcit;
-			std::string const &type = std::get<0>(descriptor);
-			ParamSet const &parameters = *std::get<1>(descriptor);
-			MakeShapeCallback_t	const &callback = LookupShapeFunc(type);
-			std::vector<raytracer::Shape*> shapes = callback(render_context_, parameters);
-			for (size_t i = 0; i < shapes.size(); ++i)
-			{
-				raytracer::GeometryPrimitive *prim =
-				new (render_context_.mem_region()) raytracer::GeometryPrimitive(*shapes[i]);
-				render_context_.AddPrimitive(prim);
-			}
-		}
-	}
+	//
+	render_context_ = api::RenderContext(camera, sampler, integrator, primitives);
 }
 
 void
-TranslationState::PushObjectDesc_(ObjectIdentifier const _id, std::string const &_name)
+TranslationState::PushObjectDesc_(ResourceContext::ObjectType const _type,
+								  std::string const &_subtype_id)
 {
-	ObjectDescriptorContainer_t &descriptors = object_desc_vector_(_id);
-	descriptors.push_back(std::make_tuple(_name, parameters_));
-	parameters_ = new (mem_region_) ParamSet();
-}
-
-TranslationState::ObjectDescriptorContainer_t &
-TranslationState::object_desc_vector_(ObjectIdentifier const _id)
-{
-	return scene_desc_[static_cast<unsigned>(_id)];
+	std::string const unique_id = cached_object_id_.empty() ?
+		resource_context_.MakeUniqueID(_type) :
+		cached_object_id_;
+	resource_context_.PushDescriptor(unique_id, _type, *parameters_, _subtype_id);
 }
 
 

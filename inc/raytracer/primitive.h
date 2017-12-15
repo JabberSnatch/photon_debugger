@@ -11,9 +11,9 @@ namespace raytracer {
 class Primitive
 {
 public:
+	virtual ~Primitive() = default;
 	virtual bool	Intersect(maths::Ray &_ray, SurfaceInteraction &_hit_info) const = 0;
 	virtual bool	DoesIntersect(maths::Ray const &_ray) const = 0;
-
 	virtual maths::Bounds3f	WorldBounds() const = 0;
 };
 
@@ -23,15 +23,11 @@ class GeometryPrimitive final :
 {
 public:
 	GeometryPrimitive(Shape const &_shape);
-
 	bool	Intersect(maths::Ray &_ray, SurfaceInteraction &_hit_info) const override;
 	bool	DoesIntersect(maths::Ray const &_ray) const override;
-
 	maths::Bounds3f	WorldBounds() const override;
-
 private:
 	Shape const	&shape_;
-
 };
 
 

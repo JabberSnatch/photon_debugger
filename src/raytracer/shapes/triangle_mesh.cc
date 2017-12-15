@@ -1,83 +1,127 @@
-#include "raytracer/triangle_mesh.h"
+#include "raytracer/shapes/triangle_mesh.h"
 
-#include <sstream>
+#include <numeric>
 
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 
-#include "globals.h"
-#include "common_macros.h"
-#include "core/logger.h"
-#include "core/memory_region.h"
-#include "core/profiler.h"
+#include "maths/ray.h"
 #include "maths/transform.h"
-#include "maths/vector.h"
-#include "maths/point.h"
+#include "raytracer/primitive.h"
+#include "raytracer/shapes/triangle.h"
+#include "raytracer/triangle_mesh_data.h"
+
 
 namespace raytracer {
 
-TriangleMesh::TriangleMesh(maths::Transform const &_world_transform, int32_t _triangle_count,
-			 std::vector<int32_t> const &_indices,
-			 std::vector<maths::Point3f> const &_vertices,
-			 std::vector<maths::Norm3f> const *_normals,
-			 std::vector<maths::Vec3f> const *_tangents,
-			 std::vector<maths::Point2f> const *_uv) :
-	triangle_count{ _triangle_count }, indices{ _indices }, world_bounds{}
+
+TriangleMesh::TriangleMesh(maths::Transform const &_world_transform,
+						   bool _flip_normals,
+						   TriangleMeshData const &_data,
+						   core::MemoryRegion &_mem_region) :
+	Shape(_world_transform, _flip_normals),
+	world_bounds_(_data.world_bounds),
+	triangles_(MakeTriangles_(_world_transform, _flip_normals, _data, _mem_region)),
+	bvh_(MakePrimitives_(triangles_, _mem_region), kBvhNodeSize)
+{}
+
+
+bool
+TriangleMesh::Intersect(maths::Ray const &_ray,
+						maths::Decimal &_tHit,
+						SurfaceInteraction &_hit_info) const
 {
-	TIMED_SCOPE(TriangleMesh_ctor);
-
-	YS_ASSERT(triangle_count > 0);
-	YS_ASSERT(static_cast<size_t>(3 * triangle_count) == indices.size());
-
-	vertices.reserve(_vertices.size());
-	for (auto &&vertex : _vertices)
-	{
-		maths::Point3f const	world_vertex{ _world_transform(vertex) };
-		vertices.emplace_back(world_vertex);
-		world_bounds = maths::Union(world_bounds, world_vertex);
-	}
-	
-	if (_normals != nullptr)
-	{
-		YS_ASSERT(_normals->size() == vertices.size());
-		for (auto &&normal : *_normals)
-			normals.emplace_back(_world_transform(normal));
-		//normals.insert(normals.begin(), _normals->begin(), _normals->end());
-	}
-
-	if (_tangents != nullptr)
-	{
-		YS_ASSERT(_tangents->size() == vertices.size());
-		for (auto &&tangent : *_tangents)
-			tangents.emplace_back(_world_transform(tangent));
-		//tangents.insert(tangents.begin(), _tangents->begin(), _tangents->end());
-	}
-
-	if (_uv != nullptr)
-	{
-		YS_ASSERT(_uv->size() == vertices.size());
-		uv.insert(uv.begin(), _uv->begin(), _uv->end());
-	}
-
-	std::stringstream message_stream{};
-	message_stream << "WORLD_BOUNDS : " << std::endl <<
-		"	" << world_bounds.min.x << "; " << world_bounds.min.y << "; " << world_bounds.min.z <<
-		std::endl <<
-		"	" << world_bounds.max.x << "; " << world_bounds.max.y << "; " << world_bounds.max.z <<
-		std::endl;
-	LOG_INFO(tools::kChannelGeneral, message_stream.str());
+	maths::Ray bvh_ray{ _ray };
+	bool const result = bvh_.Intersect(bvh_ray, _hit_info);
+	_tHit = (result) ? bvh_ray.tMax : _tHit;
+	return result;
 }
 
-TriangleMesh *
+
+bool
+TriangleMesh::DoesIntersect(maths::Ray const &_ray) const
+{
+	return bvh_.DoesIntersect(_ray);
+}
+
+
+maths::Decimal
+TriangleMesh::Area() const
+{
+	return std::accumulate(triangles_.cbegin(), triangles_.cend(), 0._d,
+						   [](maths::Decimal const &_acc, Triangle const* const _triangle) {
+		return _acc + _triangle->Area();
+	});
+}
+
+
+Shape::SurfacePoint
+TriangleMesh::SampleSurface(maths::Vec2f const &_ksi) const
+{
+	YS_ASSERT(false);
+	return Shape::SurfacePoint();
+}
+
+
+maths::Bounds3f
+TriangleMesh::ObjectBounds() const
+{
+	return world_transform(world_bounds_, maths::Transform::kInverse);
+}
+
+
+maths::Bounds3f
+TriangleMesh::WorldBounds() const
+{
+	return world_bounds_;
+}
+
+
+TriangleMesh::TriangleContainer_t
+TriangleMesh::MakeTriangles_(maths::Transform const &_world_transform,
+							 bool _flip_normals,
+							 TriangleMeshData const &_data,
+							 core::MemoryRegion &_mem_region)
+{
+	TriangleContainer_t result{};
+	result.reserve(_data.triangle_count);
+	for (int32_t face_index = 0; face_index < _data.triangle_count; ++face_index)
+	{
+		result.emplace_back(new (_mem_region)
+							raytracer::Triangle(_world_transform,
+												_flip_normals,
+												_data,
+												face_index));
+	}
+	return result;
+}
+
+
+BvhAccelerator::PrimitiveArray_t
+TriangleMesh::MakePrimitives_(TriangleContainer_t const &_triangles,
+							  core::MemoryRegion &_mem_region)
+{
+	BvhAccelerator::PrimitiveArray_t result{};
+	result.reserve(_triangles.size());
+	std::transform(_triangles.cbegin(), _triangles.cend(),
+				   std::back_inserter(result), [&_mem_region] (Triangle const* const _triangle) {
+		return new (_mem_region) GeometryPrimitive(*static_cast<Shape const*>(_triangle));
+	});
+	return result;
+}
+
+
+TriangleMesh*
 ReadTriangleMeshFromFile(std::string const &_path,
 						 maths::Transform const &_world_transform,
+						 bool _flip_normals,
 						 core::MemoryRegion &_mem_region)
 {
 	TriangleMesh *result = nullptr;
 	uint32_t const		load_flags =
 		aiProcess_Triangulate |
-		aiProcess_PreTransformVertices | 
+		aiProcess_PreTransformVertices |
 		aiProcess_JoinIdenticalVertices;
 	Assimp::Importer	importer;
 	aiScene const		*scene = importer.ReadFile(_path.c_str(), load_flags);
@@ -153,13 +197,20 @@ ReadTriangleMeshFromFile(std::string const &_path,
 			((load_normals) ? " Normals provided by file." : "");
 		LOG(tools::kChannelGeneral, tools::kLevelInfo, info_message);
 #endif
-
-		result = new (_mem_region) TriangleMesh(
-			_world_transform, out_triangle_count, out_indices, out_vertices, 
-			(load_normals ? &out_normals : nullptr)
-		);
+		
+		TriangleMeshData const* const mesh_data = new (_mem_region)
+			TriangleMeshData(_world_transform,
+							 out_triangle_count,
+							 out_indices,
+							 out_vertices,
+							 (load_normals ? &out_normals : nullptr));
+		result = new (_mem_region) TriangleMesh(_world_transform,
+												_flip_normals,
+												*mesh_data,
+												_mem_region);
 	}
 	return result;
 }
+
 
 } // namespace raytracer

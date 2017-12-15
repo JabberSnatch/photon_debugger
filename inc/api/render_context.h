@@ -17,14 +17,17 @@
 namespace api {
 
 
-class RenderContext final :
-	private core::noncopyable,
-	private core::nonmovable
+class RenderContext final
 {
 public:
+	using PrimitiveContainer_t = std::vector<raytracer::Primitive const*>;
+public:
 	RenderContext();
+	RenderContext(raytracer::Camera &_camera,
+				  raytracer::Sampler &_sampler,
+				  raytracer::Integrator &_integrator,
+				  PrimitiveContainer_t &_primitives);
 	void	Clear();
-	void	SetFilm(raytracer::Film *_f);
 	void	SetCamera(raytracer::Camera *_c);
 	void	SetSampler(raytracer::Sampler *_s);
 	void	SetIntegrator(raytracer::Integrator *_i);
@@ -32,20 +35,14 @@ public:
 public:
 	bool	GoodForRender() const;
 	void	RenderAndWrite(std::string const &_path);
-public:
-	raytracer::Film		&film() { return *film_; }
-	TransformCache		&transform_cache() { return transform_cache_; }
-	core::MemoryRegion	&mem_region() { return mem_region_; }
 private:
-	core::MemoryRegion					mem_region_;
-	TransformCache						transform_cache_;
-	raytracer::Camera					*camera_ = nullptr;
-	raytracer::Film						*film_ = nullptr;
-	raytracer::Sampler					*sampler_ = nullptr;
-	raytracer::Integrator				*integrator_ = nullptr;
-	std::vector<raytracer::Primitive*>	primitives_;
+	raytracer::Camera		*camera_ = nullptr;
+	raytracer::Sampler		*sampler_ = nullptr;
+	raytracer::Integrator	*integrator_ = nullptr;
+	PrimitiveContainer_t	primitives_{};
 	//
 public:
+	// REFACTOR: move to ResourceContext or equivalent
 	std::string workdir; // To be removed, at some point in the future
 };
 
