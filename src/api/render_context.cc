@@ -8,18 +8,21 @@ RenderContext::RenderContext() :
 	camera_{ nullptr },
 	sampler_{ nullptr },
 	integrator_{ nullptr },
-	primitives_{}
+	primitives_{},
+	lights_{}
 {}
 
 
 RenderContext::RenderContext(raytracer::Camera &_camera,
 							 raytracer::Sampler &_sampler,
 							 raytracer::Integrator &_integrator,
-							 PrimitiveContainer_t &_primitives) :
+							 PrimitiveContainer_t &_primitives,
+							 LightContainer_t &_lights) :
 	camera_{ &_camera },
 	sampler_{ &_sampler },
 	integrator_{ &_integrator },
-	primitives_{ _primitives }
+	primitives_{ _primitives },
+	lights_{ _lights }
 {}
 
 
@@ -30,6 +33,7 @@ RenderContext::Clear()
 	sampler_ = nullptr;
 	integrator_ = nullptr;
 	primitives_.clear();
+	lights_.clear();
 }
 
 
@@ -75,8 +79,8 @@ RenderContext::RenderAndWrite(std::string const &_path)
 	integrator_->SetFilm(&(camera_->film()));
 	integrator_->SetCamera(camera_);
 	integrator_->SetSampler(sampler_);
-	integrator_->Prepare();
-	integrator_->Integrate({ primitives_, {} }, 0._d);
+	integrator_->Prepare(primitives_, lights_);
+	integrator_->Integrate({ primitives_, lights_ }, 0._d);
 	camera_->WriteToFile(_path);
 }
 

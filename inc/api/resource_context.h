@@ -2,6 +2,7 @@
 #ifndef __YS_RESOURCE_CONTEXT_HPP__
 #define __YS_RESOURCE_CONTEXT_HPP__
 
+#include <unordered_set>
 #include <vector>
 
 #include "api/param_set.h"
@@ -9,6 +10,12 @@
 #include "core/memory_region.h"
 #include "core/noncopyable.h"
 #include "core/nonmovable.h"
+
+
+namespace raytracer {
+class Shape;
+} // namespace raytracer
+
 
 namespace api {
 
@@ -48,6 +55,8 @@ private:
 	};
 	using ObjectInstanceContainer_t = std::vector<ObjectInstance>;
 	using DescriptorCountContainer_t = std::array<uint32_t, static_cast<size_t>(ObjectType::kCount)>;
+private:
+	using UsedShapePtrContainer_t = std::unordered_set<raytracer::Shape const*>;
 public:
 	ResourceContext();
 	bool IsUniqueIdFree(std::string const &_unique_id) const;
@@ -63,6 +72,9 @@ public:
 	std::string const	&workdir() const;
 	core::MemoryRegion	&mem_region();
 	TransformCache		&transform_cache();
+public:
+	void FlagLightShape(raytracer::Shape const &_shape);
+	bool IsShapeLight(raytracer::Shape const &_shape) const;
 private:
 	template <typename T> T* MakeObject_(ObjectDescriptor const &_object_desc);
 private:
@@ -72,6 +84,7 @@ private:
 	ObjectDescriptorContainer_t		object_descriptors_{};
 	ObjectInstanceContainer_t		object_instances_{};
 	DescriptorCountContainer_t		descriptor_counts_{};
+	UsedShapePtrContainer_t			light_shapes_{};
 };
 
 } // namespace api

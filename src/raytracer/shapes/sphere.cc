@@ -183,8 +183,8 @@ Sphere::SampleSurface(maths::Vec2f const &_ksi) const
 {
 	YS_ASSERT(z_max == radius && z_min == -radius);
 	YS_ASSERT(phi_max == maths::Radians(360._d));
-	YS_ASSERT(theta_max == maths::Radians(90._d));
-	YS_ASSERT(theta_min == maths::Radians(-90._d));
+	//	YS_ASSERT(theta_max == maths::Radians(90._d));
+	//	YS_ASSERT(theta_min == maths::Radians(-90._d));
 	maths::Point3f const base_position =
 		maths::Point3f(0._d) + radius * UniformSampleSphere(_ksi);
 	maths::Norm3f const base_normal = maths::Normalized(
@@ -214,8 +214,8 @@ Sphere::SampleVisibleSurface(SurfaceInteraction const &_origin, maths::Vec2f con
 {
 	YS_ASSERT(z_max == radius && z_min == -radius);
 	YS_ASSERT(phi_max == maths::Radians(360._d));
-	YS_ASSERT(theta_max == maths::Radians(90._d));
-	YS_ASSERT(theta_min == maths::Radians(-90._d));
+	//	YS_ASSERT(theta_max == maths::Radians(90._d));
+	//	YS_ASSERT(theta_min == maths::Radians(-90._d));
 	maths::Point3f const center_world = world_transform(maths::Point3f(0._d));
 	maths::Vec3f const origin_to_sphere = center_world - _origin.position;
 	maths::Vec3f const osw = maths::Normalized(origin_to_sphere);

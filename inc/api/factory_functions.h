@@ -16,6 +16,7 @@ namespace raytracer {
 class Camera;
 class Film;
 class Integrator;
+class Light;
 class Shape;
 class Sampler;
 
@@ -38,17 +39,20 @@ using NamedCallbackContainer_t = std::unordered_map<std::string, CallbackType>;
 using MakeShapeCallback_t = MakeObjectCallback_t<raytracer::Shape>;
 using MakeSamplerCallback_t = MakeObjectCallback_t<raytracer::Sampler>;
 using MakeIntegratorCallback_t = MakeObjectCallback_t<raytracer::Integrator>;
+using MakeLightCallback_t = MakeObjectCallback_t<raytracer::Light>;
 using ShapeCallbackContainer_t = NamedCallbackContainer_t<MakeShapeCallback_t>;
 using SamplerCallbackContainer_t = NamedCallbackContainer_t<MakeSamplerCallback_t>;
 using IntegratorCallbackContainer_t = NamedCallbackContainer_t<MakeIntegratorCallback_t>;
-
+using LightCallbackContainer_t = NamedCallbackContainer_t<MakeLightCallback_t>;
 
 ShapeCallbackContainer_t const &shape_callbacks();
 SamplerCallbackContainer_t const &sampler_callbacks();
 IntegratorCallbackContainer_t const &integrator_callbacks();
+LightCallbackContainer_t const &light_callbacks();
 MakeShapeCallback_t const &LookupShapeFunc(std::string const &_id);
 MakeSamplerCallback_t const &LookupSamplerFunc(std::string const &_id);
 MakeIntegratorCallback_t const &LookupIntegratorFunc(std::string const &_id);
+MakeLightCallback_t const &LookupLightFunc(std::string const &_id);
 
 
 raytracer::Camera* MakeCamera(api::ResourceContext &_context, api::ParamSet const &_params);

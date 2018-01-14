@@ -188,6 +188,9 @@ template
 raytracer::Shape&
 ResourceContext::Fetch<raytracer::Shape>(std::string const &_unique_id);
 template
+raytracer::Light&
+ResourceContext::Fetch<raytracer::Light>(std::string const &_unique_id);
+template
 raytracer::Sampler&
 ResourceContext::Fetch<raytracer::Sampler>(std::string const &_unique_id);
 template
@@ -262,6 +265,19 @@ ResourceContext::transform_cache()
 }
 
 
+void
+ResourceContext::FlagLightShape(raytracer::Shape const &_shape)
+{
+	light_shapes_.emplace(&_shape);
+}
+
+
+bool
+ResourceContext::IsShapeLight(raytracer::Shape const &_shape) const
+{
+	return (light_shapes_.count(&_shape) == 1);
+}
+
 
 template <typename T>
 T*
@@ -287,6 +303,13 @@ raytracer::Shape*
 ResourceContext::MakeObject_(ObjectDescriptor const &_object_desc)
 {
 	MakeShapeCallback_t const &callback = LookupShapeFunc(_object_desc.subtype_id);
+	return callback(*this, _object_desc.param_set);
+}
+template <>
+raytracer::Light*
+ResourceContext::MakeObject_(ObjectDescriptor const &_object_desc)
+{
+	MakeLightCallback_t const &callback = LookupLightFunc(_object_desc.subtype_id);
 	return callback(*this, _object_desc.param_set);
 }
 template <>

@@ -9,6 +9,7 @@
 #include "core/noncopyable.h"
 #include "core/nonmovable.h"
 #include "raytracer/camera.h"
+#include "raytracer/light.h"
 #include "raytracer/primitive.h"
 #include "raytracer/sampler.h"
 #include "raytracer/integrator.h"
@@ -21,12 +22,14 @@ class RenderContext final
 {
 public:
 	using PrimitiveContainer_t = std::vector<raytracer::Primitive const*>;
+	using LightContainer_t = std::vector<raytracer::Light const*>;
 public:
 	RenderContext();
 	RenderContext(raytracer::Camera &_camera,
 				  raytracer::Sampler &_sampler,
 				  raytracer::Integrator &_integrator,
-				  PrimitiveContainer_t &_primitives);
+				  PrimitiveContainer_t &_primitives,
+				  LightContainer_t &_lights); // TODO: add LightContainer_t (once safe-backward-kill-word is written)
 	void	Clear();
 	void	SetCamera(raytracer::Camera *_c);
 	void	SetSampler(raytracer::Sampler *_s);
@@ -40,6 +43,7 @@ private:
 	raytracer::Sampler		*sampler_ = nullptr;
 	raytracer::Integrator	*integrator_ = nullptr;
 	PrimitiveContainer_t	primitives_{};
+	LightContainer_t		lights_{};
 	//
 public:
 	// REFACTOR: move to ResourceContext or equivalent

@@ -1,3 +1,4 @@
+
 #include "raytracer/integrator.h"
 
 
@@ -76,7 +77,7 @@ NormalIntegrator::NormalIntegrator(bool const _remap, bool const _absolute) :
 
 
 void
-NormalIntegrator::Prepare()
+NormalIntegrator::Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights)
 {
 }
 
@@ -116,7 +117,7 @@ AOIntegrator::AOIntegrator(uint64_t const _sample_count, bool const _use_shading
 
 
 void
-AOIntegrator::Prepare()
+AOIntegrator::Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights)
 {
 	sampler().ReserveArray<2u>(sample_count_);
 }

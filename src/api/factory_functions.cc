@@ -7,10 +7,14 @@
 
 #include "api/param_set.h"
 #include "api/resource_context.h"
+#include "common_macros.h"
+#include "core/logger.h"
 #include "maths/transform.h"
 #include "raytracer/camera.h"
 #include "raytracer/film.h"
 #include "raytracer/integrator.h"
+#include "raytracer/integrators/direct_lighting_integrator.h"
+#include "raytracer/light.h"
 #include "raytracer/sampler.h"
 #include "raytracer/samplers/random_sampler.h"
 #include "raytracer/samplers/halton_sampler.h"
@@ -23,21 +27,26 @@
 namespace api {
 
 raytracer::Camera *MakeCamera(api::ResourceContext &_context, api::ParamSet const &_params);
-//
+
 raytracer::Film *MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params);
-//
+
 raytracer::Shape* MakeSphere(api::ResourceContext &_context, api::ParamSet const &_params);
 raytracer::Shape* MakeTriangleMesh(api::ResourceContext &_context, api::ParamSet const &_params);
-//
+
 raytracer::Sampler* MakeRandomSampler(api::ResourceContext &_context,
 									  api::ParamSet const &_params);
 raytracer::Sampler* MakeHaltonSampler(api::ResourceContext &_context,
 									  api::ParamSet const &_params);
-//
+
 raytracer::Integrator* MakeNormalIntegrator(api::ResourceContext &_context,
 											api::ParamSet const &_params);
 raytracer::Integrator* MakeAOIntegrator(api::ResourceContext &_context,
 										api::ParamSet const &_params);
+raytracer::Integrator* MakeDirectLightingIntegrator(api::ResourceContext &_context,
+													api::ParamSet const &_params);
+
+raytracer::Light* MakeAreaLight(api::ResourceContext &_context,
+								api::ParamSet const &_params);
 
 
 
@@ -89,6 +98,7 @@ integrator_callbacks()
 	static IntegratorCallbackContainer_t const callbacks{
 		{ "ambient_occlusion", &MakeAOIntegrator },
 		{ "normal", &MakeNormalIntegrator },
+		{ "direct_lighting", &MakeDirectLightingIntegrator },
 	};
 	return callbacks;
 }
@@ -98,6 +108,20 @@ LookupIntegratorFunc(std::string const &_id)
 	return LookupObjectFuncImpl_(_id, integrator_callbacks());
 }
 
+
+LightCallbackContainer_t const &
+light_callbacks()
+{
+	static LightCallbackContainer_t const callbacks{
+		{ "area_light", &MakeAreaLight },
+	};
+	return callbacks;
+}
+MakeLightCallback_t const &
+LookupLightFunc(std::string const &_id)
+{
+	return LookupObjectFuncImpl_(_id, light_callbacks());
+}
 
 
 raytracer::Camera*
@@ -131,6 +155,8 @@ MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params)
 raytracer::Shape*
 MakeSphere(api::ResourceContext &_context, api::ParamSet const &_params)
 {
+	// TODO: the identity matrix shouldn't be looked up,
+	// maths::Transform should provide a static instance
 	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
 	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
 	bool const				flip_normals = _params.FindBool("flip_normals", false);
@@ -228,7 +254,33 @@ MakeAOIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 		raytracer::AOIntegrator{ sample_count, shading_geometry };
 	return ao_integrator;
 }
+raytracer::Integrator*
+MakeDirectLightingIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
+{
+	raytracer::Integrator *const direct_lighting_integrator = new (_context.mem_region())
+		raytracer::DirectLightingIntegrator{};
+	return direct_lighting_integrator;
+}
 
 
+raytracer::Light*
+MakeAreaLight(api::ResourceContext &_context, api::ParamSet const &_params)
+{
+	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
+	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
+	maths::Vec3f const		&emission_color =
+		_params.FindFloat<3>("emission_color", maths::Vec3f{1._d, 0._d, 1._d});
+	std::string const &shape_id = _params.FindString("shape_id", "");
+	if (shape_id == "")
+	{
+		LOG_ERROR(tools::kChannelParsing, "An area light descriptor fails to provide a shape_id");
+	}
+	raytracer::Shape const	&shape = _context.Fetch<raytracer::Shape>(shape_id);
+	raytracer::Light *const area_light = new (_context.mem_region())
+		raytracer::AreaLight{ world_transform, emission_color, shape };
+	_context.FlagLightShape(shape);
+	return area_light;
+}
+	
 } // namespace api
 

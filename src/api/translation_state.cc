@@ -139,6 +139,8 @@ TranslationState::SceneSetup_()
 		resource_context_.GetAnyDescOfType(ResourceContext::ObjectType::kSampler);
 	ResourceContext::ObjectDescriptorContainer_t shape_descs =
 		resource_context_.GetAllDescsOfType(ResourceContext::ObjectType::kShape);
+	ResourceContext::ObjectDescriptorContainer_t light_descs =
+		resource_context_.GetAllDescsOfType(ResourceContext::ObjectType::kLight);
 	//
 	raytracer::Integrator	&integrator =
 		resource_context_.Fetch<raytracer::Integrator>(integrator_desc.unique_id);
@@ -146,14 +148,32 @@ TranslationState::SceneSetup_()
 		resource_context_.Fetch<raytracer::Camera>(camera_desc.unique_id);
 	raytracer::Sampler		&sampler =
 		resource_context_.Fetch<raytracer::Sampler>(sampler_desc.unique_id);
+	//
+	RenderContext::LightContainer_t lights{};
+	lights.reserve(light_descs.size());
+	std::transform(light_descs.cbegin(), light_descs.cend(), std::back_inserter(lights),
+				   [this](ResourceContext::ObjectDescriptor const *_object_desc) {
+					   raytracer::Light const &light =
+						   resource_context_.Fetch<raytracer::Light>(_object_desc->unique_id);
+					   return &light;
+				   });
+	//
+	ResourceContext::ObjectDescriptorContainer_t::iterator valid_shapes_end =
+		std::remove_if(shape_descs.begin(), shape_descs.end(),
+					   [this](ResourceContext::ObjectDescriptor const *_object_desc) {
+						   raytracer::Shape const &shape =
+							   resource_context_.Fetch<raytracer::Shape>(_object_desc->unique_id);
+						   return resource_context_.IsShapeLight(shape);
+					   });
+	shape_descs.erase(valid_shapes_end, shape_descs.end());
 	RenderContext::PrimitiveContainer_t primitives{};
 	primitives.reserve(shape_descs.size());
 	std::transform(shape_descs.cbegin(), shape_descs.cend(), std::back_inserter(primitives),
 				   [this](ResourceContext::ObjectDescriptor const *_object_desc) {
-		raytracer::Shape const &shape =
-			resource_context_.Fetch<raytracer::Shape>(_object_desc->unique_id);
-		return new (resource_context_.mem_region()) raytracer::GeometryPrimitive(shape);
-	});
+					   raytracer::Shape const &shape =
+						   resource_context_.Fetch<raytracer::Shape>(_object_desc->unique_id);
+					   return new (resource_context_.mem_region()) raytracer::GeometryPrimitive(shape);
+				   });
 	//
 	constexpr uint32_t kBvhNodeMaxSize = 20;
 	if (primitives.size() > kBvhNodeMaxSize)
@@ -169,7 +189,7 @@ TranslationState::SceneSetup_()
 	{
 	}
 	//
-	render_context_ = api::RenderContext(camera, sampler, integrator, primitives);
+	render_context_ = api::RenderContext(camera, sampler, integrator, primitives, lights);
 }
 
 void

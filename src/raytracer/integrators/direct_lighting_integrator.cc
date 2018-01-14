@@ -6,13 +6,10 @@
 #include "raytracer/sampler.h"
 #include "raytracer/surface_interaction.h"
 
+#include "common_macros.h"
+#include "core/logger.h"
 
 namespace raytracer {
-
-
-void
-DirectLightingIntegrator::Prepare()
-{}
 
 
 maths::Decimal
@@ -24,20 +21,37 @@ PowerHeuristic(uint32_t const _nf, maths::Decimal const _pf,
 	return (f * f) / (f * f + g * g);
 }
 
+
+void
+DirectLightingIntegrator::Prepare(PrimitiveContainer_t const &_primitives,
+								  LightContainer_t const &_lights)
+{
+	LOG_INFO(tools::kChannelGeneral, "Preparing DirectLightingIntegartor");
+	light_sample_count_ = _primitives.size() + _lights.size();
+	sampler().ReserveArray<2u>(light_sample_count_);
+}
+
+
 maths::Vec3f
 DirectLightingIntegrator::Li(maths::Ray const &_ray,
 							 raytracer::SurfaceInteraction const &_hit,
 							 Scene const &_scene)
 {
+	TIMED_SCOPE(DirectLightingIntegrator_Li);
 	// hardcoded perfect diffuse material
 	constexpr maths::Decimal material_pdf = 1._d / (2._d * maths::pi<maths::Decimal>);
 	//
+	if (_hit.primitive == nullptr)
+		return maths::Vec3f{ 0.5_d, 0.5_d, 0.5_d };
+	Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(light_sample_count_);
+	Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
 	maths::Vec3f result(0._d);
 	for (Light const *light : _scene._lights)
 	{
 		{
 			// NOTE: aggregate into a single get array
-			maths::Vec2f const light_sample_ksi = sampler().GetNext<2u>();
+			// maths::Vec2f const light_sample_ksi = sampler().GetNext<2u>();
+			maths::Vec2f const light_sample_ksi = *(current_sample++);
 			Light::LiSample const light_sample = light->Sample(_hit, light_sample_ksi);
 			maths::Vec3f const light_wi = light_sample.wi();
 			maths::Point3f const origin = _hit.OffsetOriginFromErrorBounds(light_wi);
@@ -63,7 +77,8 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 		}
 		{
 			// NOTE: aggregate into a single get array
-			maths::Vec2f const material_sample_ksi = sampler().GetNext<2u>();
+			// maths::Vec2f const material_sample_ksi = sampler().GetNext<2u>();
+			maths::Vec2f const material_sample_ksi = *(current_sample++);
 			// hardcoded perfect diffuse material
 			maths::Vec3f const material_wi = HemisphereMapping(material_sample_ksi);
 			maths::Decimal const light_pdf = light->Pdf(_hit, material_wi);

@@ -26,9 +26,11 @@ public:
 		std::vector<Primitive const *> const &_primitives;
 		std::vector<Light const *> const &_lights;
 	};
+	using PrimitiveContainer_t = std::vector<raytracer::Primitive const*>;
+	using LightContainer_t = std::vector<raytracer::Light const*>;
 public:
 	virtual ~Integrator() = default;
-	virtual void Prepare() = 0;
+	virtual void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) = 0;
 	void Integrate(Scene const &_scene, maths::Decimal _t);
 	void SetCamera(Camera *_camera) { camera_ = _camera; }
 	void SetFilm(Film *_film) { film_ = _film; }
@@ -51,7 +53,7 @@ class NormalIntegrator final :
 {
 public:
 	NormalIntegrator(bool const _remap, bool const _absolute);
-	void Prepare() override;
+	void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) override;
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,
 					raytracer::SurfaceInteraction const &_hit,
@@ -72,7 +74,7 @@ private:
 	static constexpr maths::Vec3f kPrimaryRaySelfHitColor = { 1._d, 0._d, 0._d };
 public:
 	AOIntegrator(uint64_t const _sample_count, bool const _use_shading_geometry);
-	void Prepare() override;
+	void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) override;
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,
 					raytracer::SurfaceInteraction const &_hit,
