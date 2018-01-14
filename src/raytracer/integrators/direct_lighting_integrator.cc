@@ -1,5 +1,7 @@
 #include "raytracer/integrators/direct_lighting_integrator.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include "maths/ray.h"
 #include "raytracer/light.h"
 #include "raytracer/primitive.h"
@@ -22,13 +24,21 @@ PowerHeuristic(uint32_t const _nf, maths::Decimal const _pf,
 }
 
 
+DirectLightingIntegrator::DirectLightingIntegrator(uint64_t const _shadow_ray_count) :
+	Integrator(),
+	shadow_ray_count_{ _shadow_ray_count }
+{}
+
+
 void
 DirectLightingIntegrator::Prepare(PrimitiveContainer_t const &_primitives,
 								  LightContainer_t const &_lights)
 {
-	LOG_INFO(tools::kChannelGeneral, "Preparing DirectLightingIntegartor");
-	light_sample_count_ = _primitives.size() + _lights.size();
-	sampler().ReserveArray<2u>(light_sample_count_);
+	LOG_INFO(tools::kChannelGeneral, "Preparing DirectLightingIntegrator");
+	for (uint64_t i = 0u; i < boost::numeric_cast<uint64_t>(_lights.size()); ++i)
+	{
+		sampler().ReserveArray<2u>(2u * shadow_ray_count_);
+	}
 }
 
 
@@ -43,73 +53,76 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 	//
 	if (_hit.primitive == nullptr)
 		return maths::Vec3f{ 0.5_d, 0.5_d, 0.5_d };
-	Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(light_sample_count_);
-	Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
 	maths::Vec3f result(0._d);
 	for (Light const *light : _scene._lights)
 	{
+		Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(2u * shadow_ray_count_);
+		Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
+		uint64_t sample_count = 0u;
+		while(current_sample != samples.cend())
 		{
-			// NOTE: aggregate into a single get array
-			// maths::Vec2f const light_sample_ksi = sampler().GetNext<2u>();
-			maths::Vec2f const light_sample_ksi = *(current_sample++);
-			Light::LiSample const light_sample = light->Sample(_hit, light_sample_ksi);
-			maths::Vec3f const light_wi = light_sample.wi();
-			maths::Point3f const origin = _hit.OffsetOriginFromErrorBounds(light_wi);
-			raytracer::SurfaceInteraction shadow_hit_info{};
-			maths::Ray shadow_ray{ origin, light_wi, maths::infinity<maths::Decimal>, _ray.time };
-			for (Primitive const *primitive : _scene._primitives)
 			{
-				primitive->Intersect(shadow_ray, shadow_hit_info);
-			}
-			if (!shadow_hit_info.primitive)
-			{
-				maths::Decimal const weight = PowerHeuristic(1u, light_sample.probability,
-															 1u, material_pdf);
-				maths::Decimal const cos_theta =
-					maths::Abs(maths::Dot(light_wi, _hit.shading.normal()));
-				maths::Vec3f const contribution = light_sample.li *
-					material_pdf * cos_theta * weight / light_sample.probability;
-				result += contribution;
-			}
-			else
-			{ // shadowed light, no contribution
-			}
-		}
-		{
-			// NOTE: aggregate into a single get array
-			// maths::Vec2f const material_sample_ksi = sampler().GetNext<2u>();
-			maths::Vec2f const material_sample_ksi = *(current_sample++);
-			// hardcoded perfect diffuse material
-			maths::Vec3f const material_wi = HemisphereMapping(material_sample_ksi);
-			maths::Decimal const light_pdf = light->Pdf(_hit, material_wi);
-			if (light_pdf > 0._d)
-			{
-				maths::Point3f const origin = _hit.OffsetOriginFromErrorBounds(material_wi);
+				maths::Vec2f const light_sample_ksi = *(current_sample++);
+				Light::LiSample const light_sample = light->Sample(_hit, light_sample_ksi);
+				maths::Vec3f const light_wi = light_sample.wi();
+				maths::Point3f const origin = _hit.OffsetOriginFromErrorBounds(light_wi);
 				raytracer::SurfaceInteraction shadow_hit_info{};
-				maths::Ray shadow_ray{ origin, material_wi,
-					maths::infinity<maths::Decimal>, _ray.time };
+				maths::Ray shadow_ray{ origin, light_wi, maths::infinity<maths::Decimal>, _ray.time };
 				for (Primitive const *primitive : _scene._primitives)
 				{
 					primitive->Intersect(shadow_ray, shadow_hit_info);
 				}
 				if (!shadow_hit_info.primitive)
 				{
-					maths::Decimal const weight = PowerHeuristic(1u, material_pdf,
-																 1u, light_pdf);
+					maths::Decimal const weight = PowerHeuristic(1u, light_sample.probability,
+																 1u, material_pdf);
 					maths::Decimal const cos_theta =
-						maths::Abs(maths::Dot(material_wi, _hit.shading.normal()));
-					maths::Vec3f const contribution = light->Le() *
-						light_pdf * cos_theta * weight / material_pdf;
+						maths::Abs(maths::Dot(light_wi, _hit.shading.normal()));
+					maths::Vec3f const contribution = light_sample.li *
+						material_pdf * cos_theta * weight / light_sample.probability;
 					result += contribution;
 				}
 				else
 				{ // shadowed light, no contribution
 				}
 			}
-			else
-			{ // sampled a direction for which the light doesn't contribute
+			{
+				maths::Vec2f const material_sample_ksi = *(current_sample++);
+				// hardcoded perfect diffuse material
+				maths::Vec3f const material_wi = HemisphereMapping(material_sample_ksi);
+				maths::Decimal const light_pdf = light->Pdf(_hit, material_wi);
+				if (light_pdf > 0._d)
+				{
+					maths::Point3f const origin = _hit.OffsetOriginFromErrorBounds(material_wi);
+					raytracer::SurfaceInteraction shadow_hit_info{};
+					maths::Ray shadow_ray{ origin, material_wi,
+										   maths::infinity<maths::Decimal>, _ray.time };
+					for (Primitive const *primitive : _scene._primitives)
+					{
+						primitive->Intersect(shadow_ray, shadow_hit_info);
+					}
+					if (!shadow_hit_info.primitive)
+					{
+						maths::Decimal const weight = PowerHeuristic(1u, material_pdf,
+																	 1u, light_pdf);
+						maths::Decimal const cos_theta =
+							maths::Abs(maths::Dot(material_wi, _hit.shading.normal()));
+						maths::Vec3f const contribution = light->Le() *
+							light_pdf * cos_theta * weight / material_pdf;
+						result += contribution;
+					}
+					else
+					{ // shadowed light, no contribution
+					}
+				}
+				else
+				{ // sampled a direction for which the light doesn't contribute
+				}
 			}
+			++sample_count;
 		}
+		YS_ASSERT(sample_count == shadow_ray_count_);
+		result /= boost::numeric_cast<maths::Decimal>(shadow_ray_count_);
 	}
 	return result;
 }

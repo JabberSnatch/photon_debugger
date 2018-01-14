@@ -257,8 +257,9 @@ MakeAOIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 raytracer::Integrator*
 MakeDirectLightingIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 {
+	uint64_t const			shadow_ray_count = _params.FindUint("shadow_rays", 1u);
 	raytracer::Integrator *const direct_lighting_integrator = new (_context.mem_region())
-		raytracer::DirectLightingIntegrator{};
+		raytracer::DirectLightingIntegrator{ shadow_ray_count };
 	return direct_lighting_integrator;
 }
 
@@ -270,7 +271,7 @@ MakeAreaLight(api::ResourceContext &_context, api::ParamSet const &_params)
 	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
 	maths::Vec3f const		&emission_color =
 		_params.FindFloat<3>("emission_color", maths::Vec3f{1._d, 0._d, 1._d});
-	std::string const &shape_id = _params.FindString("shape_id", "");
+	std::string const 		&shape_id = _params.FindString("shape_id", "");
 	if (shape_id == "")
 	{
 		LOG_ERROR(tools::kChannelParsing, "An area light descriptor fails to provide a shape_id");
