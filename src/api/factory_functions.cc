@@ -185,7 +185,7 @@ MakeTriangleMesh(api::ResourceContext &_context, api::ParamSet const &_params)
 			path = workdir / path;
 			YS_ASSERT(path.is_absolute());
 		}
-		//
+
 		if (boost::filesystem::exists(path))
 		{
 			result = raytracer::ReadTriangleMeshFromFile(path.generic_string(),

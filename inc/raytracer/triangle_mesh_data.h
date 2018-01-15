@@ -12,6 +12,7 @@
 namespace raytracer {
 
 
+// TODO: implement instancing
 class TriangleMeshData
 {
 public:

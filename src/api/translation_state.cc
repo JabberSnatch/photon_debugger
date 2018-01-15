@@ -1,5 +1,7 @@
 #include "api/translation_state.h"
 
+#include <sstream>
+
 #include "boost/filesystem.hpp"
 
 #include "api/factory_functions.h"
@@ -16,7 +18,37 @@ TranslationState::TranslationState():
 	resource_context_{}, render_context_{},
 	scope_depth_{ 1 }, transform_stack_{ maths::Transform{} },
 	cached_object_id_{ "" }, parameters_{ nullptr }
-{}
+{
+	ResetResourceCounters();
+}
+void
+TranslationState::SceneBegin()
+{
+	render_context_.Clear();
+	parameters_ = nullptr;
+	YS_ASSERT(scope_depth_ == 1);
+	YS_ASSERT(transform_stack_.size() == 1 && transform_stack_.back() == maths::Transform{});
+	YS_ASSERT(cached_object_id_.empty());
+}
+void
+TranslationState::SceneEnd()
+{
+	SceneSetup_();
+}
+void
+TranslationState::ScopeBegin()
+{
+	parameters_ = new (resource_context_.mem_region()) ParamSet();
+	transform_stack_.push_back(transform_stack_.back());
+	scope_depth_++;
+}
+void
+TranslationState::ScopeEnd()
+{
+	scope_depth_--;
+	transform_stack_.pop_back();
+	cached_object_id_.clear();
+}
 void
 TranslationState::Workdir(std::string const &_absolute_path)
 {
@@ -31,22 +63,14 @@ TranslationState::Output(std::string const &_relative_path)
 void
 TranslationState::ObjectId(std::string const &_object_id)
 {
-	bool const is_object_id_free = resource_context_.IsUniqueIdFree(_object_id);
-	if (is_object_id_free)
+	if (cached_object_id_.empty())
 	{
-		if (cached_object_id_.empty())
-		{
-			cached_object_id_ = _object_id;
-		}
-		else
-		{
-			// Ideally, the parser should be in charge of catching this error
-			LOG_ERROR(tools::kChannelParsing, "An object has more than one ID field, ignored the latest");
-		}
+		cached_object_id_ = _object_id;
 	}
 	else
 	{
-		LOG_ERROR(tools::kChannelParsing, "ObjectID " + _object_id + " is already used");
+		// Ideally, the parser should be in charge of catching this error
+		LOG_ERROR(tools::kChannelParsing, "An object has more than one ID field, ignored the latest");
 	}
 }
 void
@@ -101,30 +125,6 @@ void
 TranslationState::Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z)
 {
 	transform_stack_.back() = transform_stack_.back() * maths::Scale(_x, _y, _z);
-}
-void
-TranslationState::ScopeBegin()
-{
-	parameters_ = new (resource_context_.mem_region()) ParamSet();
-	transform_stack_.push_back(transform_stack_.back());
-	scope_depth_++;
-}
-void
-TranslationState::ScopeEnd()
-{
-	scope_depth_--;
-	transform_stack_.pop_back();
-	cached_object_id_.clear();
-}
-void
-TranslationState::SceneBegin()
-{
-	render_context_.Clear();
-}
-void
-TranslationState::SceneEnd()
-{
-	SceneSetup_();
 }
 
 
@@ -197,11 +197,57 @@ TranslationState::PushObjectDesc_(ResourceContext::ObjectType const _type,
 								  std::string const &_subtype_id)
 {
 	std::string const unique_id = cached_object_id_.empty() ?
-		resource_context_.MakeUniqueID(_type) :
+		MakeUniqueResourceID_(_type) :
 		cached_object_id_;
 	resource_context_.PushDescriptor(unique_id, _type, *parameters_, _subtype_id);
+	++(resource_counters_[static_cast<uint32_t>(_type)]);
 }
 
+
+void
+TranslationState::ResetResourceCounters()
+{
+	std::fill(resource_counters_.begin(), resource_counters_.end(), 0u);
+}
+
+
+std::string
+TranslationState::MakeUniqueResourceID_(ResourceContext::ObjectType const _type) const
+{
+	std::stringstream result_stream;
+	if (_type == ResourceContext::ObjectType::kFilm)
+	{
+		result_stream << "film";
+	}
+	else if (_type == ResourceContext::ObjectType::kCamera)
+	{
+		result_stream << "camera";
+	}
+	else if (_type == ResourceContext::ObjectType::kShape)
+	{
+		result_stream << "shape";
+	}
+	else if (_type == ResourceContext::ObjectType::kLight)
+	{
+		result_stream << "light";
+	}
+	else if (_type == ResourceContext::ObjectType::kSampler)
+	{
+		result_stream << "sampler";
+	}
+	else if (_type == ResourceContext::ObjectType::kIntegrator)
+	{
+		result_stream << "integrator";
+	}
+	else
+	{
+		YS_ASSERT(false);
+		LOG_ERROR(tools::kChannelGeneral, "Unhandled ObjectType");
+	}
+	uint32_t const existing_count = resource_counters_[static_cast<uint32_t>(_type)];
+	result_stream << existing_count;
+	return result_stream.str();
+}
 
 
 } // namespace api

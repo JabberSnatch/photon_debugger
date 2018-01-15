@@ -29,7 +29,7 @@ public:
 				  raytracer::Sampler &_sampler,
 				  raytracer::Integrator &_integrator,
 				  PrimitiveContainer_t &_primitives,
-				  LightContainer_t &_lights); // TODO: add LightContainer_t (once safe-backward-kill-word is written)
+				  LightContainer_t &_lights);
 	void	Clear();
 	void	SetCamera(raytracer::Camera *_c);
 	void	SetSampler(raytracer::Sampler *_s);

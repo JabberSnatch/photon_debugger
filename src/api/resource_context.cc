@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <string>
-#include <sstream>
 
 #include <boost/numeric/conversion/cast.hpp>
 
@@ -57,12 +56,6 @@ ResourceContext::GetType<raytracer::Integrator>()
 }
 
 
-ResourceContext::ResourceContext()
-{
-	std::fill(descriptor_counts_.begin(), descriptor_counts_.end(), 0u);
-}
-
-
 bool
 ResourceContext::IsUniqueIdFree(std::string const &_unique_id) const
 {
@@ -86,10 +79,10 @@ ResourceContext::PushDescriptor(std::string const &_unique_id,
 	{
 		object_descriptors_.emplace_back(new (mem_region_)
 			ObjectDescriptor{ _unique_id, _type, _param_set, _subtype_id });
-		++(descriptor_counts_[static_cast<uint32_t>(_type)]);
 	}
 	else
 	{
+		// TODO: handle object descriptor reassignment properly
 		LOG_WARNING(tools::kChannelGeneral, "Object ID " + _unique_id + " is referenced by two separate descriptors.");
 	}
 }
@@ -122,8 +115,6 @@ ResourceContext::GetAllDescsOfType(ObjectType const _type) const
 	{
 		return _object_desc->type_id == _type;
 	});
-	YS_ASSERT(result.size() ==
-			  boost::numeric_cast<size_t>(descriptor_counts_[static_cast<uint32_t>(_type)]));
 	return result;
 }
 
@@ -202,45 +193,6 @@ void
 ResourceContext::SetWorkdir(std::string const &_workdir)
 {
 	workdir_ = _workdir;
-}
-
-
-std::string
-ResourceContext::MakeUniqueID(ObjectType const _type) const
-{
-	std::stringstream result_stream;
-	if (_type == ObjectType::kFilm)
-	{
-		result_stream << "film";
-	}
-	else if (_type == ObjectType::kCamera)
-	{
-		result_stream << "camera";
-	}
-	else if (_type == ObjectType::kShape)
-	{
-		result_stream << "shape";
-	}
-	else if (_type == ObjectType::kLight)
-	{
-		result_stream << "light";
-	}
-	else if (_type == ObjectType::kSampler)
-	{
-		result_stream << "sampler";
-	}
-	else if (_type == ObjectType::kIntegrator)
-	{
-		result_stream << "integrator";
-	}
-	else
-	{
-		YS_ASSERT(false);
-		LOG_ERROR(tools::kChannelGeneral, "Unhandled ObjectType");
-	}
-	uint32_t const existing_count = descriptor_counts_[static_cast<uint32_t>(_type)];
-	result_stream << existing_count;
-	return result_stream.str();
 }
 
 

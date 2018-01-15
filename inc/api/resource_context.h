@@ -54,11 +54,9 @@ private:
 		void				*instance;
 	};
 	using ObjectInstanceContainer_t = std::vector<ObjectInstance>;
-	using DescriptorCountContainer_t = std::array<uint32_t, static_cast<size_t>(ObjectType::kCount)>;
 private:
 	using UsedShapePtrContainer_t = std::unordered_set<raytracer::Shape const*>;
 public:
-	ResourceContext();
 	bool IsUniqueIdFree(std::string const &_unique_id) const;
 	void PushDescriptor(std::string const &_unique_id,
 						ObjectType _type,
@@ -68,7 +66,6 @@ public:
 	ObjectDescriptorContainer_t GetAllDescsOfType(ObjectType const _type) const;
 	template <typename T> T& Fetch(std::string const &_unique_id);
 	void SetWorkdir(std::string const &_workdir);
-	std::string MakeUniqueID(ObjectType const _type) const;
 	std::string const	&workdir() const;
 	core::MemoryRegion	&mem_region();
 	TransformCache		&transform_cache();
@@ -83,7 +80,6 @@ private:
 	TransformCache					transform_cache_{};
 	ObjectDescriptorContainer_t		object_descriptors_{};
 	ObjectInstanceContainer_t		object_instances_{};
-	DescriptorCountContainer_t		descriptor_counts_{};
 	UsedShapePtrContainer_t			light_shapes_{};
 };
 

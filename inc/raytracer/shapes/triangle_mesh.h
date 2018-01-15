@@ -4,6 +4,8 @@
 
 #include <string>
 #include <vector>
+
+#include "core/memory_region.h"
 #include "maths/maths.h"
 #include "maths/bounds.h"
 #include "raytracer/shape.h"
@@ -50,6 +52,7 @@ private:
 	maths::Bounds3f		world_bounds_;
 	TriangleContainer_t	triangles_;
 	BvhAccelerator		bvh_;
+	core::MemoryRegion	mem_region_;
 };
 
 TriangleMesh	*ReadTriangleMeshFromFile(std::string const &_path,

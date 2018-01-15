@@ -111,7 +111,7 @@ TriangleMesh::MakePrimitives_(TriangleContainer_t const &_triangles,
 	return result;
 }
 
-
+// TODO: implement instancing
 TriangleMesh*
 ReadTriangleMeshFromFile(std::string const &_path,
 						 maths::Transform const &_world_transform,

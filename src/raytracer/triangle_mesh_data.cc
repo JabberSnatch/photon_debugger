@@ -8,6 +8,7 @@
 
 namespace raytracer {
 
+
 TriangleMeshData::TriangleMeshData(maths::Transform const &_world_transform,
 								   int32_t _triangle_count,
 								   IndicesContainer_t const &_indices,

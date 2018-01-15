@@ -27,8 +27,14 @@ class TranslationState final :
 {
 private:
 	using TransformStack_t = std::vector<maths::Transform>;
+	using ResourceCounterContainer_t =
+		std::array<uint32_t, static_cast<size_t>(ResourceContext::ObjectType::kCount)>;
 public:
 	TranslationState();
+	void	SceneBegin();
+	void	SceneEnd();
+	void	ScopeBegin();
+	void	ScopeEnd();
 	void	Workdir(std::string const &_absolute_path);
 	void	Output(std::string const &_relative_path);
 	void	ObjectId(std::string const &_object_id);
@@ -42,10 +48,6 @@ public:
 	void	Translate(maths::Vec3f const &_t);
 	void	Rotate(maths::Decimal _angle, maths::Vec3f const &_axis);
 	void	Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z);
-	void	ScopeBegin();
-	void	ScopeEnd();
-	void	SceneBegin();
-	void	SceneEnd();
 	ParamSet	&param_set() { return *parameters_; }
 public:
 	api::RenderContext	&render_context() { return render_context_; }
@@ -63,6 +65,11 @@ private:
 	TransformStack_t		transform_stack_;
 	std::string				cached_object_id_;
 	ParamSet				*parameters_;
+public:
+	void	ResetResourceCounters();
+private:
+	std::string					MakeUniqueResourceID_(ResourceContext::ObjectType const _type) const;
+	ResourceCounterContainer_t	resource_counters_{};
 };
 
 
