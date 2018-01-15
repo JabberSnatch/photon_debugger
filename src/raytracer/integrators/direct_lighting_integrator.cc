@@ -11,6 +11,9 @@
 #include "common_macros.h"
 #include "core/logger.h"
 
+#include <string>
+#include <sstream>
+
 namespace raytracer {
 
 
@@ -37,7 +40,8 @@ DirectLightingIntegrator::Prepare(PrimitiveContainer_t const &_primitives,
 	LOG_INFO(tools::kChannelGeneral, "Preparing DirectLightingIntegrator");
 	for (uint64_t i = 0u; i < boost::numeric_cast<uint64_t>(_lights.size()); ++i)
 	{
-		sampler().ReserveArray<2u>(2u * shadow_ray_count_);
+		sampler().ReserveArray<2u>(shadow_ray_count_);
+		sampler().ReserveArray<2u>(shadow_ray_count_);
 	}
 }
 
@@ -50,17 +54,19 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 	TIMED_SCOPE(DirectLightingIntegrator_Li);
 	// hardcoded perfect diffuse material
 	constexpr maths::Decimal material_pdf = 1._d / (2._d * maths::pi<maths::Decimal>);
-	//
+
 	if (_hit.primitive == nullptr)
 		return maths::Vec3f{ 0.5_d, 0.5_d, 0.5_d };
 	maths::Vec3f result(0._d);
 	for (Light const *light : _scene._lights)
 	{
-		Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(2u * shadow_ray_count_);
-		Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
 		uint64_t sample_count = 0u;
-		while(current_sample != samples.cend())
+		maths::Vec2f light_sample_avg{maths::zero<maths::Vec2f>};
+		maths::Vec2f material_sample_avg{maths::zero<maths::Vec2f>};
 		{
+			Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(shadow_ray_count_);
+			Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
+			while(current_sample != samples.cend())
 			{
 				maths::Vec2f const light_sample_ksi = *(current_sample++);
 				Light::LiSample const light_sample = light->Sample(_hit, light_sample_ksi);
@@ -85,7 +91,15 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 				else
 				{ // shadowed light, no contribution
 				}
+
+				++sample_count;
+				light_sample_avg += light_sample_ksi;
 			}
+		}
+		{
+			Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(2u * shadow_ray_count_);
+			Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
+			while (current_sample != samples.cend())
 			{
 				maths::Vec2f const material_sample_ksi = *(current_sample++);
 				// hardcoded perfect diffuse material
@@ -118,10 +132,28 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 				else
 				{ // sampled a direction for which the light doesn't contribute
 				}
+
+				++sample_count;
+				material_sample_avg += material_sample_ksi;
 			}
-			++sample_count;
 		}
-		YS_ASSERT(sample_count == shadow_ray_count_);
+		YS_ASSERT(sample_count == shadow_ray_count_ * 2);
+		light_sample_avg /= static_cast<maths::Decimal>(shadow_ray_count_);
+		material_sample_avg /= static_cast<maths::Decimal>(shadow_ray_count_);
+#if 0
+		const auto vec2_to_string = [](maths::Vec2f const &_vec) -> std::string {
+			std::stringstream out_stream{};
+			out_stream << _vec.x << " " << _vec.y;
+			return out_stream.str();
+		};
+		LOG_INFO(tools::kChannelGeneral,
+				 "Light Sample; Material Sample averages\n");
+		LOG_INFO(tools::kChannelGeneral,
+				 vec2_to_string(light_sample_avg));
+		LOG_INFO(tools::kChannelGeneral,
+				 vec2_to_string(material_sample_avg));
+#endif
+		
 		result /= boost::numeric_cast<maths::Decimal>(shadow_ray_count_);
 	}
 	return result;
