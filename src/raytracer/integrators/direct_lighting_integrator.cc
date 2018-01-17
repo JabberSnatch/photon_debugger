@@ -57,12 +57,10 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 
 	if (_hit.primitive == nullptr)
 		return maths::Vec3f{ 0.5_d, 0.5_d, 0.5_d };
-	maths::Vec3f result(0._d);
+
+	maths::Vec3f Li(0._d);
 	for (Light const *light : _scene._lights)
 	{
-		uint64_t sample_count = 0u;
-		maths::Vec2f light_sample_avg{maths::zero<maths::Vec2f>};
-		maths::Vec2f material_sample_avg{maths::zero<maths::Vec2f>};
 		{
 			Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(shadow_ray_count_);
 			Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
@@ -86,18 +84,16 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 						maths::Abs(maths::Dot(light_wi, _hit.shading.normal()));
 					maths::Vec3f const contribution = light_sample.li *
 						material_pdf * cos_theta * weight / light_sample.probability;
-					result += contribution;
+					Li += contribution;
 				}
 				else
 				{ // shadowed light, no contribution
 				}
-
-				++sample_count;
-				light_sample_avg += light_sample_ksi;
 			}
 		}
+		
 		{
-			Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(2u * shadow_ray_count_);
+			Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(shadow_ray_count_);
 			Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();
 			while (current_sample != samples.cend())
 			{
@@ -123,7 +119,7 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 							maths::Abs(maths::Dot(material_wi, _hit.shading.normal()));
 						maths::Vec3f const contribution = light->Le() *
 							light_pdf * cos_theta * weight / material_pdf;
-						result += contribution;
+						Li += contribution;
 					}
 					else
 					{ // shadowed light, no contribution
@@ -132,31 +128,11 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 				else
 				{ // sampled a direction for which the light doesn't contribute
 				}
-
-				++sample_count;
-				material_sample_avg += material_sample_ksi;
 			}
 		}
-		YS_ASSERT(sample_count == shadow_ray_count_ * 2);
-		light_sample_avg /= static_cast<maths::Decimal>(shadow_ray_count_);
-		material_sample_avg /= static_cast<maths::Decimal>(shadow_ray_count_);
-#if 0
-		const auto vec2_to_string = [](maths::Vec2f const &_vec) -> std::string {
-			std::stringstream out_stream{};
-			out_stream << _vec.x << " " << _vec.y;
-			return out_stream.str();
-		};
-		LOG_INFO(tools::kChannelGeneral,
-				 "Light Sample; Material Sample averages\n");
-		LOG_INFO(tools::kChannelGeneral,
-				 vec2_to_string(light_sample_avg));
-		LOG_INFO(tools::kChannelGeneral,
-				 vec2_to_string(material_sample_avg));
-#endif
-		
-		result /= boost::numeric_cast<maths::Decimal>(shadow_ray_count_);
 	}
-	return result;
+	Li /= boost::numeric_cast<maths::Decimal>(shadow_ray_count_);
+	return Li;
 }
 
 

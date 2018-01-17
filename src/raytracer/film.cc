@@ -6,6 +6,7 @@
 
 #include "globals.h"
 #include "maths/vector.h"
+#include "core/logger.h"
 #include "core/profiler.h"
 
 namespace raytracer
@@ -50,7 +51,6 @@ Film::WriteToFile(std::string const &_path) const
 				x = resolution_.w - 1 - x;
 				y = resolution_.h - 1 - y;
 			}
-
 			maths::Vec3f pixel_value = MapToLimitedRange(pixels_[y * resolution_.w + x]);
 			
 			YS_ASSERT(pixel_value.r >= 0.f && pixel_value.g >= 0.f && pixel_value.b >= 0.f);

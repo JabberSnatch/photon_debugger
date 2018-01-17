@@ -154,6 +154,7 @@ AOIntegrator::Li(maths::Ray const &_ray,
 			bool cast_primary_ray = false;
 			bool fixed_shading_normal_self_hitting = false;
 			if (use_shading_geometry_)
+				// TODO: refactor the raycasting part out of this block
 			{	// if we're using shading geometry, we have to account for a wi pointing underneath
 				// the geometry's surface
 				maths::Vec3f const geometry_normal{ _hit.geometry.normal() };

@@ -271,6 +271,8 @@ MakeAreaLight(api::ResourceContext &_context, api::ParamSet const &_params)
 	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
 	maths::Vec3f const		&emission_color =
 		_params.FindFloat<3>("emission_color", maths::Vec3f{1._d, 0._d, 1._d});
+	maths::Decimal const	intensity =
+		_params.FindFloat("intensity", 1._d);
 	std::string const 		&shape_id = _params.FindString("shape_id", "");
 	if (shape_id == "")
 	{
@@ -278,7 +280,7 @@ MakeAreaLight(api::ResourceContext &_context, api::ParamSet const &_params)
 	}
 	raytracer::Shape const	&shape = _context.Fetch<raytracer::Shape>(shape_id);
 	raytracer::Light *const area_light = new (_context.mem_region())
-		raytracer::AreaLight{ world_transform, emission_color, shape };
+		raytracer::AreaLight{ world_transform, emission_color * intensity, shape };
 	_context.FlagLightShape(shape);
 	return area_light;
 }

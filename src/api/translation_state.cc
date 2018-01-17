@@ -54,6 +54,7 @@ TranslationState::Workdir(std::string const &_absolute_path)
 {
 	workdir_ = boost::filesystem::absolute(_absolute_path).string();
 	render_context_.workdir = workdir_;
+	resource_context_.SetWorkdir(workdir_);
 }
 void
 TranslationState::Output(std::string const &_relative_path)
