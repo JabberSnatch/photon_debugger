@@ -29,9 +29,11 @@ public:
 	using PrimitiveContainer_t = std::vector<raytracer::Primitive const*>;
 	using LightContainer_t = std::vector<raytracer::Light const*>;
 public:
+	// TODO: Integrator(Camera, Film, Sampler)
 	virtual ~Integrator() = default;
 	virtual void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) = 0;
 	void Integrate(Scene const &_scene, maths::Decimal _t);
+	// TODO: remove
 	void SetCamera(Camera *_camera) { camera_ = _camera; }
 	void SetFilm(Film *_film) { film_ = _film; }
 	void SetSampler(Sampler *_sampler) { sampler_ = _sampler; }

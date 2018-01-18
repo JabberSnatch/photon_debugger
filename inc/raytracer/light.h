@@ -37,6 +37,7 @@ public:
 	virtual maths::Vec3f Le() const = 0;
 	virtual LiSample Sample(SurfaceInteraction const &_hit_info, maths::Vec2f const &_ksi) const = 0;
 	virtual maths::Decimal Pdf(SurfaceInteraction const &_hit_info, maths::Vec3f const &_wi) const = 0;
+	// TODO: remove world_transform
 	maths::Transform const &world_transform() const;
 private:
 	maths::Transform const &world_transform_;

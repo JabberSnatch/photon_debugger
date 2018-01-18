@@ -13,9 +13,10 @@ namespace api {
 
 
 TranslationState::TranslationState():
-	workdir_{ boost::filesystem::current_path().string() },
-	output_path_{ boost::filesystem::absolute("image.png", workdir_).string() },
-	resource_context_{}, render_context_{},
+	render_context_{},
+	resource_context_{ boost::filesystem::current_path().string() },
+	output_path_{ "" },
+	output_file_{ "image.png" },
 	scope_depth_{ 1 }, transform_stack_{ maths::Transform{} },
 	cached_object_id_{ "" }, parameters_{ nullptr }
 {
@@ -50,16 +51,37 @@ TranslationState::ScopeEnd()
 	cached_object_id_.clear();
 }
 void
-TranslationState::Workdir(std::string const &_absolute_path)
+TranslationState::Workdir(std::string const &_path)
 {
-	workdir_ = boost::filesystem::absolute(_absolute_path).string();
-	render_context_.workdir = workdir_;
-	resource_context_.SetWorkdir(workdir_);
+	boost::filesystem::path const absolute_path =
+		boost::filesystem::absolute(_path);
+	YS_ASSERT(boost::filesystem::is_directory(absolute_path));
+	resource_context_.SetWorkdir(absolute_path.generic_string());
 }
+
 void
-TranslationState::Output(std::string const &_relative_path)
+TranslationState::Output(std::string const &_file)
 {
-	output_path_ = boost::filesystem::absolute(_relative_path, workdir_).string();
+	boost::filesystem::path const file_path{ _file };
+	if (file_path.is_relative())
+	{
+		output_file_ = _file;
+	}
+	else if (file_path.is_absolute())
+	{
+		boost::filesystem::path const workdir{ resource_context_.workdir() };
+		boost::filesystem::path const directory{ file_path.parent_path() };
+		boost::filesystem::path const file{ file_path.filename() };
+		if (!boost::filesystem::equivalent(directory, workdir))
+		{
+			output_path_ = directory.generic_string();
+		}
+		output_file_ = file.generic_string();
+	}
+	else
+	{
+		YS_ASSERT(false);
+	}
 }
 void
 TranslationState::ObjectId(std::string const &_object_id)
@@ -126,6 +148,28 @@ void
 TranslationState::Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z)
 {
 	transform_stack_.back() = transform_stack_.back() * maths::Scale(_x, _y, _z);
+}
+
+
+std::string
+TranslationState::output_path() const
+{
+	std::string result{ "" };
+	YS_ASSERT(!output_file_.empty());
+	if (output_path_.empty())
+	{
+		std::string const workdir = resource_context_.workdir();
+		boost::filesystem::path const output_path{
+			boost::filesystem::absolute(output_file_, workdir) };
+		result = output_path.generic_string();
+	}
+	else
+	{
+		boost::filesystem::path const output_path{
+			boost::filesystem::absolute(output_file_, output_path_) };
+		result = output_path.generic_string();
+	}
+	return result;
 }
 
 

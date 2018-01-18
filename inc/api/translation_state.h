@@ -35,8 +35,8 @@ public:
 	void	SceneEnd();
 	void	ScopeBegin();
 	void	ScopeEnd();
-	void	Workdir(std::string const &_absolute_path);
-	void	Output(std::string const &_relative_path);
+	void	Workdir(std::string const &_path);
+	void	Output(std::string const &_file);
 	void	ObjectId(std::string const &_object_id);
 	void	Film();
 	void	Camera();
@@ -48,19 +48,21 @@ public:
 	void	Translate(maths::Vec3f const &_t);
 	void	Rotate(maths::Decimal _angle, maths::Vec3f const &_axis);
 	void	Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z);
+	// TODO: make sure param_set isn't deprecated
 	ParamSet	&param_set() { return *parameters_; }
 public:
 	api::RenderContext	&render_context() { return render_context_; }
-	std::string			&output_path() { return output_path_; }
+	std::string output_path() const;
 private:
 	void	SceneSetup_();
 	void	PushObjectDesc_(ResourceContext::ObjectType const _type,
 							std::string const &_subtype_id);
 private:
-	std::string				workdir_;
-	std::string				output_path_;
 	api::RenderContext		render_context_;
 	api::ResourceContext	resource_context_;
+	std::string				output_path_;
+	std::string				output_file_;
+	
 	uint32_t				scope_depth_;
 	TransformStack_t		transform_stack_;
 	std::string				cached_object_id_;

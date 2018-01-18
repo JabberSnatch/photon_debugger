@@ -55,7 +55,8 @@ int main(int argc, char *argv[])
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 	globals::logger.BindPath(tools::kChannelParsing, "parsing.log");
 
-	// TODO: Implement $ ./RayTracer.exe _JUNK/magikarp.txt
+	// TODO: make logging output dependant on output name
+	// TODO: add planes (and quads)
 	std::string absolute_path{};
 	bool interactive_mode = false;
 	if (argc > 1)

@@ -44,10 +44,6 @@ private:
 	raytracer::Integrator	*integrator_ = nullptr;
 	PrimitiveContainer_t	primitives_{};
 	LightContainer_t		lights_{};
-	//
-public:
-	// REFACTOR: move to ResourceContext or equivalent
-	std::string workdir; // To be removed, at some point in the future
 };
 
 

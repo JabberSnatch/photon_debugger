@@ -75,7 +75,6 @@ RenderContext::GoodForRender() const
 void
 RenderContext::RenderAndWrite(std::string const &_path)
 {
-	// REFACTOR: Still some work to do here, as soon as Integrator is constructed from its dependencies
 	integrator_->SetFilm(&(camera_->film()));
 	integrator_->SetCamera(camera_);
 	integrator_->SetSampler(sampler_);

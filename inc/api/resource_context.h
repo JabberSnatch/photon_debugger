@@ -36,6 +36,7 @@ public:
 		kCount
 	};
 	template <typename T> static constexpr ObjectType GetType();
+public:
 	struct ObjectDescriptor
 	{
 		std::string const	unique_id;
@@ -57,6 +58,7 @@ private:
 private:
 	using UsedShapePtrContainer_t = std::unordered_set<raytracer::Shape const*>;
 public:
+	explicit ResourceContext(std::string const &_workdir);
 	bool IsUniqueIdFree(std::string const &_unique_id) const;
 	void PushDescriptor(std::string const &_unique_id,
 						ObjectType _type,

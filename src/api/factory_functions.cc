@@ -238,7 +238,6 @@ MakeHaltonSampler(api::ResourceContext &_context, api::ParamSet const &_params)
 raytracer::Integrator*
 MakeNormalIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 {
-	// REFACTOR: Integrator should lookup its dependecies upon construction
 	bool const	remap = _params.FindBool("remap", false);
 	bool const	absolute = _params.FindBool("absolute", false);
 	raytracer::Integrator *const normal_integrator = new (_context.mem_region())

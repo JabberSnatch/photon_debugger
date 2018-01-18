@@ -690,7 +690,9 @@ OutputGroup(TranslationState &_state,
 			std::vector<Token>::const_iterator _production_begin,
 			std::vector<Token>::const_iterator _production_end)
 {
-	LOG_ERROR(tools::kChannelParsing, "Output group ended, NO SEMANTIC ACTION");
+	LOG_INFO(tools::kChannelParsing, "Output group ended, applying semantic action..");
+	std::string const &value = std::next(_production_begin)->text;
+	_state.Output(value);
 }
 
 void

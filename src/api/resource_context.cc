@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string>
 
+#include <boost/filesystem.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 #include "api/factory_functions.h"
@@ -53,6 +54,13 @@ constexpr ResourceContext::ObjectType
 ResourceContext::GetType<raytracer::Integrator>()
 {
 	return ObjectType::kIntegrator;
+}
+
+
+ResourceContext::ResourceContext(std::string const &_workdir) :
+	workdir_{ _workdir }
+{
+	YS_ASSERT(boost::filesystem::exists(boost::filesystem::path(_workdir)));
 }
 
 
@@ -192,6 +200,7 @@ ResourceContext::Fetch<raytracer::Integrator>(std::string const &_unique_id);
 void
 ResourceContext::SetWorkdir(std::string const &_workdir)
 {
+	YS_ASSERT(boost::filesystem::exists(boost::filesystem::path(_workdir)));
 	workdir_ = _workdir;
 }
 
