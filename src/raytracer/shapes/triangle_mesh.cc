@@ -209,6 +209,10 @@ ReadTriangleMeshFromFile(std::string const &_path,
 												*mesh_data,
 												_mem_region);
 	}
+	else
+	{
+		LOG_WARNING(tools::kChannelGeneral, "could not load file " + _path);
+	}
 	return result;
 }
 

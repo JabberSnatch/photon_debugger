@@ -1,3 +1,4 @@
+#include <csignal>
 #include <typeinfo>
 #include <iostream>
 #include <sstream>
@@ -15,48 +16,54 @@
 #include "raytracer/samplers/halton_sampler.h"
 
 
-void flush_profiler()
+void flush_profiler();
+void flush_logger();
+
+void render(std::string const &_path, api::TranslationState &_translation_state)
 {
-	globals::profiler_aggregate.GrabTimers(globals::profiler);
+	_translation_state.ResetResourceCounters();
+	if (!_path.empty() && boost::filesystem::exists(_path))
 	{
-		tools::Profiler::TimerTable_t timers = globals::profiler_aggregate.timers();
-		for (auto it = timers.begin(); it != timers.end(); ++it)
-		{
-			tools::Timer const &timer = it->second;
-			char const *call_string = (timer.call_count() > 1) ? " calls. " : " call. ";
-			std::stringstream string;
-			string << "\n" << 
-				timer.name() << " : " << std::endl <<
-				"	" << timer.call_count() << call_string << std::endl <<
-				"	real time : [ " <<
-				timer.total_time() << " : " << timer.worst_time() << " + " <<
-				timer.average_time() << " - " <<
-				timer.best_time() << " ] " << std::endl <<
-				"	cycles :    [ " <<
-				timer.total_cycles() << " : " << timer.worst_cycles() << " + " <<
-				timer.average_cycles() << " - " <<
-				timer.best_cycles() << " ]";
-			globals::logger.Log(tools::kChannelProfiling, tools::kLevelInfo, string.str());
-		}
+		api::ProcessInputFile(_path, _translation_state);
 	}
+	else
+	{
+		std::cout << "No input file" << std::endl;
+	}
+	//
+	if (_translation_state.render_context().GoodForRender())
+	{
+		_translation_state.render_context().RenderAndWrite(_translation_state.output_path());
+	}
+	else
+	{
+		std::cout << "Error in input file" << std::endl;
+	}
+	flush_profiler();
+	flush_logger();
 }
 
 
-void flush_logger()
+void signal_handler(int signal)
 {
-	globals::logger.FlushAll();
+	std::cout << "unexpected error, shutting down.." << std::endl;
+	globals::logger.~Logger();
 }
 
 
 int main(int argc, char *argv[])
 {
-	// TODO: Make this depend on the file name
+	std::signal(SIGSEGV, signal_handler);
+	std::signal(SIGTERM, signal_handler);
+	std::signal(SIGABRT, signal_handler);
+
 	globals::logger.BindPath(tools::kChannelGeneral, "general.log");
 	globals::logger.BindPath(tools::kChannelProfiling, "profiling.log");
 	globals::logger.BindPath(tools::kChannelParsing, "parsing.log");
 
 	// TODO: make logging output dependant on output name
 	// TODO: add planes (and quads)
+	// TODO: add support for c4d files
 	std::string absolute_path{};
 	bool interactive_mode = false;
 	if (argc > 1)
@@ -83,6 +90,7 @@ int main(int argc, char *argv[])
 		std::cout << "Please provide a path to an input file as first argument." << std::endl;
 	}
 
+
 	{
 		api::TranslationState translation_state{};
 		if (interactive_mode)
@@ -95,26 +103,7 @@ int main(int argc, char *argv[])
 				std::cin >> input_string;
 				if (input_string == "render")
 				{
-					translation_state.ResetResourceCounters();
-					if (!absolute_path.empty() && boost::filesystem::exists(absolute_path))
-					{
-						api::ProcessInputFile(absolute_path, translation_state);
-					}
-					else
-					{
-						std::cout << "No input file" << std::endl;
-					}
-					//
-					if (translation_state.render_context().GoodForRender())
-					{
-						translation_state.render_context().RenderAndWrite(translation_state.output_path());
-					}
-					else
-					{
-						std::cout << "Error in input file" << std::endl;
-					}
-					flush_profiler();
-					flush_logger();
+					render(absolute_path, translation_state);
 				}
 				else if (input_string == "exit")
 				{
@@ -128,30 +117,42 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			if (!absolute_path.empty() && boost::filesystem::exists(absolute_path))
-			{
-				api::ProcessInputFile(absolute_path, translation_state);
-			}
-			else
-			{
-				std::cout << "No input file" << std::endl;
-			}
-			//
-			if (translation_state.render_context().GoodForRender())
-			{
-				translation_state.render_context().RenderAndWrite(translation_state.output_path());
-			}
-			else
-			{
-				std::cout << "Error in input file" << std::endl;
-			}
-			flush_profiler();
-			flush_logger();
+			render(absolute_path, translation_state);
 		}
 	}
-
-
 	
 	system("pause");
 	return 0;
+}
+
+
+void flush_profiler()
+{
+	globals::profiler_aggregate.GrabTimers(globals::profiler);
+	{
+		tools::Profiler::TimerTable_t timers = globals::profiler_aggregate.timers();
+		for (auto it = timers.begin(); it != timers.end(); ++it)
+		{
+			tools::Timer const &timer = it->second;
+			char const *call_string = (timer.call_count() > 1) ? " calls. " : " call. ";
+			std::stringstream string;
+			string << "\n" <<
+				timer.name() << " : " << std::endl <<
+				"	" << timer.call_count() << call_string << std::endl <<
+				"	real time : [ " <<
+				timer.total_time() << " : " << timer.worst_time() << " + " <<
+				timer.average_time() << " - " <<
+				timer.best_time() << " ] " << std::endl <<
+				"	cycles :    [ " <<
+				timer.total_cycles() << " : " << timer.worst_cycles() << " + " <<
+				timer.average_cycles() << " - " <<
+				timer.best_cycles() << " ]";
+			globals::logger.Log(tools::kChannelProfiling, tools::kLevelInfo, string.str());
+		}
+	}
+}
+
+void flush_logger()
+{
+	globals::logger.FlushAll();
 }

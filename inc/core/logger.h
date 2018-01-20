@@ -24,6 +24,7 @@ namespace tools {
 enum LogChannel { kChannelGeneral = 0, kChannelProfiling, kChannelParsing, kChannelCount, kChannelStdOut };
 enum LogLevel { kLevelDebug = 0, kLevelInfo, kLevelWarning, kLevelError, kLevelCount };
 
+// TODO: move implementation out of this file
 // One instance of FileLogger manages an array of stringstreams.
 // When a buffer exceeds a certain size, it is written back to disk and cleared.
 // LocalLoggers give it messages, and it orders them before writing them back to disk.
@@ -105,6 +106,7 @@ public:
 	static constexpr size_t		kInvalidThreadIndex = std::numeric_limits<size_t>::max();
 	thread_local static size_t	thread_index;
 
+	~Logger();
 	// Allocates necessary resources for parallel logging. This is called once by a main thread.
 	// Remember to set thread_index on each client thread.
 	void	AllowMultipleThreads(size_t _thread_count);
@@ -209,6 +211,12 @@ LogBuffer<hs, bs>::Log(LogChannel _channel, LogLevel _level, std::string const &
 	//	channel_lock_[_channel].Release();
 }
 
+
+template <size_t hs, size_t bs>
+Logger<hs, bs>::~Logger()
+{
+	FlushAll();
+}
 
 
 template <size_t hs, size_t bs>
