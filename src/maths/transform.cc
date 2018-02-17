@@ -8,6 +8,14 @@ namespace maths
 {
 
 
+const Transform&
+Transform::Identity()
+{
+	static const Transform result(Mat4x4f::Identity(), Mat4x4f::Identity());
+	return result;
+}
+
+
 bool
 Transform::IsIdentity() const
 {

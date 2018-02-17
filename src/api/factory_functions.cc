@@ -155,10 +155,7 @@ MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params)
 raytracer::Shape*
 MakeSphere(api::ResourceContext &_context, api::ParamSet const &_params)
 {
-	// TODO: the identity matrix shouldn't be looked up,
-	// maths::Transform should provide a static instance
-	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
-	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
+	maths::Transform const	&world_transform = _params.FindTransform("world_transform", maths::Transform::Identity());
 	bool const				flip_normals = _params.FindBool("flip_normals", false);
 	maths::Decimal const	radius = _params.FindFloat("radius", 1._d);
 	maths::Decimal const	z_min = _params.FindFloat("z_min", -radius);
@@ -172,8 +169,7 @@ raytracer::Shape*
 MakeTriangleMesh(api::ResourceContext &_context, api::ParamSet const &_params)
 {
 	raytracer::Shape* result = nullptr;
-	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
-	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
+	maths::Transform const	&world_transform = _params.FindTransform("world_transform", maths::Transform::Identity());
 	bool const				flip_normals = _params.FindBool("flip_normals", false);
 	std::string const		path_string = _params.FindString("path", "");
 	if (path_string != "")
@@ -266,8 +262,7 @@ MakeDirectLightingIntegrator(api::ResourceContext &_context, api::ParamSet const
 raytracer::Light*
 MakeAreaLight(api::ResourceContext &_context, api::ParamSet const &_params)
 {
-	maths::Transform const	&identity = _context.transform_cache().Lookup(maths::Transform());
-	maths::Transform const	&world_transform = _params.FindTransform("world_transform", identity);
+	maths::Transform const	&world_transform = _params.FindTransform("world_transform", maths::Transform::Identity());
 	maths::Vec3f const		&emission_color =
 		_params.FindFloat<3>("emission_color", maths::Vec3f{1._d, 0._d, 1._d});
 	maths::Decimal const	intensity =

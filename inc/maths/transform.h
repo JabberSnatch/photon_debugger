@@ -13,6 +13,8 @@ namespace maths
 class Transform final
 {
 public:
+	static const Transform& Identity();
+public:
 	enum OpDirection { kForward = 0, kInverse };
 
 	explicit Transform() :
