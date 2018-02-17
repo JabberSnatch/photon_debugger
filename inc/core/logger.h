@@ -215,6 +215,8 @@ LogBuffer<hs, bs>::Log(LogChannel _channel, LogLevel _level, std::string const &
 template <size_t hs, size_t bs>
 Logger<hs, bs>::~Logger()
 {
+	// TODO: fix this; Flush is a timed scope, and there is no guarantee that
+	// the profiler will shutdown after the logger
 	FlushAll();
 }
 

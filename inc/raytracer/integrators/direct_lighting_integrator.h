@@ -12,7 +12,7 @@ namespace raytracer {
 class DirectLightingIntegrator : public Integrator
 {
 public:
-	DirectLightingIntegrator(uint64_t const _shadow_ray_count);
+	DirectLightingIntegrator(Camera& _camera, Film& _film, Sampler& _sampler, uint64_t const _shadow_ray_count);
 	void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) override;
 	maths::Vec3f Li(maths::Ray const &_ray,
 					raytracer::SurfaceInteraction const &_hit,

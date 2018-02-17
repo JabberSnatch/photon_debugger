@@ -231,30 +231,79 @@ MakeHaltonSampler(api::ResourceContext &_context, api::ParamSet const &_params)
 }
 
 
+namespace {
+template <typename T>
+T&
+FetchForIDOrAny(std::string const &_object_id, api::ResourceContext &_context)
+{
+	T* result = nullptr;
+	if (_object_id.empty())
+	{
+		api::ResourceContext::ObjectDescriptor const &object_desc =
+			_context.GetAnyDescOfType(api::ResourceContext::GetType<T>());
+		result = &(_context.Fetch<T>(object_desc.unique_id));
+	}
+	else
+	{
+		result = &(_context.Fetch<T>(_object_id));
+	}
+	return *result;
+}
+
+std::tuple<raytracer::Camera*, raytracer::Film*, raytracer::Sampler*>
+IntegratorCommonMake(api::ResourceContext &_context, api::ParamSet const &_params)
+{
+	std::string const camera_id = _params.FindString("camera_id", "");
+	std::string const film_id = _params.FindString("film_id", "");
+	std::string const sampler_id = _params.FindString("sampler_id", "");
+	raytracer::Camera &camera =
+		FetchForIDOrAny<raytracer::Camera>(camera_id, _context);
+	raytracer::Film &film =
+		FetchForIDOrAny<raytracer::Film>(film_id, _context);
+	raytracer::Sampler &sampler =
+		FetchForIDOrAny<raytracer::Sampler>(sampler_id, _context);
+	return std::make_tuple(&camera, &film, &sampler);
+}
+}
+
 raytracer::Integrator*
 MakeNormalIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 {
+	auto integrator_base_params = IntegratorCommonMake(_context, _params);
 	bool const	remap = _params.FindBool("remap", false);
 	bool const	absolute = _params.FindBool("absolute", false);
 	raytracer::Integrator *const normal_integrator = new (_context.mem_region())
-		raytracer::NormalIntegrator{ remap, absolute };
+		raytracer::NormalIntegrator{ *std::get<0>(integrator_base_params),
+									 *std::get<1>(integrator_base_params),
+									 *std::get<2>(integrator_base_params),
+									 remap, absolute };
 	return normal_integrator;
 }
+
 raytracer::Integrator*
 MakeAOIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 {
+	auto integrator_base_params = IntegratorCommonMake(_context, _params);
 	uint64_t const	sample_count = _params.FindUint("sample_count", 1u);
 	bool const	shading_geometry = _params.FindBool("shading_geometry", false);
 	raytracer::Integrator *const ao_integrator = new (_context.mem_region())
-		raytracer::AOIntegrator{ sample_count, shading_geometry };
+		raytracer::AOIntegrator{ *std::get<0>(integrator_base_params),
+								 *std::get<1>(integrator_base_params),
+								 *std::get<2>(integrator_base_params),
+								 sample_count, shading_geometry };
 	return ao_integrator;
 }
+
 raytracer::Integrator*
 MakeDirectLightingIntegrator(api::ResourceContext &_context, api::ParamSet const &_params)
 {
+	auto integrator_base_params = IntegratorCommonMake(_context, _params);
 	uint64_t const			shadow_ray_count = _params.FindUint("shadow_rays", 1u);
 	raytracer::Integrator *const direct_lighting_integrator = new (_context.mem_region())
-		raytracer::DirectLightingIntegrator{ shadow_ray_count };
+		raytracer::DirectLightingIntegrator{ *std::get<0>(integrator_base_params),
+											 *std::get<1>(integrator_base_params),
+											 *std::get<2>(integrator_base_params),
+											 shadow_ray_count };
 	return direct_lighting_integrator;
 }
 

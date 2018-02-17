@@ -48,7 +48,6 @@ public:
 	void	Translate(maths::Vec3f const &_t);
 	void	Rotate(maths::Decimal _angle, maths::Vec3f const &_axis);
 	void	Scale(maths::Decimal _x, maths::Decimal _y, maths::Decimal _z);
-	// TODO: make sure param_set isn't deprecated
 	ParamSet	&param_set() { return *parameters_; }
 public:
 	api::RenderContext	&render_context() { return render_context_; }

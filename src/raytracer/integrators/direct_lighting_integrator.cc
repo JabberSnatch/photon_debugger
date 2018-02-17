@@ -27,8 +27,8 @@ PowerHeuristic(uint32_t const _nf, maths::Decimal const _pf,
 }
 
 
-DirectLightingIntegrator::DirectLightingIntegrator(uint64_t const _shadow_ray_count) :
-	Integrator(),
+DirectLightingIntegrator::DirectLightingIntegrator(Camera& _camera, Film& _film, Sampler& _sampler, uint64_t const _shadow_ray_count) :
+	Integrator{ _camera, _film, _sampler },
 	shadow_ray_count_{ _shadow_ray_count }
 {}
 

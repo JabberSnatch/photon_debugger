@@ -178,10 +178,6 @@ TranslationState::SceneSetup_()
 {
 	ResourceContext::ObjectDescriptor const &integrator_desc =
 		resource_context_.GetAnyDescOfType(ResourceContext::ObjectType::kIntegrator);
-	ResourceContext::ObjectDescriptor const &camera_desc =
-		resource_context_.GetAnyDescOfType(ResourceContext::ObjectType::kCamera);
-	ResourceContext::ObjectDescriptor const &sampler_desc =
-		resource_context_.GetAnyDescOfType(ResourceContext::ObjectType::kSampler);
 	ResourceContext::ObjectDescriptorContainer_t shape_descs =
 		resource_context_.GetAllDescsOfType(ResourceContext::ObjectType::kShape);
 	ResourceContext::ObjectDescriptorContainer_t light_descs =
@@ -189,10 +185,6 @@ TranslationState::SceneSetup_()
 	//
 	raytracer::Integrator	&integrator =
 		resource_context_.Fetch<raytracer::Integrator>(integrator_desc.unique_id);
-	raytracer::Camera		&camera =
-		resource_context_.Fetch<raytracer::Camera>(camera_desc.unique_id);
-	raytracer::Sampler		&sampler =
-		resource_context_.Fetch<raytracer::Sampler>(sampler_desc.unique_id);
 	//
 	RenderContext::LightContainer_t lights{};
 	lights.reserve(light_descs.size());
@@ -234,7 +226,7 @@ TranslationState::SceneSetup_()
 	{
 	}
 	//
-	render_context_ = api::RenderContext(camera, sampler, integrator, primitives, lights);
+	render_context_ = api::RenderContext(integrator, primitives, lights);
 }
 
 void
@@ -244,7 +236,7 @@ TranslationState::PushObjectDesc_(ResourceContext::ObjectType const _type,
 	std::string const unique_id = cached_object_id_.empty() ?
 		MakeUniqueResourceID_(_type) :
 		cached_object_id_;
-	resource_context_.PushDescriptor(unique_id, _type, *parameters_, _subtype_id);
+	resource_context_.PushDescriptor(unique_id, _type, param_set(), _subtype_id);
 	++(resource_counters_[static_cast<uint32_t>(_type)]);
 }
 

@@ -159,16 +159,19 @@ ResourceContext::Fetch(std::string const &_unique_id)
 				else
 				{
 					LOG_ERROR(tools::kChannelGeneral, "Unexpected error, no object created.");
+					YS_ASSERT(false);
 				}
 			}
 			else
 			{
 				LOG_ERROR(tools::kChannelGeneral, "Fetch expected an object of type " + std::to_string(static_cast<int> (GetType<T>())) + " but got " + std::to_string(static_cast<int>(object_desc.type_id)) + " instead.	 Object ID : " + object_desc.unique_id);
+				YS_ASSERT(false);
 			}
 		}
 		else
 		{
 			LOG_ERROR(tools::kChannelGeneral, "Object ID " + _unique_id + " doesn't exist.");
+			YS_ASSERT(false);
 		}
 	}
 	else

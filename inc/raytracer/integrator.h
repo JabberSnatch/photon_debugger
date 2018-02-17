@@ -29,24 +29,22 @@ public:
 	using PrimitiveContainer_t = std::vector<raytracer::Primitive const*>;
 	using LightContainer_t = std::vector<raytracer::Light const*>;
 public:
-	// TODO: Integrator(Camera, Film, Sampler)
+	Integrator(Camera& _camera, Film& _film, Sampler& _sampler);
 	virtual ~Integrator() = default;
 	virtual void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) = 0;
 	void Integrate(Scene const &_scene, maths::Decimal _t);
-	// TODO: remove
-	void SetCamera(Camera *_camera) { camera_ = _camera; }
-	void SetFilm(Film *_film) { film_ = _film; }
-	void SetSampler(Sampler *_sampler) { sampler_ = _sampler; }
+	const Camera &camera() const { return camera_; }
+	const Film &film() const { return film_; }
 protected:
-	Sampler &sampler() { return *sampler_; }
+	Sampler &sampler() { return sampler_; }
 private:
 	virtual maths::Vec3f Li(maths::Ray const &_ray,
 							raytracer::SurfaceInteraction const &_hit,
 							Scene const &_scene) = 0;
 private:
-	Camera *camera_ = nullptr;
-	Film *film_ = nullptr;
-	Sampler *sampler_ = nullptr;
+	Camera &camera_;
+	Film &film_;
+	Sampler &sampler_;
 };
 
 
@@ -54,7 +52,7 @@ class NormalIntegrator final :
 	public Integrator
 {
 public:
-	NormalIntegrator(bool const _remap, bool const _absolute);
+	NormalIntegrator(Camera& _camera, Film& _film, Sampler& _sampler, bool const _remap, bool const _absolute);
 	void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) override;
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,
@@ -75,7 +73,7 @@ private:
 	static constexpr maths::Vec3f kSecondaryRaySelfHitColor = { 0._d, 0._d, 1._d };
 	static constexpr maths::Vec3f kPrimaryRaySelfHitColor = { 1._d, 0._d, 0._d };
 public:
-	AOIntegrator(uint64_t const _sample_count, bool const _use_shading_geometry);
+	AOIntegrator(Camera& _camera, Film& _film, Sampler& _sampler, uint64_t const _sample_count, bool const _use_shading_geometry);
 	void Prepare(PrimitiveContainer_t const &_primitives, LightContainer_t const &_lights) override;
 private:
 	maths::Vec3f Li(maths::Ray const &_ray,

@@ -25,22 +25,15 @@ public:
 	using LightContainer_t = std::vector<raytracer::Light const*>;
 public:
 	RenderContext();
-	RenderContext(raytracer::Camera &_camera,
-				  raytracer::Sampler &_sampler,
-				  raytracer::Integrator &_integrator,
+	RenderContext(raytracer::Integrator &_integrator,
 				  PrimitiveContainer_t &_primitives,
 				  LightContainer_t &_lights);
 	void	Clear();
-	void	SetCamera(raytracer::Camera *_c);
-	void	SetSampler(raytracer::Sampler *_s);
-	void	SetIntegrator(raytracer::Integrator *_i);
 	void	AddPrimitive(raytracer::Primitive *_prim);
 public:
 	bool	GoodForRender() const;
 	void	RenderAndWrite(std::string const &_path);
 private:
-	raytracer::Camera		*camera_ = nullptr;
-	raytracer::Sampler		*sampler_ = nullptr;
 	raytracer::Integrator	*integrator_ = nullptr;
 	PrimitiveContainer_t	primitives_{};
 	LightContainer_t		lights_{};
