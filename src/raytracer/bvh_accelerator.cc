@@ -10,9 +10,16 @@
 namespace raytracer {
 
 
+BvhAccelerator::BvhAccelerator() :
+	primitives_{},
+	nodes_{ nullptr },
+	node_max_size_{ 0u }
+{}
+
 BvhAccelerator::BvhAccelerator(BvhAccelerator::PrimitiveArray_t const &_primitives,
 							   uint32_t _node_max_size) :
 	primitives_{ _primitives },
+	nodes_{ nullptr },
 	node_max_size_{ _node_max_size }
 {
 	YS_ASSERT(primitives_.size() <= maths::highest_value<uint32_t>);

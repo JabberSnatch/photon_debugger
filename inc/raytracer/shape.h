@@ -38,7 +38,8 @@ public:
 	virtual maths::Bounds3f	ObjectBounds() const = 0;
 	virtual maths::Bounds3f	WorldBounds() const;
 public:
-	// REFACTOR: Maybe Primitive should have a transform instead of shape
+	// TODO: Maybe Primitive should have a transform instead of shape
+	// (some shape impelementations might require their transform though)
 	maths::Transform const	&world_transform;
 	bool const				swaps_handedness;
 	bool const				flip_normals;

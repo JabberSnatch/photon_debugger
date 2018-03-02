@@ -120,8 +120,13 @@ int main(int argc, char *argv[])
 			render(absolute_path, translation_state);
 		}
 	}
-	
+
 	system("pause");
+
+	std::signal(SIGSEGV, SIG_DFL);
+	std::signal(SIGTERM, SIG_DFL);
+	std::signal(SIGABRT, SIG_DFL);
+
 	return 0;
 }
 

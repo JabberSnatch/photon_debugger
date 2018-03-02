@@ -33,6 +33,7 @@ public:
 		kLight,
 		kSampler,
 		kIntegrator,
+		kTriangleMeshRawData,
 		kCount
 	};
 	template <typename T> static constexpr ObjectType GetType();
@@ -42,7 +43,7 @@ public:
 		std::string const	unique_id;
 		ObjectType const	type_id;
 		ParamSet const		&param_set;
-		std::string const	subtype_id;
+		std::string const	subtype_id; // TODO: implement type checking for subtypes
 	};
 	using ObjectDescriptorContainer_t = std::vector<ObjectDescriptor const *>;
 private:
@@ -66,7 +67,10 @@ public:
 						std::string const &_subtype_id = "");
 	ObjectDescriptor const &GetAnyDescOfType(ObjectType const _type) const;
 	ObjectDescriptorContainer_t GetAllDescsOfType(ObjectType const _type) const;
+	ObjectDescriptor const &GetDesc(std::string const &_unique_id) const;
 	template <typename T> T& Fetch(std::string const &_unique_id);
+	bool HasInstance(std::string const &_unique_id) const;
+	template <typename T> inline T const &GetInstance(std::string const &_unique_id) const;
 	void SetWorkdir(std::string const &_workdir);
 	std::string const	&workdir() const;
 	core::MemoryRegion	&mem_region();
@@ -76,6 +80,7 @@ public:
 	bool IsShapeLight(raytracer::Shape const &_shape) const;
 private:
 	template <typename T> T* MakeObject_(ObjectDescriptor const &_object_desc);
+	void *GetInstanceImpl_(std::string const &_unique_id) const;
 private:
 	std::string						workdir_{ "" };
 	core::MemoryRegion				mem_region_{};
@@ -84,6 +89,17 @@ private:
 	ObjectInstanceContainer_t		object_instances_{};
 	UsedShapePtrContainer_t			light_shapes_{};
 };
+
+
+template <typename T>
+inline T const &
+ResourceContext::GetInstance(std::string const &_unique_id) const
+{
+	YS_ASSERT(!IsUniqueIdFree(_unique_id));
+	YS_ASSERT(GetType<T>() == GetDesc(_unique_id).type_id);
+	return *reinterpret_cast<T*>(GetInstanceImpl_(_unique_id));
+}
+
 
 } // namespace api
 

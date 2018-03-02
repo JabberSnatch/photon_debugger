@@ -13,12 +13,12 @@
 namespace raytracer {
 
 Triangle::Triangle(maths::Transform const &_world_transform, bool _flip_normals,
-				   TriangleMeshData const &_mesh_data, int32_t _face_index) :
+				   TriangleMeshRawData const &_mesh_data, int32_t _face_index) :
 	Shape(_world_transform, _flip_normals),
 	mesh_data_{ _mesh_data }
 {
 	YS_ASSERT(_face_index < mesh_data_.triangle_count);
-	vertex_index_ = &mesh_data_.indices[TriangleMeshData::IndexOffset(_face_index)];
+	vertex_index_ = &mesh_data_.indices[TriangleMeshRawData::IndexOffset(_face_index)];
 }
 
 bool

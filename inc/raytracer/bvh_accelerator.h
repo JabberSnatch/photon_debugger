@@ -26,11 +26,15 @@ class BvhAccelerator
 public:
 	using PrimitiveArray_t = std::vector<Primitive const*>;
 
+	BvhAccelerator();
 	BvhAccelerator(PrimitiveArray_t const &_primitives,
 				   uint32_t _node_max_size);
+	// TODO: implement proper copy assignment and ctor (at least for empty bvhs)
+	BvhAccelerator(BvhAccelerator const &_other) = delete;
+	BvhAccelerator &operator=(BvhAccelerator const &_other) = delete;
 	~BvhAccelerator();
 
-	
+
 	BvhNode		*BuildRecursive(core::MemoryRegion &_region,
 								std::vector<BvhPrimitiveDesc> &_primitive_desc,
 								uint32_t _first, uint32_t _end, int &_node_count,
@@ -42,7 +46,7 @@ public:
 	maths::Bounds3f	WorldBounds() const override;
 
 private:
-	void		BuildLeafNode_(BvhNode *_node, 
+	void		BuildLeafNode_(BvhNode *_node,
 							   maths::Bounds3f const &_bounds,
 							   std::vector<BvhPrimitiveDesc> &_primitive_desc,
 							   PrimitiveArray_t &_ordered_primitives,

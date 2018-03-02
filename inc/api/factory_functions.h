@@ -19,6 +19,7 @@ class Integrator;
 class Light;
 class Shape;
 class Sampler;
+class TriangleMeshRawData;
 
 } // namespace raytracer
 
@@ -45,6 +46,14 @@ using SamplerCallbackContainer_t = NamedCallbackContainer_t<MakeSamplerCallback_
 using IntegratorCallbackContainer_t = NamedCallbackContainer_t<MakeIntegratorCallback_t>;
 using LightCallbackContainer_t = NamedCallbackContainer_t<MakeLightCallback_t>;
 
+
+raytracer::Camera* MakeCamera(api::ResourceContext &_context, api::ParamSet const &_params);
+raytracer::Film* MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params);
+
+raytracer::TriangleMeshRawData* MakeTriangleMeshRawData(api::ResourceContext &_context,
+														api::ParamSet const &_params);
+
+
 ShapeCallbackContainer_t const &shape_callbacks();
 SamplerCallbackContainer_t const &sampler_callbacks();
 IntegratorCallbackContainer_t const &integrator_callbacks();
@@ -53,11 +62,6 @@ MakeShapeCallback_t const &LookupShapeFunc(std::string const &_id);
 MakeSamplerCallback_t const &LookupSamplerFunc(std::string const &_id);
 MakeIntegratorCallback_t const &LookupIntegratorFunc(std::string const &_id);
 MakeLightCallback_t const &LookupLightFunc(std::string const &_id);
-
-
-raytracer::Camera* MakeCamera(api::ResourceContext &_context, api::ParamSet const &_params);
-raytracer::Film* MakeFilm(api::ResourceContext &_context, api::ParamSet const &_params);
-
 
 } // namespace api
 
