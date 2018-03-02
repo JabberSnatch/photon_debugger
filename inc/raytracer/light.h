@@ -31,23 +31,18 @@ public:
 		maths::Decimal const probability;
 	};
 public:
-	Light(maths::Transform const & _world_transform);
 	virtual ~Light() = default;
 	// _ksi is a 2D [0,1) point used to produce the sample
 	virtual maths::Vec3f Le() const = 0;
 	virtual LiSample Sample(SurfaceInteraction const &_hit_info, maths::Vec2f const &_ksi) const = 0;
 	virtual maths::Decimal Pdf(SurfaceInteraction const &_hit_info, maths::Vec3f const &_wi) const = 0;
-	// TODO: remove world_transform
-	maths::Transform const &world_transform() const;
-private:
-	maths::Transform const &world_transform_;
 };
 
 
 class AreaLight final : public Light
 {
 public:
-	AreaLight(maths::Transform const &_world_transform, maths::Vec3f const &_le, raytracer::Shape const &_shape);
+	AreaLight(maths::Vec3f const &_le, raytracer::Shape const &_shape);
 	maths::Vec3f Le() const override;
 	LiSample Sample(SurfaceInteraction const &_hit_info, maths::Vec2f const &_ksi) const override;
 	maths::Decimal Pdf(SurfaceInteraction const &_hit_info, maths::Vec3f const &_wi) const override;

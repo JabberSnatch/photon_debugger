@@ -493,7 +493,6 @@ MakeDirectLightingIntegrator(api::ResourceContext &_context, api::ParamSet const
 raytracer::Light*
 MakeAreaLight(api::ResourceContext &_context, api::ParamSet const &_params)
 {
-	maths::Transform const	&world_transform = _params.FindTransform("world_transform", maths::Transform::Identity());
 	maths::Vec3f const		&emission_color =
 		_params.FindFloat<3>("emission_color", maths::Vec3f{1._d, 0._d, 1._d});
 	maths::Decimal const	intensity =
@@ -505,7 +504,7 @@ MakeAreaLight(api::ResourceContext &_context, api::ParamSet const &_params)
 	}
 	raytracer::Shape const	&shape = _context.Fetch<raytracer::Shape>(shape_id);
 	raytracer::Light *const area_light = new (_context.mem_region())
-		raytracer::AreaLight{ world_transform, emission_color * intensity, shape };
+		raytracer::AreaLight{ emission_color * intensity, shape };
 	_context.FlagLightShape(shape);
 	return area_light;
 }

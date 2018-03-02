@@ -8,20 +8,7 @@
 namespace raytracer {
 
 
-Light::Light(maths::Transform const &_world_transform) :
-	world_transform_{ _world_transform }
-{}
-
-
-maths::Transform const &
-Light::world_transform() const
-{
-	return world_transform_;
-}
-
-
-AreaLight::AreaLight(maths::Transform const &_world_transform, maths::Vec3f const &_le, raytracer::Shape const &_shape) :
-	Light(_world_transform),
+AreaLight::AreaLight(maths::Vec3f const &_le, raytracer::Shape const &_shape) :
 	le_{ _le }, shape_{ _shape }
 {}
 
