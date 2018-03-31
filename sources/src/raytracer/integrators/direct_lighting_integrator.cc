@@ -91,7 +91,7 @@ DirectLightingIntegrator::Li(maths::Ray const &_ray,
 				}
 			}
 		}
-		
+
 		{
 			Sampler::Sample2DContainer_t const &samples = sampler().GetArray<2u>(shadow_ray_count_);
 			Sampler::Sample2DContainer_t::const_iterator current_sample = samples.cbegin();

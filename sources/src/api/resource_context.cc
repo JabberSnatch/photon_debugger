@@ -12,56 +12,6 @@
 namespace api {
 
 
-template <typename T>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType()
-{
-	static_assert(false, "Unimplemented type");
-	return ObjectType::kCount;
-}
-template <>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType<raytracer::Film>()
-{
-	return ObjectType::kFilm;
-}
-template <>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType<raytracer::Camera>()
-{
-	return ObjectType::kCamera;
-}
-template <>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType<raytracer::Shape>()
-{
-	return ObjectType::kShape;
-}
-template <>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType<raytracer::Light>()
-{
-	return ObjectType::kLight;
-}
-template <>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType<raytracer::Sampler>()
-{
-	return ObjectType::kSampler;
-}
-template <>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType<raytracer::Integrator>()
-{
-	return ObjectType::kIntegrator;
-}
-template <>
-constexpr ResourceContext::ObjectType
-ResourceContext::GetType<raytracer::TriangleMeshRawData>()
-{
-	return ObjectType::kTriangleMeshRawData;
-}
-
 
 ResourceContext::ResourceContext(std::string const &_workdir) :
 	workdir_{ _workdir }

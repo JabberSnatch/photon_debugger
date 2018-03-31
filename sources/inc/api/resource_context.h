@@ -13,7 +13,13 @@
 
 
 namespace raytracer {
+class Film;
+class Camera;
 class Shape;
+class Light;
+class Sampler;
+class Integrator;
+class TriangleMeshRawData;
 } // namespace raytracer
 
 
@@ -98,6 +104,57 @@ ResourceContext::GetInstance(std::string const &_unique_id) const
 	YS_ASSERT(!IsUniqueIdFree(_unique_id));
 	YS_ASSERT(GetType<T>() == GetDesc(_unique_id).type_id);
 	return *reinterpret_cast<T*>(GetInstanceImpl_(_unique_id));
+}
+
+
+template <typename T>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType()
+{
+	static_assert(false, "Unimplemented type");
+	return ObjectType::kCount;
+}
+template <>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType<raytracer::Film>()
+{
+	return ObjectType::kFilm;
+}
+template <>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType<raytracer::Camera>()
+{
+	return ObjectType::kCamera;
+}
+template <>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType<raytracer::Shape>()
+{
+	return ObjectType::kShape;
+}
+template <>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType<raytracer::Light>()
+{
+	return ObjectType::kLight;
+}
+template <>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType<raytracer::Sampler>()
+{
+	return ObjectType::kSampler;
+}
+template <>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType<raytracer::Integrator>()
+{
+	return ObjectType::kIntegrator;
+}
+template <>
+constexpr ResourceContext::ObjectType
+ResourceContext::GetType<raytracer::TriangleMeshRawData>()
+{
+	return ObjectType::kTriangleMeshRawData;
 }
 
 

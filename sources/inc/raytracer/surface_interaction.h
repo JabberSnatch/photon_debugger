@@ -72,11 +72,11 @@ public:
 	maths::Vec3f		position_error;
 	maths::Decimal		time;
 	maths::Vec3f		wo;				// Light flow direction
-	Shape const			*shape;
+	Shape const			*shape = nullptr;
 	maths::Point2f		uv;
 	GeometryProperties	geometry;		// True geometry properties
 	GeometryProperties	shading;		// Shading geometry
-	Primitive const		*primitive;
+	Primitive const		*primitive = nullptr;
 };
 
 
