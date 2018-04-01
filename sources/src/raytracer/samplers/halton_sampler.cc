@@ -229,12 +229,14 @@ HaltonSampler::HaltonSampler(uint64_t const _seed,
 	// mj[i] = sample_stride_ / tile_resolution_[i]
 	mj_.x = tile_resolution_.y;
 	mj_.y = tile_resolution_.x;
-	mj_modular_inverses_.x = ModularInverse(
-		boost::numeric_cast<int64_t>(mj_.x),
-		boost::numeric_cast<int64_t>(tile_resolution_.x));
-	mj_modular_inverses_.y = ModularInverse(
-		boost::numeric_cast<int64_t>(mj_.y),
-		boost::numeric_cast<int64_t>(tile_resolution_.y));
+	mj_modular_inverses_.x = tile_resolution_.x != 1u ?
+		ModularInverse(boost::numeric_cast<int64_t>(mj_.x),
+					   boost::numeric_cast<int64_t>(tile_resolution_.x)) :
+		1u;
+	mj_modular_inverses_.y = tile_resolution_.y != 1u ?
+		ModularInverse(boost::numeric_cast<int64_t>(mj_.y),
+					   boost::numeric_cast<int64_t>(tile_resolution_.y)) :
+		1u;
 	//
 	LOG_INFO(tools::kChannelGeneral, "HaltonSampler actual tile resolution : " + std::to_string(tile_resolution_.x) + "; " + std::to_string(tile_resolution_.y));
 }

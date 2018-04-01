@@ -120,3 +120,8 @@ target_link_libraries( PhotonDebugger
 					   PRIVATE
 					   api
 					   )
+
+
+
+# SUBDIRECTORIES
+add_subdirectory(sandbox)

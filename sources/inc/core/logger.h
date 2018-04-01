@@ -137,7 +137,7 @@ private:
 	using pLogBuffer = std::unique_ptr<LogBuffer<hs, bs>>;
 
 	std::multimap<LogChannel, std::string>		paths_;
-	std::array<bool, LogChannel::kChannelCount>	is_enabled_{ algo::fill<kChannelCount>::apply(true) };
+	std::array<bool, LogChannel::kChannelCount>	is_enabled_{ algo::fill<kChannelCount>::apply(false) };
 
 	size_t										thread_count_{ 0 };
 	std::vector<pLogBuffer>						thread_buffer_;
