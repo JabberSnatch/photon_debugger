@@ -70,9 +70,14 @@ Triangle::Intersect(maths::Ray const &_ray,
 	maths::Decimal	e0 = p1.x*p2.y - p2.x*p1.y;
 	maths::Decimal	e1 = p2.x*p0.y - p0.x*p2.y;
 	maths::Decimal	e2 = p0.x*p1.y - p1.x*p0.y;
+#ifdef TRIANGLE_DEFENSIVE_EDGE_INTERSECTION
 	// NOTE: If any of these is zero, we don't know for sure whether we hit the triangle or not.
+	// TODO: Handle the "shared edge" problem :
+	//		 a lone triangle's edges should be outside while a connected triangle's edges should
+	//		 be inside
 	if (e0 == 0._d || e1 == 0._d || e2 == 0._d)
 		return false;
+#endif
 
 	if ((e0 > 0._d || e1 > 0._d || e2 > 0._d) && (e0 < 0._d || e1 < 0._d || e2 < 0._d))
 		return false;
