@@ -19,6 +19,7 @@
 #include "globals.h"
 #include "core/profiler.h"
 
+
 namespace tools {
 
 enum LogChannel { kChannelGeneral = 0, kChannelProfiling, kChannelParsing, kChannelCount, kChannelStdOut };
@@ -161,7 +162,9 @@ template <size_t hs, size_t bs> thread_local size_t Logger<hs, bs>::thread_index
 
 inline std::ostream &operator<<(std::ostream &_stream, LogEntry const &_entry)
 {
+#ifdef LOGGER_ENABLE_PROFILING
 	TIMED_SCOPE(LogEntry_StreamOperator);
+#endif
 
 	std::string level_string;
 	switch (_entry.level) {
@@ -241,7 +244,9 @@ template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::Log(LogChannel _channel, LogLevel _level, std::string const &_message)
 {
+#ifdef LOGGER_ENABLE_PROFILING
 	TIMED_SCOPE(Logger_Log);
+#endif
 
 	if (_level < lowest_active_level) return;
 	if (!is_enabled_[_channel]) return;
@@ -266,7 +271,9 @@ template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::Merge(LogChannel _channel, EntryBuffer_t &_buffer, size_t &_entry_count)
 {
+#ifdef LOGGER_ENABLE_PROFILING
 	TIMED_SCOPE(Logger_Merge);
+#endif
 
 	merge_lock_[_channel].Acquire();
 	
@@ -291,7 +298,9 @@ template <size_t hs, size_t bs>
 void
 Logger<hs, bs>::Flush(LogChannel _channel, bool _release_merge_lock)
 {
+#ifdef LOGGER_ENABLE_PROFILING
 	TIMED_SCOPE(Logger_Flush);
+#endif
 
 	flush_lock_[_channel].Acquire();
 
