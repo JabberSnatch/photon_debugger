@@ -314,15 +314,50 @@ int main(int argc, char **argv)
 				return _results.outward.intersect;
 			});
 
+		maths::Decimal const primary_fail_ratio =
+			static_cast<maths::Decimal>(primary_fail_count) /
+			static_cast<maths::Decimal>(test_context.exec_count());
+		maths::Decimal const inward_fail_ratio =
+			static_cast<maths::Decimal>(inward_fail_count) /
+			static_cast<maths::Decimal>(test_context.exec_count());
+		maths::Decimal const outward_fail_ratio =
+			static_cast<maths::Decimal>(outward_fail_count) /
+			static_cast<maths::Decimal>(test_context.exec_count());
+
 		std::cout << "SUMMARY" << std::endl;
 		std::cout << results_container.size() << std::endl;
 		std::cout << "TESTED " << test_context.exec_count() << " CASES" << std::endl;
-		std::cout << "PRIMARY FAILS .. " << primary_fail_count << std::endl;
-		std::cout << "INWARD FAILS .. " << inward_fail_count << std::endl;
-		std::cout << "OUTWARD FAILS .. " << outward_fail_count << std::endl;
+		std::cout << "PRIMARY FAILS .. " << primary_fail_count << " .. "
+				  << primary_fail_ratio << std::endl;
+		std::cout << "INWARD FAILS .. " << inward_fail_count << " .. "
+				  << inward_fail_ratio << std::endl;
+		std::cout << "OUTWARD FAILS .. " << outward_fail_count << " .. "
+				  << outward_fail_ratio << std::endl;
+
+#if 0
+		std::cout << "INWARD FAILS LIST .. " << std::endl;
+		std::for_each(results_container.cbegin(), results_container.cend(),
+					  [](TestResults const &_results)
+					  {
+						  if (!_results.inward.intersect)
+						  {
+							  std::cout << _results.primary << std::endl << std::endl;
+						  }
+					  });
+		std::cout << "INWARD SUCCESS SAMPLE .. " << std::endl;
+		std::find_if(std::next(results_container.cbegin(), results_container.size() / 2), results_container.cend(),
+					 [](TestResults const &_results)
+					 {
+						 if (_results.inward.intersect)
+						 {
+							 std::cout << _results.primary << std::endl << std::endl;
+							 return true;
+						 }
+						 return false;
+					 });
+#endif
 	}
 
-	std::system("pause");
 	return 0;
 }
 
@@ -344,11 +379,8 @@ TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_prima
 		std::cout << "OK" << std::endl;
 #endif
 
-#if 1
 		maths::Vec3f const primary_offset_w{ result.primary.hit.geometry.normal() };
-#else
-		maths::Vec3f const primary_offset_w{ -_primary_ray.direction };
-#endif
+
 		maths::Point3f const secondary_origin =
 			result.primary.hit.OffsetOriginFromErrorBounds(primary_offset_w);
 
@@ -465,9 +497,10 @@ std::ostream &operator<<(std::ostream &_ostream, std::array<T, n> const &_array)
 
 std::ostream &operator<<(std::ostream &_ostream, IntersectInfo const &_info)
 {
-	_ostream << _info.intersect << "; " << _info.t << "; "
-			 << _info.hit.position.e << "; "
-			 << _info.hit.geometry.normal().e;
+	_ostream << _info.intersect << "; " << _info.t << std::endl
+			 << _info.hit.position.e << "; " << _info.hit.position_error << std::endl
+			 << _info.hit.geometry.normal().e << std::endl
+			 << _info.hit.wo;
 	return _ostream;
 }
 }
