@@ -3,9 +3,14 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include <boost/program_options.hpp>
+
+#include "globals.h"
+
+#include "core/logger.h"
 
 #include "maths/maths.h"
 #include "maths/matrix.h"
@@ -116,7 +121,7 @@ void validate(boost::any &_v,
 
 struct IntersectInfo
 {
-	maths::Decimal t = -1._d;
+	maths::Decimal t = -maths::infinity<maths::Decimal>;
 	raytracer::SurfaceInteraction hit{};
 	bool intersect = false;
 };
@@ -124,6 +129,7 @@ struct IntersectInfo
 
 struct TestResults
 {
+	maths::Decimal NdotL = -maths::infinity<maths::Decimal>;
 	IntersectInfo primary{};
 	IntersectInfo inward{};
 	IntersectInfo outward{};
@@ -188,6 +194,8 @@ private:
 int main(int argc, char **argv)
 {
 	using ResultsContainer_t = std::vector<TestResults>;
+
+	globals::logger.BindPath(tools::kChannelGeneral, "raybounce_general.txt");
 
 	TestContext test_context{};
 
@@ -261,6 +269,13 @@ int main(int argc, char **argv)
 				maths::Decimal const phi = maths::Radians(phi_step * origin_step_size.y);
 				maths::Point3f const origin = PointFromSpherical(theta, phi, test_context.origin_distance);
 
+				{
+					globals::logger.EnableChannel(tools::kChannelGeneral, true);
+					std::stringstream message{ "" };
+					message << std::endl << "NEW ORIGIN";
+					LOG_INFO(tools::kChannelGeneral, message.str());
+					globals::logger.EnableChannel(tools::kChannelGeneral, false);
+				}
 				for (int x_step = 0; x_step < test_context.target_subdiv.x; ++x_step)
 				{
 					maths::Decimal const x_target =
@@ -281,6 +296,15 @@ int main(int argc, char **argv)
 						std::cout << target.e << std::endl;
 						std::cout << direction.e << std::endl;
 #endif
+
+
+						{
+							globals::logger.EnableChannel(tools::kChannelGeneral, true);
+							std::stringstream message{ "" };
+							message << std::endl << "NEW RAY";
+							LOG_INFO(tools::kChannelGeneral, message.str());
+							globals::logger.EnableChannel(tools::kChannelGeneral, false);
+						}
 
 						maths::Ray const primary_ray{ origin, direction, ktMax, kTime };
 						results_container.emplace_back(TestRoutine(quad, primary_ray));
@@ -341,6 +365,7 @@ int main(int argc, char **argv)
 					  {
 						  if (!_results.inward.intersect)
 						  {
+							  std::cout << "NdotL .. " << _results.NdotL << std::endl;
 							  std::cout << _results.primary << std::endl << std::endl;
 						  }
 					  });
@@ -350,6 +375,7 @@ int main(int argc, char **argv)
 					 {
 						 if (_results.inward.intersect)
 						 {
+							 std::cout << "NdotL .. " << _results.NdotL << std::endl;
 							 std::cout << _results.primary << std::endl << std::endl;
 							 return true;
 						 }
@@ -378,6 +404,7 @@ TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_prima
 #ifdef TESTROUTINE_LOGGING
 		std::cout << "OK" << std::endl;
 #endif
+		result.NdotL = maths::Dot(result.primary.hit.geometry.normal(), -_primary_ray.direction);
 
 		maths::Vec3f const primary_offset_w{ result.primary.hit.geometry.normal() };
 
@@ -391,9 +418,11 @@ TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_prima
 												-_primary_ray.direction,
 												ktMax, kTime };
 
+		globals::logger.EnableChannel(tools::kChannelGeneral, true);
 		result.inward.intersect = _shape.Intersect(secondary_inward_ray,
 												   result.inward.t,
 												   result.inward.hit);
+		globals::logger.EnableChannel(tools::kChannelGeneral, false);
 		result.outward.intersect = _shape.Intersect(secondary_outward_ray,
 													result.outward.t,
 													result.outward.hit);

@@ -1,5 +1,8 @@
 #include "raytracer/shapes/triangle.h"
 
+#include <sstream>
+#include <iomanip>
+
 #include "common_macros.h"
 #include "globals.h"
 #include "core/profiler.h"
@@ -79,24 +82,64 @@ Triangle::Intersect(maths::Ray const &_ray,
 		return false;
 #endif
 
+	if (typeid(maths::Decimal) == typeid(float) &&
+		(e0 == 0._d || e1 == 0._d || e2 == 0._d))
+	{
+		maths::Vector<double, 3> const dp0{ static_cast<maths::Vector<double, 3>>(p0) };
+		maths::Vector<double, 3> const dp1{ static_cast<maths::Vector<double, 3>>(p1) };
+		maths::Vector<double, 3> const dp2{ static_cast<maths::Vector<double, 3>>(p2) };
+		e0 = static_cast<maths::Decimal>(dp1.x*dp2.y - dp2.x*dp1.y);
+		e1 = static_cast<maths::Decimal>(dp2.x*dp0.y - dp0.x*dp2.y);
+		e2 = static_cast<maths::Decimal>(dp0.x*dp1.y - dp1.x*dp0.y);
+	}
+
+	std::stringstream edge_string{ "" };
+	edge_string.precision(std::numeric_limits<maths::Decimal>::digits10 + 1);
+	edge_string << e0 << " " << e1 << " " << e2;
+	LOG_INFO(tools::kChannelGeneral, edge_string.str());
+#if 1
+	{
+		maths::Vec3f const edge_error{ maths::gamma(5u) };
+		//		maths::Decimal const edge_epsilon{ maths::gamma(5u) };
+		if ((e0 > edge_error.x || e1 > edge_error.y || e2 > edge_error.z) &&
+			(e0 < -edge_error.x || e1 < -edge_error.y || e2 < -edge_error.z))
+		{
+			LOG_INFO(tools::kChannelGeneral, "Killed EdgeTest");
+			return false;
+		}
+	}
+#else
 	if ((e0 > 0._d || e1 > 0._d || e2 > 0._d) && (e0 < 0._d || e1 < 0._d || e2 < 0._d))
 		return false;
+#endif
+
 	maths::Decimal const	e_sum = e0 + e1 + e2;
+#if 0
+	{
+		maths::Decimal const e_sum_error{ e_sum * maths::gamma(6u) };
+		if (maths::Abs(e_sum) < e_sum_error)
+			return false;
+	}
+#else
 	if (e_sum == 0._d)
+	{
+		LOG_INFO(tools::kChannelGeneral, "Killed EdgeSum");
 		return false;
+	}
+#endif
 
 	p0.z *= sz; p1.z *= sz; p2.z *= sz;
 	maths::Decimal const	t_scaled = e0*p0.z + e1*p1.z + e2*p2.z;
 	if (e_sum < 0._d && (t_scaled >= 0._d || t_scaled < _ray.tMax * e_sum))
+	{
+		LOG_INFO(tools::kChannelGeneral, "Killed PosTScaled");
 		return false;
+	}
 	if (e_sum > 0._d && (t_scaled <= 0._d || t_scaled > _ray.tMax * e_sum))
+	{
+		LOG_INFO(tools::kChannelGeneral, "Killed NegTScaled");
 		return false;
-
-	maths::Decimal const	e_sum_inverse = 1._d / e_sum;
-	maths::Decimal const	b0 = e0 * e_sum_inverse;
-	maths::Decimal const	b1 = e1 * e_sum_inverse;
-	maths::Decimal const	b2 = e2 * e_sum_inverse;
-	maths::Decimal const	t = t_scaled * e_sum_inverse;
+	}
 
 	// Should definitely investigate more on this. 
 	// Reference is PBR, 3.9.6, Pharr et al
@@ -114,9 +157,12 @@ Triangle::Intersect(maths::Ray const &_ray,
 											 deltaX * maxYt);
 	maths::Decimal const	maxE = maths::MaximumComponent(maths::Abs(
 		maths::Vec3f{ e0, e1, e2 }));
+
+	maths::Decimal const	e_sum_inverse = 1._d / e_sum;
 	maths::Decimal const	deltaT = 3._d * (maths::gamma(3u) * maxE * maxZt +
 											 deltaE * maxZt +
 											 deltaZ * maxE) * maths::Abs(e_sum_inverse);
+	maths::Decimal const	t = t_scaled * e_sum_inverse;
 	if (t <= deltaT)
 		return false;
 
@@ -124,6 +170,10 @@ Triangle::Intersect(maths::Ray const &_ray,
 	maths::Point2f const	uv0{ uv(0) }, uv1{ uv(1) }, uv2{ uv(2) };
 	maths::Vec2f const		duv02 = uv0 - uv2, duv12 = uv1 - uv2;
 	maths::Vec3f const		dp02 = v0 - v2, dp12 = v1 - v2;
+
+	maths::Decimal const	b0 = e0 * e_sum_inverse;
+	maths::Decimal const	b1 = e1 * e_sum_inverse;
+	maths::Decimal const	b2 = e2 * e_sum_inverse;
 
 	maths::Decimal const	x_abs_sum =
 		maths::Abs(b0 * p0.x) + maths::Abs(b1 * p1.x) + maths::Abs(b2 * p2.x);
