@@ -118,6 +118,16 @@ operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs)
 			result[i] += _lhs[i][j] * _rhs[j];
 	return result;
 }
+template <typename T, uint32_t R, uint32_t C>
+Matrix<T, R, C>
+operator*(Matrix<T, R, C> const &_lhs, T const &_rhs)
+{
+	Matrix<T, R, C> result(zero<T>);
+	for (uint32_t i = 0; i < R; ++i)
+		for (uint32_t j = 0; j < C; ++j)
+			result[i][j] = _lhs[i][j] * _rhs;
+	return result;
+}
 
 
 template <typename T, uint32_t R, uint32_t C>

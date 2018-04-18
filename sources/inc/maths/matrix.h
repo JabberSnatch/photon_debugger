@@ -76,6 +76,8 @@ template <typename T, uint32_t R, uint32_t C, uint32_t common>
 Matrix<T, R, C> operator*(Matrix<T, R, common> const &_lhs, Matrix<T, common, C> const &_rhs);
 template <typename T, uint32_t R, uint32_t C>
 Vector<T, R> operator*(Matrix<T, R, C> const &_lhs, Vector<T, C> const &_rhs);
+template <typename T, uint32_t R, uint32_t C>
+Matrix<T, R, C> operator*(Matrix<T, R, C> const &_lhs, T const &_rhs);
 
 template <typename T, uint32_t R, uint32_t C>
 Matrix<T, C, R> FromRows(std::array<Vector<T, C>, R> const &_rows);

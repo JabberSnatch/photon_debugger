@@ -1,7 +1,8 @@
 #include "raytracer/shapes/triangle.h"
 
-#include <sstream>
+#include <cmath>
 #include <iomanip>
+#include <sstream>
 
 #include "common_macros.h"
 #include "globals.h"
@@ -35,6 +36,63 @@ Triangle::Intersect(maths::Ray const &_ray,
 	maths::Point3f const	&v1 = mesh_data_.vertices[vertex_index_[1]];
 	maths::Point3f const	&v2 = mesh_data_.vertices[vertex_index_[2]];
 
+#if 0
+	bool result = false;
+
+	maths::Vec3f const plane_normal = maths::Cross(v1 - v0, v2 - v0);
+	// 5 round
+	maths::Vec4f const plane_vector{ plane_normal,
+									 maths::Dot(-plane_normal, static_cast<maths::Vec3f>(v0)) };
+	maths::Vec4f const ray_origin( static_cast<maths::Vec3f>(_ray.origin), 1._d );
+	maths::Vec4f const ray_direction( _ray.direction, 0._d );
+
+	// 15 round
+	maths::Decimal const t = -(maths::Dot(plane_vector, ray_origin) /
+							   maths::Dot(plane_vector, ray_direction));
+	if (std::isfinite(t) && t > 0._d)
+	{
+		// 2 round
+		maths::Point3f const position = _ray.origin + _ray.direction * t;
+		maths::Vec3f const R = position - v0;
+		maths::Vec3f const Q1 = v1 - v0;
+		maths::Vec3f const Q2 = v2 - v0;
+		maths::Decimal const Q1sqr = maths::Dot(Q1, Q1);
+		maths::Decimal const Q2sqr = maths::Dot(Q2, Q2);
+		maths::Decimal const Q1dotQ2 = maths::Dot(Q1, Q2);
+		maths::Decimal const determinant = Q1sqr * Q2sqr - (Q1dotQ2 * Q1dotQ2);
+		maths::Matrix<maths::Decimal, 2u, 2u> const adjugate{
+			Q2sqr, -Q1dotQ2,
+			-Q1dotQ2, Q1sqr
+		};
+		maths::Vec2f const w1w2 =
+			(adjugate * (1._d / determinant)) *
+			maths::Vec2f{ maths::Dot(R, Q1),
+						  maths::Dot(R, Q2) };
+		maths::Vec3f const barycentric{ 1._d - w1w2.x - w1w2.y, w1w2.x, w1w2.y };
+		result = ((barycentric.x >= 0._d) &&
+				  (barycentric.y >= 0._d) &&
+				  (barycentric.z >= 0._d));
+
+		if (result)
+		{
+			maths::Vec3f const error_bounds{ maths::gamma(22u) * position };
+
+			SurfaceInteraction::GeometryProperties const geometry{
+				maths::Normalized(static_cast<maths::Norm3f>(plane_normal)),
+				maths::Vec3f(0._d), maths::Vec3f(0._d), maths::Norm3f(0._d), maths::Norm3f(0._d)
+			};
+			SurfaceInteraction::GeometryProperties const shading{ geometry };
+
+			_hit_info = SurfaceInteraction{
+				position, error_bounds, t, -_ray.direction, this, maths::Point2f{}, geometry, shading
+			};
+			_tHit = t;
+		}
+	}
+
+	return result;
+
+#else
 	maths::Point3f	p0 = v0;
 	maths::Point3f	p1 = v1;
 	maths::Point3f	p2 = v2;
@@ -268,6 +326,7 @@ Triangle::Intersect(maths::Ray const &_ray,
 	//	return false;
 
 	return true;
+#endif
 }
 
 

@@ -410,6 +410,9 @@ TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_prima
 
 		maths::Point3f const secondary_origin =
 			result.primary.hit.OffsetOriginFromErrorBounds(primary_offset_w);
+		std::cout << maths::Dot(maths::Abs(static_cast<maths::Vec3f>(result.primary.hit.geometry.normal_quick())), result.primary.hit.position_error) * static_cast<maths::Vec3f>(result.primary.hit.geometry.normal_quick()) << std::endl;
+		std::cout << result.primary.hit.position_error << std::endl;
+
 
 		maths::Ray const secondary_inward_ray{ secondary_origin,
 											   _primary_ray.direction,

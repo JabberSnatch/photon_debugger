@@ -292,6 +292,9 @@ template <typename T, uint32_t n, typename... Indices>
 Vector<T, n> Swizzle(Vector<T, n> const &_v, Indices... _indices);
 
 
+template <typename T, uint32_t n>
+constexpr T Dot(Vector<T, n> const &_lhs, Vector<T, n> const &_rhs);
+
 // ============================================================
 // Vector<typename T, 3> operations
 // ============================================================
