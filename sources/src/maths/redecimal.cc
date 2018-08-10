@@ -154,8 +154,8 @@ REDecimal::operator-() const
 	result.precise = -precise;
 #endif
 	result.value = -value;
-	result.low_bound = -low_bound;
-	result.high_bound = -high_bound;
+	result.low_bound = -high_bound;
+	result.high_bound = -low_bound;
 	result.Check();
 	return result;
 }
