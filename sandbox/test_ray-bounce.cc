@@ -16,6 +16,7 @@
 #include "maths/matrix.h"
 #include "maths/point.h"
 #include "maths/ray.h"
+#include "maths/redecimal.h"
 #include "maths/transform.h"
 #include "maths/vector.h"
 
@@ -118,6 +119,24 @@ void validate(boost::any &_v,
 }
 }
 // <<<<<<< BOOST EXTENSION
+
+
+namespace watertight_intersect {
+
+template <typename InternalFloat>
+struct Triangle {
+public:
+	using InternalVec3 = maths::Vector3<InternalFloat>;
+public:
+	bool Intersect(maths::Ray const &_ray,
+				   maths::Decimal &_tHit,
+				   raytracer::SurfaceInteraction &_hit_info) const;
+
+	std::array<InternalVec3, 3u> vertices;
+};
+
+} // namespace watertight_intersect
+
 
 struct IntersectInfo
 {
@@ -392,6 +411,18 @@ TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_prima
 {
 	TestResults result{};
 
+	{
+		using TriangleType = watertight_intersect::Triangle<maths::REDecimal>;
+		TriangleType const validation{
+			TriangleType::InternalVec3{ 0._d, 0._d, 0._d },
+			TriangleType::InternalVec3{ 0._d, 1._d, 0._d },
+			TriangleType::InternalVec3{ 1._d, 0._d, 0._d }
+		};
+		bool const intersect = validation.Intersect(_primary_ray,
+													result.primary.t,
+													result.primary.hit);
+	}
+
 	result.primary.intersect = _shape.Intersect(_primary_ray, result.primary.t, result.primary.hit);
 
 #ifdef TESTROUTINE_LOGGING
@@ -536,3 +567,51 @@ std::ostream &operator<<(std::ostream &_ostream, IntersectInfo const &_info)
 	return _ostream;
 }
 }
+
+
+namespace watertight_intersect {
+
+template <typename InternalFloat>
+bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
+										maths::Decimal &,
+										raytracer::SurfaceInteraction &) const
+{
+	uint32_t const ray_direction_largest_dim = maths::MaximumDimension(maths::Abs(_ray.direction));
+	uint32_t reordered_x = (ray_direction_largest_dim + 1u) % 3u;
+	uint32_t reordered_y = (ray_direction_largest_dim + 2u) % 3u;
+	if (_ray.direction[ray_direction_largest_dim] < 0._d)
+	{
+		std::swap(reordered_x, reordered_y);
+	}
+
+	InternalVec3 const reordered_direction{ maths::Swizzle(_ray.direction,
+														   reordered_x,
+														   reordered_y,
+														   ray_direction_largest_dim) };
+	InternalVec3 const shear_constants{ -reordered_direction.x / reordered_direction.z,
+										-reordered_direction.y / reordered_direction.z,
+										static_cast<InternalFloat>(1) / reordered_direction.z };
+
+	std::array<InternalVec3, 3u> const local_vertices{
+		maths::Swizzle(vertices[0] - static_cast<InternalVec3>(_ray.position),
+					   reordered_x,
+					   reordered_y,
+					   ray_direction_largest_dim),
+		maths::Swizzle(vertices[1] - static_cast<InternalVec3>(_ray.position),
+					   reordered_x,
+					   reordered_y,
+					   ray_direction_largest_dim),
+		maths::Swizzle(vertices[2] - static_cast<InternalVec3>(_ray.position),
+					   reordered_x,
+					   reordered_y,
+					   ray_direction_largest_dim)
+	};
+
+	std::array<InternalVec3, 3u> const transformed_vertices{
+		local_vertices[0] + shear_constants
+
+	return false;
+}
+
+} // namespace watertight_intersect
+
