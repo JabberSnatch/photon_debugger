@@ -34,7 +34,8 @@ struct IntersectInfo;
 struct TestResults;
 struct TestContext;
 
-TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_primary_ray);
+TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_primary_ray,
+						TestContext &_temp_context);
 
 maths::Point3f PointFromSpherical(maths::Decimal const _theta,
 								  maths::Decimal const _phi,
@@ -135,6 +136,9 @@ public:
 	std::array<InternalVec3, 3u> vertices;
 };
 
+template<typename T>
+using TriangleContainer_t = std::vector<Triangle<T>>;
+
 } // namespace watertight_intersect
 
 
@@ -202,6 +206,9 @@ struct TestContext
 	{ return target_extents / maths::Vec2f{ 2._d }; }
 
 	TriangleMesh const		&quad();
+
+	template <typename InternalFloat>
+	watertight_intersect::TriangleContainer_t<InternalFloat> wi_quad();
 
 private:
 	std::unique_ptr<raytracer::TriangleMeshRawData>	quad_raw_data_cache_;
@@ -326,7 +333,8 @@ int main(int argc, char **argv)
 						}
 
 						maths::Ray const primary_ray{ origin, direction, ktMax, kTime };
-						results_container.emplace_back(TestRoutine(quad, primary_ray));
+						results_container.emplace_back(TestRoutine(quad, primary_ray,
+																   test_context));
 
 #ifdef TESTROUTINE_LOGGING
 						std::cout << std::endl;
@@ -407,20 +415,18 @@ int main(int argc, char **argv)
 }
 
 
-TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_primary_ray)
+TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_primary_ray,
+						TestContext &_temp_context)
 {
 	TestResults result{};
 
 	{
-		using TriangleType = watertight_intersect::Triangle<maths::REDecimal>;
-		TriangleType const validation{
-			TriangleType::InternalVec3{ 0._d, 0._d, 0._d },
-			TriangleType::InternalVec3{ 0._d, 1._d, 0._d },
-			TriangleType::InternalVec3{ 1._d, 0._d, 0._d }
-		};
-		bool const intersect = validation.Intersect(_primary_ray,
-													result.primary.t,
-													result.primary.hit);
+		auto wi_quad = _temp_context.wi_quad<maths::REDecimal>();
+		std::for_each(wi_quad.cbegin(), wi_quad.cend(), [&result, &_primary_ray](auto const &_triangle) {
+			bool const intersect = _triangle.Intersect(_primary_ray,
+													   result.primary.t,
+													   result.primary.hit);
+		});
 	}
 
 	result.primary.intersect = _shape.Intersect(_primary_ray, result.primary.t, result.primary.hit);
@@ -533,6 +539,29 @@ TestContext::quad()
 	return *quad_cache_;
 }
 
+template <typename InternalFloat>
+watertight_intersect::TriangleContainer_t<InternalFloat>
+TestContext::wi_quad()
+{
+	using TriangleType = watertight_intersect::Triangle<InternalFloat>;
+	if (!quad_raw_data_cache_)
+		quad();
+
+	std::array<TriangleType::InternalVec3, 4> vertices{};
+	for (int i = 0; i < 4; ++i)
+	{
+		maths::Point3f const &source = quad_raw_data_cache_->vertices[i];
+		vertices[i] = TriangleType::InternalVec3{ source.x, source.y, source.z };
+	}
+
+	watertight_intersect::TriangleContainer_t<InternalFloat> const result{
+		TriangleType{ vertices[0], vertices[1], vertices[2] },
+		TriangleType{ vertices[2], vertices[3], vertices[0] }
+	};
+
+	return result;
+}
+
 
 maths::Point3f PointFromSpherical(maths::Decimal const _theta,
 								  maths::Decimal const _phi,
@@ -593,25 +622,53 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 										static_cast<InternalFloat>(1) / reordered_direction.z };
 
 	std::array<InternalVec3, 3u> const local_vertices{
-		maths::Swizzle(vertices[0] - static_cast<InternalVec3>(_ray.position),
+		maths::Swizzle(vertices[0] - static_cast<InternalVec3>(_ray.origin),
 					   reordered_x,
 					   reordered_y,
 					   ray_direction_largest_dim),
-		maths::Swizzle(vertices[1] - static_cast<InternalVec3>(_ray.position),
+		maths::Swizzle(vertices[1] - static_cast<InternalVec3>(_ray.origin),
 					   reordered_x,
 					   reordered_y,
 					   ray_direction_largest_dim),
-		maths::Swizzle(vertices[2] - static_cast<InternalVec3>(_ray.position),
+		maths::Swizzle(vertices[2] - static_cast<InternalVec3>(_ray.origin),
 					   reordered_x,
 					   reordered_y,
 					   ray_direction_largest_dim)
 	};
 
 	std::array<InternalVec3, 3u> const transformed_vertices{
-		local_vertices[0] + shear_constants
+		local_vertices[0] * InternalVec3{ 1._d, 1._d, 0._d } + local_vertices[0].z * shear_constants,
+		local_vertices[1] * InternalVec3{ 1._d, 1._d, 0._d } + local_vertices[1].z * shear_constants,
+		local_vertices[2] * InternalVec3{ 1._d, 1._d, 0._d } + local_vertices[2].z * shear_constants
+	};
 
-	return false;
+	InternalVec3 const uvw {
+		transformed_vertices[2].x * transformed_vertices[1].y -
+		transformed_vertices[2].y * transformed_vertices[1].x,
+
+		transformed_vertices[0].x * transformed_vertices[2].y -
+		transformed_vertices[0].y * transformed_vertices[2].x,
+
+		transformed_vertices[1].x * transformed_vertices[0].y -
+		transformed_vertices[1].y * transformed_vertices[0].x
+	};
+
+	if (uvw.x < 0._d || uvw.y < 0._d || uvw.z < 0._d)
+		return false;
+
+	InternalFloat const determinant{ maths::FoldSum(uvw) };
+	if (determinant == 0._d)
+		return false;
+
+	InternalFloat const scaled_hit_distance =
+		maths::Dot(uvw,
+				   InternalVec3{ transformed_vertices[0].z,
+								 transformed_vertices[1].z,
+								 transformed_vertices[2].z });
+
+	return true;
 }
+
 
 } // namespace watertight_intersect
 
