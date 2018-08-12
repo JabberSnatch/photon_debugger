@@ -14,8 +14,11 @@ namespace maths
 // Short for Running Error Decimal
 struct REDecimal
 {
-	REDecimal() :
-		REDecimal(0._d)
+	constexpr REDecimal() :
+		value{ 0._d }, low_bound{ 0._d }, high_bound{ 0._d }
+#ifdef YS_REDECIMAL_HAS_PRECISE
+		, precise{ 0._d }
+#endif
 	{}
 	REDecimal(Decimal _value) :
 		value{ _value }, low_bound{ NextDecimalDown(_value) }, high_bound{ NextDecimalUp(_value) }
@@ -69,6 +72,8 @@ struct REDecimal
 	bool	operator < (Decimal _rhs) const;
 	// Return true only if the whole error interval is above _rhs
 	bool	operator > (Decimal _rhs) const;
+	// Return true only if _rhs is within the error interval
+	bool    operator == (Decimal _rhs) const;
 
 	void Check() const;
 
@@ -77,6 +82,8 @@ struct REDecimal
 #endif
 };
 
+
+template <> struct Zero<REDecimal> { static constexpr REDecimal value{}; };
 
 REDecimal Sqrt(REDecimal const &_v);
 bool Quadratic(REDecimal const &_a, REDecimal const &_b, REDecimal const &_c,

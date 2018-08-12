@@ -163,12 +163,17 @@ REDecimal::operator-() const
 bool
 REDecimal::operator < (Decimal _rhs) const
 {
-	return low_bound < _rhs;
+	return high_bound < _rhs;
 }
 bool
 REDecimal::operator > (Decimal _rhs) const
 {
-	return high_bound > _rhs;
+	return low_bound > _rhs;
+}
+bool
+REDecimal::operator == (Decimal _rhs) const
+{
+	return !(*this < _rhs) && !(*this > _rhs);
 }
 
 void
