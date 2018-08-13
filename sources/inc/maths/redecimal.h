@@ -75,6 +75,9 @@ struct REDecimal
 	// Return true only if _rhs is within the error interval
 	bool    operator == (Decimal _rhs) const;
 
+	bool	operator < (REDecimal _rhs) const;
+	bool	operator > (REDecimal _rhs) const;
+
 	void Check() const;
 
 #ifdef YS_REDECIMAL_HAS_PRECISE

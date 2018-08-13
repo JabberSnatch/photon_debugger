@@ -34,9 +34,6 @@ struct IntersectInfo;
 struct TestResults;
 struct TestContext;
 
-TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_primary_ray,
-						TestContext &_temp_context);
-
 maths::Point3f PointFromSpherical(maths::Decimal const _theta,
 								  maths::Decimal const _phi,
 								  maths::Decimal const _distance);
@@ -136,8 +133,17 @@ public:
 	std::array<InternalVec3, 3u> vertices;
 };
 
-template<typename T>
-using TriangleContainer_t = std::vector<Triangle<T>>;
+template <typename InternalFloat>
+struct TriangleList {
+public:
+	using Triangle_t = Triangle<InternalFloat>;
+public:
+	TriangleList(std::initializer_list<Triangle_t> _init_list) : triangles{ _init_list } {}
+	bool Intersect(maths::Ray const &_ray,
+				   maths::Decimal &_tHit,
+				   raytracer::SurfaceInteraction &_hit_info) const;
+	std::vector<Triangle_t> triangles;
+};
 
 } // namespace watertight_intersect
 
@@ -205,10 +211,21 @@ struct TestContext
 	maths::Vec2f			target_abs_bounds() const
 	{ return target_extents / maths::Vec2f{ 2._d }; }
 
-	TriangleMesh const		&quad();
+	std::string				method{ "baseline" };
 
+	TriangleMesh const		&quad();
 	template <typename InternalFloat>
-	watertight_intersect::TriangleContainer_t<InternalFloat> wi_quad();
+	watertight_intersect::TriangleList<InternalFloat> wi_quad();
+
+public:
+	using ResultsContainer_t = std::vector<TestResults>;
+	ResultsContainer_t RunTest();
+	void PrintResults(ResultsContainer_t const &_results_container) const;
+private:
+	template <typename ShapeType>
+	ResultsContainer_t RunTest_impl(ShapeType const &_shape) const;
+	template <typename ShapeType>
+	static TestResults TestRoutine(ShapeType const &_shape, maths::Ray const &_primary_ray);
 
 private:
 	std::unique_ptr<raytracer::TriangleMeshRawData>	quad_raw_data_cache_;
@@ -219,7 +236,7 @@ private:
 
 int main(int argc, char **argv)
 {
-	using ResultsContainer_t = std::vector<TestResults>;
+
 
 	globals::logger.BindPath(tools::kChannelGeneral, "raybounce_general.txt");
 
@@ -248,7 +265,10 @@ int main(int argc, char **argv)
 			 "int")
 			("origin-distance",
 			 bpo::value(&test_context.origin_distance)->default_value(test_context.origin_distance),
-			 "float");
+			 "float")
+			("method",
+			 bpo::value(&test_context.method)->default_value(test_context.method),
+			 "string");
 
 		bpo::variables_map vm{};
 		try
@@ -273,161 +293,173 @@ int main(int argc, char **argv)
 		std::cout << test_context.origin_extents << std::endl;
 		std::cout << test_context.origin_subdiv << std::endl;
 		std::cout << test_context.origin_distance << std::endl;
-		std::cout << test_context.exec_count() << std::endl << std::endl;;
+		std::cout << test_context.exec_count() << std::endl;
+		std::cout << test_context.method << std::endl;
+		std::cout << std::endl;
 	}
 
-	TriangleMesh const &quad = test_context.quad();
-
-	ResultsContainer_t results_container{};
-	results_container.reserve(test_context.exec_count());
-
-	{
-		maths::Vec2f const origin_step_size = test_context.origin_step_size();
-		maths::Vec2f const target_step_size = test_context.target_step_size();
-		maths::Vec2f const target_abs_bounds = test_context.target_abs_bounds();
-
-		for (int theta_step = 0; theta_step < test_context.origin_subdiv.x; ++theta_step)
-		{
-			maths::Decimal const theta = maths::Radians(theta_step * origin_step_size.x);
-
-			for (int phi_step = 0; phi_step < test_context.origin_subdiv.y; ++phi_step)
-			{
-				maths::Decimal const phi = maths::Radians(phi_step * origin_step_size.y);
-				maths::Point3f const origin = PointFromSpherical(theta, phi, test_context.origin_distance);
-
-				{
-					globals::logger.EnableChannel(tools::kChannelGeneral, true);
-					std::stringstream message{ "" };
-					message << std::endl << "NEW ORIGIN";
-					LOG_INFO(tools::kChannelGeneral, message.str());
-					globals::logger.EnableChannel(tools::kChannelGeneral, false);
-				}
-				for (int x_step = 0; x_step < test_context.target_subdiv.x; ++x_step)
-				{
-					maths::Decimal const x_target =
-						-target_abs_bounds.x +
-						target_step_size.x * x_step +
-						target_step_size.x * .5_d;
-
-					for (int y_step = 0; y_step < test_context.target_subdiv.y; ++y_step)
-					{
-						maths::Decimal const y_target =
-							-target_abs_bounds.y +
-							target_step_size.y * y_step +
-							target_step_size.y * .5_d;
-						maths::Point3f const target{ x_target, y_target, 0._d };
-						maths::Vec3f const direction{ maths::Normalized(target - origin) };
-#ifdef TESTROUTINE_LOGGING
-						std::cout << origin.e << std::endl;
-						std::cout << target.e << std::endl;
-						std::cout << direction.e << std::endl;
-#endif
-
-
-						{
-							globals::logger.EnableChannel(tools::kChannelGeneral, true);
-							std::stringstream message{ "" };
-							message << std::endl << "NEW RAY";
-							LOG_INFO(tools::kChannelGeneral, message.str());
-							globals::logger.EnableChannel(tools::kChannelGeneral, false);
-						}
-
-						maths::Ray const primary_ray{ origin, direction, ktMax, kTime };
-						results_container.emplace_back(TestRoutine(quad, primary_ray,
-																   test_context));
-
-#ifdef TESTROUTINE_LOGGING
-						std::cout << std::endl;
-#endif
-					}
-				}
-			}
-		}
-	}
-
-	{
-		int64_t const primary_fail_count = std::count_if(
-			results_container.cbegin(), results_container.cend(),
-			[](TestResults const &_results)
-			{
-				return !_results.primary.intersect;
-			});
-		int64_t const inward_fail_count = std::count_if(
-			results_container.cbegin(), results_container.cend(),
-			[](TestResults const &_results)
-			{
-				return !_results.inward.intersect;
-			});
-		int64_t const outward_fail_count = std::count_if(
-			results_container.cbegin(), results_container.cend(),
-			[](TestResults const &_results)
-			{
-				return _results.outward.intersect;
-			});
-
-		maths::Decimal const primary_fail_ratio =
-			static_cast<maths::Decimal>(primary_fail_count) /
-			static_cast<maths::Decimal>(test_context.exec_count());
-		maths::Decimal const inward_fail_ratio =
-			static_cast<maths::Decimal>(inward_fail_count) /
-			static_cast<maths::Decimal>(test_context.exec_count());
-		maths::Decimal const outward_fail_ratio =
-			static_cast<maths::Decimal>(outward_fail_count) /
-			static_cast<maths::Decimal>(test_context.exec_count());
-
-		std::cout << "SUMMARY" << std::endl;
-		std::cout << results_container.size() << std::endl;
-		std::cout << "TESTED " << test_context.exec_count() << " CASES" << std::endl;
-		std::cout << "PRIMARY FAILS .. " << primary_fail_count << " .. "
-				  << primary_fail_ratio << std::endl;
-		std::cout << "INWARD FAILS .. " << inward_fail_count << " .. "
-				  << inward_fail_ratio << std::endl;
-		std::cout << "OUTWARD FAILS .. " << outward_fail_count << " .. "
-				  << outward_fail_ratio << std::endl;
-
-#if 0
-		std::cout << "INWARD FAILS LIST .. " << std::endl;
-		std::for_each(results_container.cbegin(), results_container.cend(),
-					  [](TestResults const &_results)
-					  {
-						  if (!_results.inward.intersect)
-						  {
-							  std::cout << "NdotL .. " << _results.NdotL << std::endl;
-							  std::cout << _results.primary << std::endl << std::endl;
-						  }
-					  });
-		std::cout << "INWARD SUCCESS SAMPLE .. " << std::endl;
-		std::find_if(std::next(results_container.cbegin(), results_container.size() / 2), results_container.cend(),
-					 [](TestResults const &_results)
-					 {
-						 if (_results.inward.intersect)
-						 {
-							 std::cout << "NdotL .. " << _results.NdotL << std::endl;
-							 std::cout << _results.primary << std::endl << std::endl;
-							 return true;
-						 }
-						 return false;
-					 });
-#endif
-	}
+	TestContext::ResultsContainer_t const results_container = test_context.RunTest();
+	test_context.PrintResults(results_container);
 
 	return 0;
 }
 
 
-TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_primary_ray,
-						TestContext &_temp_context)
+TriangleMesh const &
+TestContext::quad()
+{
+	using raytracer::TriangleMeshRawData;
+	using raytracer::TriangleMeshData;
+
+	maths::Vec2f bounds = target_abs_bounds() * quad_coeff;
+
+	static TriangleMeshRawData::IndicesContainer_t const indices{
+		0, 1, 2,
+		2, 3, 0
+	};
+	TriangleMeshRawData::VerticesContainer_t const vertices{
+		maths::Point3f{ bounds.x, bounds.y, 0._d },
+		maths::Point3f{ -bounds.x, bounds.y, 0._d },
+		maths::Point3f{ -bounds.x, -bounds.y, 0._d },
+		maths::Point3f{ bounds.x, -bounds.y, 0._d }
+	};
+	quad_raw_data_cache_ = std::make_unique<TriangleMeshRawData>(
+		2,
+		indices,
+		vertices
+		);
+
+	static maths::Transform const world_transform{
+		maths::Mat4x4f::Identity()
+	};
+
+	static const bool flip_normals = false;
+
+	quad_data_cache_ = std::make_unique<TriangleMeshData>(
+		world_transform,
+		flip_normals,
+		*quad_raw_data_cache_,
+		InstancingPolicy{}
+		);
+
+	quad_cache_ = std::make_unique<TriangleMesh>(
+		world_transform,
+		flip_normals,
+		*quad_data_cache_);
+
+	return *quad_cache_;
+}
+
+template <typename InternalFloat>
+watertight_intersect::TriangleList<InternalFloat>
+TestContext::wi_quad()
+{
+	using TriangleType = watertight_intersect::Triangle<InternalFloat>;
+	if (!quad_raw_data_cache_)
+		quad();
+
+	std::array<TriangleType::InternalVec3, 4> vertices{};
+	for (int i = 0; i < 4; ++i)
+	{
+		maths::Point3f const &source = quad_raw_data_cache_->vertices[i];
+		vertices[i] = TriangleType::InternalVec3{ source.x, source.y, source.z };
+	}
+
+	watertight_intersect::TriangleList<InternalFloat> const result{
+		TriangleType{ vertices[0], vertices[1], vertices[2] },
+		TriangleType{ vertices[2], vertices[3], vertices[0] }
+	};
+
+	return result;
+}
+
+TestContext::ResultsContainer_t
+TestContext::RunTest()
+{
+	if (method == "baseline")
+		return RunTest_impl(quad());
+	else if (method == "experimental")
+		return RunTest_impl(wi_quad<maths::REDecimal>());
+	else
+		return ResultsContainer_t{};
+}
+
+template <typename ShapeType>
+TestContext::ResultsContainer_t
+TestContext::RunTest_impl(ShapeType const &_shape) const
+{
+	ResultsContainer_t results_container{};
+	results_container.reserve(exec_count());
+
+	maths::Vec2f const origin_step_size_cache = origin_step_size();
+	maths::Vec2f const target_step_size_cache = target_step_size();
+	maths::Vec2f const target_abs_bounds_cache = target_abs_bounds();
+
+	for (int theta_step = 0; theta_step < origin_subdiv.x; ++theta_step)
+	{
+		maths::Decimal const theta = maths::Radians(theta_step * origin_step_size_cache.x);
+
+		for (int phi_step = 0; phi_step < origin_subdiv.y; ++phi_step)
+		{
+			maths::Decimal const phi = maths::Radians(phi_step * origin_step_size_cache.y);
+			maths::Point3f const origin = PointFromSpherical(theta, phi, origin_distance);
+
+			{
+				globals::logger.EnableChannel(tools::kChannelGeneral, true);
+				std::stringstream message{ "" };
+				message << std::endl << "NEW ORIGIN";
+				LOG_INFO(tools::kChannelGeneral, message.str());
+				globals::logger.EnableChannel(tools::kChannelGeneral, false);
+			}
+			for (int x_step = 0; x_step < target_subdiv.x; ++x_step)
+			{
+				maths::Decimal const x_target =
+					-target_abs_bounds_cache.x +
+					target_step_size_cache.x * x_step +
+					target_step_size_cache.x * .5_d;
+
+				for (int y_step = 0; y_step < target_subdiv.y; ++y_step)
+				{
+					maths::Decimal const y_target =
+						-target_abs_bounds_cache.y +
+						target_step_size_cache.y * y_step +
+						target_step_size_cache.y * .5_d;
+					maths::Point3f const target{ x_target, y_target, 0._d };
+					maths::Vec3f const direction{ maths::Normalized(target - origin) };
+#ifdef TESTROUTINE_LOGGING
+					std::cout << origin.e << std::endl;
+					std::cout << target.e << std::endl;
+					std::cout << direction.e << std::endl;
+#endif
+
+
+					{
+						globals::logger.EnableChannel(tools::kChannelGeneral, true);
+						std::stringstream message{ "" };
+						message << std::endl << "NEW RAY";
+						LOG_INFO(tools::kChannelGeneral, message.str());
+						globals::logger.EnableChannel(tools::kChannelGeneral, false);
+					}
+
+					maths::Ray const primary_ray{ origin, direction, ktMax, kTime };
+					results_container.emplace_back(TestRoutine(_shape, primary_ray));
+
+#ifdef TESTROUTINE_LOGGING
+					std::cout << std::endl;
+#endif
+				}
+			}
+		}
+	}
+
+	return results_container;
+}
+
+template <typename ShapeType>
+TestResults
+TestContext::TestRoutine(ShapeType const &_shape, maths::Ray const &_primary_ray)
 {
 	TestResults result{};
-
-	{
-		auto wi_quad = _temp_context.wi_quad<maths::REDecimal>();
-		std::for_each(wi_quad.cbegin(), wi_quad.cend(), [&result, &_primary_ray](auto const &_triangle) {
-			bool const intersect = _triangle.Intersect(_primary_ray,
-													   result.primary.t,
-													   result.primary.hit);
-		});
-	}
 
 	result.primary.intersect = _shape.Intersect(_primary_ray, result.primary.t, result.primary.hit);
 
@@ -493,74 +525,74 @@ TestResults TestRoutine(raytracer::Shape const &_shape, maths::Ray const &_prima
 	return result;
 };
 
-
-TriangleMesh const &
-TestContext::quad()
+void
+TestContext::PrintResults(ResultsContainer_t const &_results_container) const
 {
-	using raytracer::TriangleMeshRawData;
-	using raytracer::TriangleMeshData;
+	int64_t const primary_fail_count = std::count_if(
+		_results_container.cbegin(), _results_container.cend(),
+		[](TestResults const &_results)
+		{
+			return !_results.primary.intersect;
+		});
+	int64_t const inward_fail_count = std::count_if(
+		_results_container.cbegin(), _results_container.cend(),
+		[](TestResults const &_results)
+		{
+			return !_results.inward.intersect;
+		});
+	int64_t const outward_fail_count = std::count_if(
+		_results_container.cbegin(), _results_container.cend(),
+		[](TestResults const &_results)
+		{
+			return _results.outward.intersect;
+		});
 
-	maths::Vec2f bounds = target_abs_bounds() * quad_coeff;
+	maths::Decimal const primary_fail_ratio =
+		static_cast<maths::Decimal>(primary_fail_count) /
+		static_cast<maths::Decimal>(exec_count());
+	maths::Decimal const inward_fail_ratio =
+		static_cast<maths::Decimal>(inward_fail_count) /
+		static_cast<maths::Decimal>(exec_count());
+	maths::Decimal const outward_fail_ratio =
+		static_cast<maths::Decimal>(outward_fail_count) /
+		static_cast<maths::Decimal>(exec_count());
 
-	static TriangleMeshRawData::IndicesContainer_t const indices{
-		0, 1, 2,
-		2, 3, 0
-	};
-	TriangleMeshRawData::VerticesContainer_t const vertices{
-		maths::Point3f{ bounds.x, bounds.y, 0._d },
-		maths::Point3f{ -bounds.x, bounds.y, 0._d },
-		maths::Point3f{ -bounds.x, -bounds.y, 0._d },
-		maths::Point3f{ bounds.x, -bounds.y, 0._d }
-	};
-	quad_raw_data_cache_ = std::make_unique<TriangleMeshRawData>(
-		2,
-		indices,
-		vertices
-		);
+	std::cout << "SUMMARY" << std::endl;
+	std::cout << _results_container.size() << std::endl;
+	std::cout << "TESTED " << exec_count() << " CASES" << std::endl;
+	std::cout << "PRIMARY FAILS .. " << primary_fail_count << " .. "
+			  << primary_fail_ratio << std::endl;
+	std::cout << "INWARD FAILS .. " << inward_fail_count << " .. "
+			  << inward_fail_ratio << std::endl;
+	std::cout << "OUTWARD FAILS .. " << outward_fail_count << " .. "
+			  << outward_fail_ratio << std::endl;
 
-	static maths::Transform const world_transform{
-		maths::Mat4x4f::Identity()
-	};
-
-	static const bool flip_normals = false;
-
-	quad_data_cache_ = std::make_unique<TriangleMeshData>(
-		world_transform,
-		flip_normals,
-		*quad_raw_data_cache_,
-		InstancingPolicy{}
-		);
-
-	quad_cache_ = std::make_unique<TriangleMesh>(
-		world_transform,
-		flip_normals,
-		*quad_data_cache_);
-
-	return *quad_cache_;
+#if 0
+	std::cout << "INWARD FAILS LIST .. " << std::endl;
+	std::for_each(_results_container.cbegin(), _results_container.cend(),
+				  [](TestResults const &_results)
+				  {
+					  if (!_results.inward.intersect)
+					  {
+						  std::cout << "NdotL .. " << _results.NdotL << std::endl;
+						  std::cout << _results.primary << std::endl << std::endl;
+					  }
+				  });
+	std::cout << "INWARD SUCCESS SAMPLE .. " << std::endl;
+	std::find_if(std::next(_results_container.cbegin(), _results_container.size() / 2), _results_container.cend(),
+				 [](TestResults const &_results)
+				 {
+					 if (_results.inward.intersect)
+					 {
+						 std::cout << "NdotL .. " << _results.NdotL << std::endl;
+						 std::cout << _results.primary << std::endl << std::endl;
+						 return true;
+					 }
+					 return false;
+				 });
+#endif
 }
 
-template <typename InternalFloat>
-watertight_intersect::TriangleContainer_t<InternalFloat>
-TestContext::wi_quad()
-{
-	using TriangleType = watertight_intersect::Triangle<InternalFloat>;
-	if (!quad_raw_data_cache_)
-		quad();
-
-	std::array<TriangleType::InternalVec3, 4> vertices{};
-	for (int i = 0; i < 4; ++i)
-	{
-		maths::Point3f const &source = quad_raw_data_cache_->vertices[i];
-		vertices[i] = TriangleType::InternalVec3{ source.x, source.y, source.z };
-	}
-
-	watertight_intersect::TriangleContainer_t<InternalFloat> const result{
-		TriangleType{ vertices[0], vertices[1], vertices[2] },
-		TriangleType{ vertices[2], vertices[3], vertices[0] }
-	};
-
-	return result;
-}
 
 
 maths::Point3f PointFromSpherical(maths::Decimal const _theta,
@@ -602,8 +634,8 @@ namespace watertight_intersect {
 
 template <typename InternalFloat>
 bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
-										maths::Decimal &,
-										raytracer::SurfaceInteraction &) const
+										maths::Decimal &_tHit,
+										raytracer::SurfaceInteraction &_hit_info) const
 {
 	uint32_t const ray_direction_largest_dim = maths::MaximumDimension(maths::Abs(_ray.direction));
 	uint32_t reordered_x = (ray_direction_largest_dim + 1u) % 3u;
@@ -636,13 +668,13 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 					   ray_direction_largest_dim)
 	};
 
-	std::array<InternalVec3, 3u> const transformed_vertices{
+	maths::Vector<InternalVec3, 3> const transformed_vertices{
 		local_vertices[0] * InternalVec3{ 1._d, 1._d, 0._d } + local_vertices[0].z * shear_constants,
 		local_vertices[1] * InternalVec3{ 1._d, 1._d, 0._d } + local_vertices[1].z * shear_constants,
 		local_vertices[2] * InternalVec3{ 1._d, 1._d, 0._d } + local_vertices[2].z * shear_constants
 	};
 
-	InternalVec3 const uvw {
+	InternalVec3 const uvw{
 		transformed_vertices[2].x * transformed_vertices[1].y -
 		transformed_vertices[2].y * transformed_vertices[1].x,
 
@@ -666,7 +698,72 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 								 transformed_vertices[1].z,
 								 transformed_vertices[2].z });
 
+	if (scaled_hit_distance > (determinant * _ray.tMax) || scaled_hit_distance < InternalFloat{ 0._d })
+		return false;
+
+
+
+	InternalVec3 const barycentric{ uvw / determinant };
+	InternalFloat const t = scaled_hit_distance / determinant;
+	_tHit = t.value;
+
+	InternalVec3 const barycentric_hit_point =
+								barycentric[0] * vertices[0]
+								+ barycentric[1] * vertices[1]
+								+ barycentric[2] * vertices[2];
+
+	InternalVec3 const t_hit_point =
+		InternalVec3(_ray.origin) + static_cast<InternalVec3>(_ray.direction) * t;
+	InternalVec3 const &ref_hit = t_hit_point;
+	maths::Point3f const hit_point{ ref_hit.x.value,
+									ref_hit.y.value,
+									ref_hit.z.value };
+
+	maths::Vec3f error_bounds{};
+	{
+		maths::Vec3f const max_bounds{ std::max(std::abs(ref_hit.x.value - ref_hit.x.high_bound),
+												std::abs(ref_hit.x.value - ref_hit.x.low_bound)),
+									   std::max(std::abs(ref_hit.y.value - ref_hit.y.high_bound),
+												std::abs(ref_hit.y.value - ref_hit.y.low_bound)),
+									   std::max(std::abs(ref_hit.z.value - ref_hit.z.high_bound),
+												std::abs(ref_hit.z.value - ref_hit.z.low_bound))
+		};
+		error_bounds = max_bounds;
+	}
+
+	maths::Point3f p0{ static_cast<maths::Decimal>(vertices[0].x),
+					   static_cast<maths::Decimal>(vertices[0].y),
+					   static_cast<maths::Decimal>(vertices[0].z) };
+	maths::Point3f p1{ static_cast<maths::Decimal>(vertices[1].x),
+					   static_cast<maths::Decimal>(vertices[1].y),
+					   static_cast<maths::Decimal>(vertices[1].z) };
+	maths::Point3f p2{ static_cast<maths::Decimal>(vertices[2].x),
+					   static_cast<maths::Decimal>(vertices[2].y),
+					   static_cast<maths::Decimal>(vertices[2].z) };
+	maths::Norm3f const geometry_normal{
+		static_cast<maths::Norm3f>(maths::Normalized(maths::Cross(p1 - p0, p2 - p0)))
+	};
+	raytracer::SurfaceInteraction::GeometryProperties const geometry{
+		geometry_normal, maths::Vec3f(0._d), maths::Vec3f(0._d), maths::Norm3f(0._d), maths::Norm3f(0._d)
+	};
+	_hit_info = raytracer::SurfaceInteraction{
+		hit_point, error_bounds, _tHit, -_ray.direction, nullptr, maths::Point2f(0._d), geometry, geometry
+	};
+
 	return true;
+}
+
+template <typename InternalFloat>
+bool
+TriangleList<InternalFloat>:: Intersect(maths::Ray const &_ray,
+										maths::Decimal &_tHit,
+										raytracer::SurfaceInteraction &_hit_info) const
+{
+	bool hit = false;
+	std::for_each(triangles.cbegin(), triangles.cend(), [&](Triangle_t const &_triangle) {
+		hit = _triangle.Intersect(_ray, _tHit, _hit_info) || hit;
+	});
+	return hit;
 }
 
 
