@@ -26,6 +26,9 @@
 #include "raytracer/surface_interaction.h"
 
 
+// NOTE: pathological case :
+// --target-offset 10000000x10000000x1.0 --target-extents 1x1 --method experimental
+
 
 using InstancingPolicy = raytracer::InstancingPolicyClass::Transformed;
 using TriangleMesh = raytracer::TriangleMesh<InstancingPolicy>;
@@ -180,7 +183,7 @@ constexpr maths::Decimal	kPhiMax = 45._d;
 
 constexpr int				kThetaSubdiv = 4;
 constexpr int				kPhiSubdiv = 2;
-constexpr maths::Decimal	kDistance = 2._d;
+constexpr maths::Decimal	kDistance = 1._d;
 
 constexpr int				kXSubdiv = 16;
 constexpr int				kYSubdiv = 16;
@@ -193,6 +196,7 @@ struct TestContext
 	maths::Decimal			tMax{ ktMax };
 	maths::Decimal			time{ kTime };
 
+	maths::Vec3f			target_offset{ 1._d, 1._d, 1._d };
 	maths::Vec2f			target_extents{ kQuadExtentX, kQuadExtentY };
 	maths::Vector2<int>		target_subdiv{ kXSubdiv, kYSubdiv };
 	maths::Decimal			quad_coeff{ kGeomCoeff };
@@ -248,6 +252,9 @@ int main(int argc, char **argv)
 		bpo::options_description option_desc{ "available options" };
 		option_desc.add_options()
 			("help", "help message")
+			("target-offset",
+			 bpo::value(&test_context.target_offset)->default_value(test_context.target_offset),
+			 "float")
 			("target-extents",
 			 bpo::value(&test_context.target_extents)->default_value(test_context.target_extents),
 			 "float")
@@ -287,6 +294,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
+		std::cout << test_context.target_offset << std::endl;
 		std::cout << test_context.target_extents << std::endl;
 		std::cout << test_context.target_subdiv << std::endl;
 		std::cout << test_context.quad_coeff << std::endl;
@@ -298,7 +306,12 @@ int main(int argc, char **argv)
 		std::cout << std::endl;
 	}
 
+	using StdChrono = std::chrono::high_resolution_clock;
+	StdChrono::time_point const start = StdChrono::now();
 	TestContext::ResultsContainer_t const results_container = test_context.RunTest();
+	StdChrono::duration const delta = StdChrono::now() - start;
+	std::cout << "RUNNING TIME .. "
+			  << std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() << " ms" << std::endl;
 	test_context.PrintResults(results_container);
 
 	return 0;
@@ -318,10 +331,10 @@ TestContext::quad()
 		2, 3, 0
 	};
 	TriangleMeshRawData::VerticesContainer_t const vertices{
-		maths::Point3f{ bounds.x, bounds.y, 0._d },
-		maths::Point3f{ -bounds.x, bounds.y, 0._d },
-		maths::Point3f{ -bounds.x, -bounds.y, 0._d },
-		maths::Point3f{ bounds.x, -bounds.y, 0._d }
+		maths::Point3f{ bounds.x, bounds.y, 0._d } + target_offset,
+		maths::Point3f{ -bounds.x, bounds.y, 0._d } + target_offset,
+		maths::Point3f{ -bounds.x, -bounds.y, 0._d } + target_offset,
+		maths::Point3f{ bounds.x, -bounds.y, 0._d } + target_offset
 	};
 	quad_raw_data_cache_ = std::make_unique<TriangleMeshRawData>(
 		2,
@@ -402,7 +415,7 @@ TestContext::RunTest_impl(ShapeType const &_shape) const
 		for (int phi_step = 0; phi_step < origin_subdiv.y; ++phi_step)
 		{
 			maths::Decimal const phi = maths::Radians(phi_step * origin_step_size_cache.y);
-			maths::Point3f const origin = PointFromSpherical(theta, phi, origin_distance);
+			maths::Point3f const origin = PointFromSpherical(theta, phi, origin_distance) + target_offset;
 
 			{
 				globals::logger.EnableChannel(tools::kChannelGeneral, true);
@@ -424,7 +437,9 @@ TestContext::RunTest_impl(ShapeType const &_shape) const
 						-target_abs_bounds_cache.y +
 						target_step_size_cache.y * y_step +
 						target_step_size_cache.y * .5_d;
-					maths::Point3f const target{ x_target, y_target, 0._d };
+					maths::Point3f const target{
+						maths::Point3f{ x_target, y_target, 0._d } + target_offset
+					};
 					maths::Vec3f const direction{ maths::Normalized(target - origin) };
 #ifdef TESTROUTINE_LOGGING
 					std::cout << origin.e << std::endl;
@@ -479,9 +494,6 @@ TestContext::TestRoutine(ShapeType const &_shape, maths::Ray const &_primary_ray
 
 		maths::Point3f const secondary_origin =
 			result.primary.hit.OffsetOriginFromErrorBounds(primary_offset_w);
-		std::cout << maths::Dot(maths::Abs(static_cast<maths::Vec3f>(result.primary.hit.geometry.normal_quick())), result.primary.hit.position_error) * static_cast<maths::Vec3f>(result.primary.hit.geometry.normal_quick()) << std::endl;
-		std::cout << result.primary.hit.position_error << std::endl;
-
 
 		maths::Ray const secondary_inward_ray{ secondary_origin,
 											   _primary_ray.direction,
@@ -547,6 +559,29 @@ TestContext::PrintResults(ResultsContainer_t const &_results_container) const
 			return _results.outward.intersect;
 		});
 
+	maths::Vector3<maths::DecimalBits> ulp_worst_error_bounds{ 0u, 0u, 0u };
+	std::for_each(
+		_results_container.cbegin(), _results_container.cend(),
+		[&ulp_worst_error_bounds](TestResults const &_results)
+		{
+			using Vec3DecimalToBits = maths::Vector3<maths::DecimalBitsMapper>;
+			maths::Vec3f const position = static_cast<maths::Vec3f>(
+				maths::Abs(_results.primary.hit.position));
+			maths::Vec3f const position_plus_bounds =
+				position + maths::Abs(_results.primary.hit.position_error);
+			Vec3DecimalToBits const position_bits{ position.x, position.y, position.z };
+			Vec3DecimalToBits const offset_position_bits{ position_plus_bounds.x,
+														  position_plus_bounds.y,
+														  position_plus_bounds.z };
+			ulp_worst_error_bounds.x = std::max(ulp_worst_error_bounds.x,
+												offset_position_bits.x.bits - position_bits.x.bits);
+			ulp_worst_error_bounds.y = std::max(ulp_worst_error_bounds.y,
+												offset_position_bits.y.bits - position_bits.y.bits);
+			ulp_worst_error_bounds.z = std::max(ulp_worst_error_bounds.z,
+												offset_position_bits.z.bits - position_bits.z.bits);
+		});
+
+
 	maths::Decimal const primary_fail_ratio =
 		static_cast<maths::Decimal>(primary_fail_count) /
 		static_cast<maths::Decimal>(exec_count());
@@ -566,6 +601,8 @@ TestContext::PrintResults(ResultsContainer_t const &_results_container) const
 			  << inward_fail_ratio << std::endl;
 	std::cout << "OUTWARD FAILS .. " << outward_fail_count << " .. "
 			  << outward_fail_ratio << std::endl;
+
+	std::cout << "LARGEST ERROR BOUNDS .. " << ulp_worst_error_bounds << std::endl;
 
 #if 0
 	std::cout << "INWARD FAILS LIST .. " << std::endl;
@@ -701,54 +738,54 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 	if (scaled_hit_distance > (determinant * _ray.tMax) || scaled_hit_distance < InternalFloat{ 0._d })
 		return false;
 
-
-
-	InternalVec3 const barycentric{ uvw / determinant };
-	InternalFloat const t = scaled_hit_distance / determinant;
-	_tHit = t.value;
-
-	InternalVec3 const barycentric_hit_point =
-								barycentric[0] * vertices[0]
-								+ barycentric[1] * vertices[1]
-								+ barycentric[2] * vertices[2];
-
-	InternalVec3 const t_hit_point =
-		InternalVec3(_ray.origin) + static_cast<InternalVec3>(_ray.direction) * t;
-	InternalVec3 const &ref_hit = t_hit_point;
-	maths::Point3f const hit_point{ ref_hit.x.value,
-									ref_hit.y.value,
-									ref_hit.z.value };
-
-	maths::Vec3f error_bounds{};
 	{
-		maths::Vec3f const max_bounds{ std::max(std::abs(ref_hit.x.value - ref_hit.x.high_bound),
-												std::abs(ref_hit.x.value - ref_hit.x.low_bound)),
-									   std::max(std::abs(ref_hit.y.value - ref_hit.y.high_bound),
-												std::abs(ref_hit.y.value - ref_hit.y.low_bound)),
-									   std::max(std::abs(ref_hit.z.value - ref_hit.z.high_bound),
-												std::abs(ref_hit.z.value - ref_hit.z.low_bound))
-		};
-		error_bounds = max_bounds;
-	}
+		InternalVec3 const barycentric{ uvw / determinant };
+		InternalFloat const t = scaled_hit_distance / determinant;
+		_tHit = t.value;
 
-	maths::Point3f p0{ static_cast<maths::Decimal>(vertices[0].x),
-					   static_cast<maths::Decimal>(vertices[0].y),
-					   static_cast<maths::Decimal>(vertices[0].z) };
-	maths::Point3f p1{ static_cast<maths::Decimal>(vertices[1].x),
-					   static_cast<maths::Decimal>(vertices[1].y),
-					   static_cast<maths::Decimal>(vertices[1].z) };
-	maths::Point3f p2{ static_cast<maths::Decimal>(vertices[2].x),
-					   static_cast<maths::Decimal>(vertices[2].y),
-					   static_cast<maths::Decimal>(vertices[2].z) };
-	maths::Norm3f const geometry_normal{
-		static_cast<maths::Norm3f>(maths::Normalized(maths::Cross(p1 - p0, p2 - p0)))
-	};
-	raytracer::SurfaceInteraction::GeometryProperties const geometry{
-		geometry_normal, maths::Vec3f(0._d), maths::Vec3f(0._d), maths::Norm3f(0._d), maths::Norm3f(0._d)
-	};
-	_hit_info = raytracer::SurfaceInteraction{
-		hit_point, error_bounds, _tHit, -_ray.direction, nullptr, maths::Point2f(0._d), geometry, geometry
-	};
+		InternalVec3 const barycentric_hit_point =
+			barycentric[0] * vertices[0]
+			+ barycentric[1] * vertices[1]
+			+ barycentric[2] * vertices[2];
+
+		InternalVec3 const t_hit_point =
+			InternalVec3(_ray.origin) + static_cast<InternalVec3>(_ray.direction) * t;
+		InternalVec3 const &ref_hit = t_hit_point;
+		maths::Point3f const hit_point{ static_cast<maths::Decimal>(ref_hit.x),
+										static_cast<maths::Decimal>(ref_hit.y),
+										static_cast<maths::Decimal>(ref_hit.z) };
+
+		maths::Vec3f error_bounds{ 0._d, 0._d, 0._d };
+		{
+			maths::Vec3f const max_bounds{ std::max(std::abs(ref_hit.x.value - ref_hit.x.high_bound),
+													std::abs(ref_hit.x.value - ref_hit.x.low_bound)),
+										   std::max(std::abs(ref_hit.y.value - ref_hit.y.high_bound),
+													std::abs(ref_hit.y.value - ref_hit.y.low_bound)),
+										   std::max(std::abs(ref_hit.z.value - ref_hit.z.high_bound),
+													std::abs(ref_hit.z.value - ref_hit.z.low_bound))
+			};
+			error_bounds = max_bounds;
+		}
+
+		maths::Point3f p0{ static_cast<maths::Decimal>(vertices[0].x),
+						   static_cast<maths::Decimal>(vertices[0].y),
+						   static_cast<maths::Decimal>(vertices[0].z) };
+		maths::Point3f p1{ static_cast<maths::Decimal>(vertices[1].x),
+						   static_cast<maths::Decimal>(vertices[1].y),
+						   static_cast<maths::Decimal>(vertices[1].z) };
+		maths::Point3f p2{ static_cast<maths::Decimal>(vertices[2].x),
+						   static_cast<maths::Decimal>(vertices[2].y),
+						   static_cast<maths::Decimal>(vertices[2].z) };
+		maths::Norm3f const geometry_normal{
+			static_cast<maths::Norm3f>(maths::Normalized(maths::Cross(p1 - p0, p2 - p0)))
+		};
+		raytracer::SurfaceInteraction::GeometryProperties const geometry{
+			geometry_normal, maths::Vec3f(0._d), maths::Vec3f(0._d), maths::Norm3f(0._d), maths::Norm3f(0._d)
+		};
+		_hit_info = raytracer::SurfaceInteraction{
+			hit_point, error_bounds, _tHit, -_ray.direction, nullptr, maths::Point2f(0._d), geometry, geometry
+		};
+	}
 
 	return true;
 }
