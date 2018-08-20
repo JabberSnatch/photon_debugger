@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <numeric>
 #include <sstream>
 #include <vector>
 
@@ -27,7 +28,8 @@
 
 
 // NOTE: pathological case :
-// --target-offset 10000000x10000000x1.0 --target-extents 1x1 --method experimental
+// --method experimental --target-offset 1048576x1048576x1
+// 2^20 gives a decent amount of error, going beyond is all errors
 
 
 using InstancingPolicy = raytracer::InstancingPolicyClass::Transformed;
@@ -391,8 +393,12 @@ TestContext::RunTest()
 {
 	if (method == "baseline")
 		return RunTest_impl(quad());
-	else if (method == "experimental")
+	else if (method == "exp_redecimal")
 		return RunTest_impl(wi_quad<maths::REDecimal>());
+	else if (method == "exp_single")
+		return RunTest_impl(wi_quad<float>());
+	else if (method == "exp_double")
+		return RunTest_impl(wi_quad<double>());
 	else
 		return ResultsContainer_t{};
 }
@@ -559,10 +565,19 @@ TestContext::PrintResults(ResultsContainer_t const &_results_container) const
 			return _results.outward.intersect;
 		});
 
+	maths::Vec3f const average_position = std::accumulate(
+		_results_container.cbegin(), _results_container.cend(), maths::Vec3f( 0._d ),
+		[_count = _results_container.size()](maths::Vec3f _acc, TestResults const &_results)
+		{
+			return _acc +
+				static_cast<maths::Vec3f>(_results.primary.hit.position) /
+				static_cast<maths::Decimal>(_count);
+		});
+
 	maths::Vector3<maths::DecimalBits> ulp_worst_error_bounds{ 0u, 0u, 0u };
 	std::for_each(
 		_results_container.cbegin(), _results_container.cend(),
-		[&ulp_worst_error_bounds](TestResults const &_results)
+		[&ulp_worst_error_bounds, &average_position](TestResults const &_results)
 		{
 			using Vec3DecimalToBits = maths::Vector3<maths::DecimalBitsMapper>;
 			maths::Vec3f const position = static_cast<maths::Vec3f>(
@@ -603,6 +618,7 @@ TestContext::PrintResults(ResultsContainer_t const &_results_container) const
 			  << outward_fail_ratio << std::endl;
 
 	std::cout << "LARGEST ERROR BOUNDS .. " << ulp_worst_error_bounds << std::endl;
+	std::cout << "AVERAGE PRIMARY POSITION .. " << average_position << std::endl;
 
 #if 0
 	std::cout << "INWARD FAILS LIST .. " << std::endl;
@@ -735,13 +751,14 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 								 transformed_vertices[1].z,
 								 transformed_vertices[2].z });
 
-	if (scaled_hit_distance > (determinant * _ray.tMax) || scaled_hit_distance < InternalFloat{ 0._d })
+	if (scaled_hit_distance > (determinant * _ray.tMax) ||
+		scaled_hit_distance < static_cast<InternalFloat>(0._d))
 		return false;
 
 	{
 		InternalVec3 const barycentric{ uvw / determinant };
 		InternalFloat const t = scaled_hit_distance / determinant;
-		_tHit = t.value;
+		_tHit = static_cast<maths::Decimal>(t);
 
 		InternalVec3 const barycentric_hit_point =
 			barycentric[0] * vertices[0]
@@ -756,6 +773,7 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 										static_cast<maths::Decimal>(ref_hit.z) };
 
 		maths::Vec3f error_bounds{ 0._d, 0._d, 0._d };
+#if 0
 		{
 			maths::Vec3f const max_bounds{ std::max(std::abs(ref_hit.x.value - ref_hit.x.high_bound),
 													std::abs(ref_hit.x.value - ref_hit.x.low_bound)),
@@ -765,6 +783,14 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 													std::abs(ref_hit.z.value - ref_hit.z.low_bound))
 			};
 			error_bounds = max_bounds;
+		}
+#endif
+		{
+			maths::Vec3f const gamma_bounds{ maths::Vec3f{ static_cast<maths::Decimal>(ref_hit.x),
+														   static_cast<maths::Decimal>(ref_hit.y),
+														   static_cast<maths::Decimal>(ref_hit.z) }
+											 * maths::gamma(11u) };
+			error_bounds = gamma_bounds;
 		}
 
 		maths::Point3f p0{ static_cast<maths::Decimal>(vertices[0].x),

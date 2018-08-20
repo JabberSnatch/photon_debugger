@@ -13,6 +13,7 @@ REDecimal::operator+(REDecimal const &_rhs) const
 	result.value = _rhs.value + value;
 	result.low_bound = NextDecimalDown(LowerBound() + _rhs.LowerBound());
 	result.high_bound = NextDecimalUp(UpperBound() + _rhs.UpperBound());
+	result.round_count = std::max(round_count, _rhs.round_count) + 1u;
 	result.Check();
 	return result;
 }
@@ -26,6 +27,7 @@ REDecimal::operator-(REDecimal const &_rhs) const
 	result.value = value - _rhs.value;
 	result.low_bound = NextDecimalDown(LowerBound() - _rhs.UpperBound());
 	result.high_bound = NextDecimalUp(UpperBound() - _rhs.LowerBound());
+	result.round_count = std::max(round_count, _rhs.round_count) + 1u;
 	result.Check();
 	return result;
 }
@@ -43,6 +45,7 @@ REDecimal::operator*(REDecimal const &_rhs) const
 	};
 	result.low_bound = maths::Min(maths::Min(prod[0], prod[1]), maths::Min(prod[2], prod[3]));
 	result.high_bound = maths::Max(maths::Max(prod[0], prod[1]), maths::Max(prod[2], prod[3]));
+	result.round_count = std::max(round_count, _rhs.round_count) + 1u;
 	result.Check();
 	return result;
 }
@@ -68,6 +71,7 @@ REDecimal::operator/(REDecimal const &_rhs) const
 		result.low_bound = maths::Min(maths::Min(div[0], div[1]), maths::Min(div[2], div[3]));
 		result.high_bound = maths::Max(maths::Max(div[0], div[1]), maths::Max(div[2], div[3]));
 	}
+	result.round_count = std::max(round_count, _rhs.round_count) + 1u;
 	result.Check();
 	return result;
 }
@@ -81,6 +85,7 @@ REDecimal::operator+=(REDecimal const &_rhs)
 	value += _rhs.value;
 	low_bound = NextDecimalDown(LowerBound() + _rhs.LowerBound());
 	high_bound = NextDecimalUp(UpperBound() + _rhs.UpperBound());
+	round_count = std::max(round_count, _rhs.round_count) + 1u;
 	Check();
 	return *this;
 }
@@ -93,6 +98,7 @@ REDecimal::operator-=(REDecimal const &_rhs)
 	value -= _rhs.value;
 	low_bound = NextDecimalDown(_rhs.LowerBound() - UpperBound());
 	high_bound = NextDecimalUp(_rhs.UpperBound() - LowerBound());
+	round_count = std::max(round_count, _rhs.round_count) + 1u;
 	Check();
 	return *this;
 }
@@ -111,6 +117,7 @@ REDecimal::operator*=(REDecimal const &_rhs)
 		maths::Min(maths::Min(prod[0], prod[1]), maths::Min(prod[2], prod[3])));
 	high_bound = NextDecimalUp(
 		maths::Max(maths::Max(prod[0], prod[1]), maths::Max(prod[2], prod[3])));
+	round_count = std::max(round_count, _rhs.round_count) + 1u;
 	Check();
 	return *this;
 }
@@ -137,6 +144,7 @@ REDecimal::operator/=(REDecimal const &_rhs)
 		high_bound = NextDecimalUp(
 			maths::Max(maths::Max(div[0], div[1]), maths::Max(div[2], div[3])));
 	}
+	round_count = std::max(round_count, _rhs.round_count) + 1u;
 	Check();
 	return *this;
 }

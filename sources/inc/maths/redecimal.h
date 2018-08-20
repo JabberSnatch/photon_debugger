@@ -49,6 +49,8 @@ struct REDecimal
 	Decimal		low_bound;
 	Decimal		high_bound;
 
+	uint64_t	round_count = 0u;
+
 	Decimal AbsoluteError() const { return high_bound - low_bound; }
 	Decimal UpperBound() const { return high_bound; }
 	Decimal LowerBound() const { return low_bound; }
