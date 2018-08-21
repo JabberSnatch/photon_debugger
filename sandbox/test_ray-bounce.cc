@@ -195,6 +195,8 @@ constexpr int				kExecCount = kThetaSubdiv * kPhiSubdiv * kXSubdiv * kYSubdiv;
 
 struct TestContext
 {
+	bool					short_output{ false };
+
 	maths::Decimal			tMax{ ktMax };
 	maths::Decimal			time{ kTime };
 
@@ -277,7 +279,11 @@ int main(int argc, char **argv)
 			 "float")
 			("method",
 			 bpo::value(&test_context.method)->default_value(test_context.method),
-			 "string");
+			 "string")
+			("short-output",
+			 bpo::value(&test_context.short_output)->default_value(test_context.short_output)->implicit_value(true),
+			 "bool")
+			;
 
 		bpo::variables_map vm{};
 		try
@@ -296,24 +302,30 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		std::cout << test_context.target_offset << std::endl;
-		std::cout << test_context.target_extents << std::endl;
-		std::cout << test_context.target_subdiv << std::endl;
-		std::cout << test_context.quad_coeff << std::endl;
-		std::cout << test_context.origin_extents << std::endl;
-		std::cout << test_context.origin_subdiv << std::endl;
-		std::cout << test_context.origin_distance << std::endl;
-		std::cout << test_context.exec_count() << std::endl;
-		std::cout << test_context.method << std::endl;
-		std::cout << std::endl;
+		if (!test_context.short_output)
+		{
+			std::cout << test_context.target_offset << std::endl;
+			std::cout << test_context.target_extents << std::endl;
+			std::cout << test_context.target_subdiv << std::endl;
+			std::cout << test_context.quad_coeff << std::endl;
+			std::cout << test_context.origin_extents << std::endl;
+			std::cout << test_context.origin_subdiv << std::endl;
+			std::cout << test_context.origin_distance << std::endl;
+			std::cout << test_context.exec_count() << std::endl;
+			std::cout << test_context.method << std::endl;
+			std::cout << std::endl;
+		}
 	}
 
 	using StdChrono = std::chrono::high_resolution_clock;
 	StdChrono::time_point const start = StdChrono::now();
 	TestContext::ResultsContainer_t const results_container = test_context.RunTest();
 	StdChrono::duration const delta = StdChrono::now() - start;
-	std::cout << "RUNNING TIME .. "
-			  << std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() << " ms" << std::endl;
+	if (!test_context.short_output)
+	{
+		std::cout << "RUNNING TIME .. "
+				  << std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() << " ms" << std::endl;
+	}
 	test_context.PrintResults(results_container);
 
 	return 0;
@@ -607,19 +619,32 @@ TestContext::PrintResults(ResultsContainer_t const &_results_container) const
 		static_cast<maths::Decimal>(outward_fail_count) /
 		static_cast<maths::Decimal>(exec_count());
 
-	std::cout << "SUMMARY" << std::endl;
-	std::cout << _results_container.size() << std::endl;
-	std::cout << "TESTED " << exec_count() << " CASES" << std::endl;
-	std::cout << "PRIMARY FAILS .. " << primary_fail_count << " .. "
-			  << primary_fail_ratio << std::endl;
-	std::cout << "INWARD FAILS .. " << inward_fail_count << " .. "
-			  << inward_fail_ratio << std::endl;
-	std::cout << "OUTWARD FAILS .. " << outward_fail_count << " .. "
-			  << outward_fail_ratio << std::endl;
+	if (!short_output)
+	{
+		std::cout << "SUMMARY" << std::endl;
+		std::cout << _results_container.size() << std::endl;
+		std::cout << "TESTED " << exec_count() << " CASES" << std::endl;
+		std::cout << "PRIMARY FAILS .. " << primary_fail_count << " .. "
+				  << primary_fail_ratio << std::endl;
+		std::cout << "INWARD FAILS .. " << inward_fail_count << " .. "
+				  << inward_fail_ratio << std::endl;
+		std::cout << "OUTWARD FAILS .. " << outward_fail_count << " .. "
+				  << outward_fail_ratio << std::endl;
 
-	std::cout << "LARGEST ERROR BOUNDS .. " << ulp_worst_error_bounds << std::endl;
-	std::cout << "AVERAGE PRIMARY POSITION .. " << average_position << std::endl;
-
+		std::cout << "LARGEST ERROR BOUNDS .. " << ulp_worst_error_bounds << std::endl;
+		std::cout << "AVERAGE PRIMARY POSITION .. " << average_position << std::endl;
+	}
+	else
+	{
+		std::cout << exec_count() << " "
+				  << primary_fail_count << " "
+				  << inward_fail_count << " "
+				  << outward_fail_count << " "
+				  << ulp_worst_error_bounds
+			//<< " "
+			//<< std::endl;
+			;
+	}
 #if 0
 	std::cout << "INWARD FAILS LIST .. " << std::endl;
 	std::for_each(_results_container.cbegin(), _results_container.cend(),
