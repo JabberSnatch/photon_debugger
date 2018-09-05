@@ -120,8 +120,48 @@ void validate(boost::any &_v,
 
 	_v = boost::any(result);
 }
-}
+
+} // namespace boost::program_options
 // <<<<<<< BOOST EXTENSION
+
+
+namespace maths {
+namespace candidate {
+
+bool DefensiveLessThan(Decimal _lhs, uint32_t _lhs_round_count,
+					   Decimal _rhs, uint32_t _rhs_round_count)
+{
+	// _lhs.high_bound should be smaller than _rhs.low_bound
+	//
+	// what are their values ?
+	// high_bound is _lhs + abs(_lhs) * gamma(_lhs_round_count)
+	// low_bound is _rhs - abs(_rhs) * gamma(_rhs_round_count)
+	//
+	// All of this works fine as long as _lhs and _rhs are outside of
+	// ]-numeric_limits<Decimal>::min, numeric_limits<Decimal>::min[
+	//
+	// lhs_ref = max(abs(_lhs), numeric_limits<Decimal>::min) should fix the issue, but
+	// it also makes the test VERY defensive in the neighborhood of 0
+
+	Decimal const lhs_ref = std::max(std::abs(_lhs), std::numeric_limits<Decimal>::min());
+	Decimal const rhs_ref = std::max(std::abs(_rhs), std::numeric_limits<Decimal>::min());
+	Decimal const lhs_high_bound = _lhs + lhs_ref * maths::gamma(_lhs_round_count);
+	Decimal const rhs_low_bound = _rhs + rhs_ref * maths::gamma(_rhs_round_count);
+	return lhs_high_bound < rhs_low_bound;
+}
+
+bool DefensiveEqual(Decimal _lhs, uint32_t _lhs_round_count,
+					Decimal _rhs)
+{
+	// _rhs should be between _lhs.low_bound and _lhs.high_bound, inclusive
+	Decimal const lhs_ref = std::max(std::abs(_lhs), std::numeric_limits<Decimal>::min());
+	Decimal const lhs_low_bound = _lhs - lhs_ref * maths::gamma(_lhs_round_count);
+	Decimal const lhs_high_bound = _lhs + lhs_ref * maths::gamma(_lhs_round_count);
+	return _rhs >= lhs_low_bound && _rhs <= lhs_high_bound;
+}
+
+} // namespace candidate
+} // namespace maths
 
 
 namespace watertight_intersect {
@@ -148,6 +188,23 @@ public:
 				   maths::Decimal &_tHit,
 				   raytracer::SurfaceInteraction &_hit_info) const;
 	std::vector<Triangle_t> triangles;
+};
+
+template <typename InternalFloat>
+struct DebugTraits
+{
+	static uint64_t round_count(InternalFloat const &_f)
+	{
+		return 0u;
+	}
+};
+template <>
+struct DebugTraits<maths::REDecimal>
+{
+	static uint64_t round_count(maths::REDecimal const &_f)
+	{
+		return _f.round_count;
+	}
 };
 
 } // namespace watertight_intersect
@@ -763,12 +820,43 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 		transformed_vertices[1].y * transformed_vertices[0].x
 	};
 
+
+#ifdef WATERTIGHT_PRINT_ROUND_COUNTS
+	std::cout << "Point A round count "
+			  << DebugTraits<InternalFloat>::round_count(uvw.x) << ", "
+			  << DebugTraits<InternalFloat>::round_count(uvw.y) << ", "
+			  << DebugTraits<InternalFloat>::round_count(uvw.z)
+			  << std::endl;
+	// Measured 5, 5, 5 rounds
+#endif
+#if 0
 	if (uvw.x < 0._d || uvw.y < 0._d || uvw.z < 0._d)
 		return false;
+#else
+	if (maths::candidate::DefensiveLessThan(static_cast<maths::Decimal>(uvw.x), 5u,
+											0._d, 0u) ||
+		maths::candidate::DefensiveLessThan(static_cast<maths::Decimal>(uvw.y), 5u,
+											0._d, 0u) ||
+		maths::candidate::DefensiveLessThan(static_cast<maths::Decimal>(uvw.z), 5u,
+											0._d, 0u))
+		return false;
+#endif
 
 	InternalFloat const determinant{ maths::FoldSum(uvw) };
+#ifdef WATERTIGHT_PRINT_ROUND_COUNTS
+	std::cout << "Point B round count "
+			  << DebugTraits<InternalFloat>::round_count(determinant)
+			  << std::endl;
+	// Measured 8 rounds
+#endif
+#if 0
 	if (determinant == 0._d)
 		return false;
+#else
+	if (maths::candidate::DefensiveEqual(static_cast<maths::Decimal>(determinant), 8u,
+										 0._d))
+		return false;
+#endif
 
 	InternalFloat const scaled_hit_distance =
 		maths::Dot(uvw,
@@ -776,9 +864,27 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 								 transformed_vertices[1].z,
 								 transformed_vertices[2].z });
 
+#ifdef WATERTIGHT_PRINT_ROUND_COUNTS
+	std::cout << "Point C round count "
+			  << DebugTraits<InternalFloat>::round_count(scaled_hit_distance) << ", "
+			  << DebugTraits<InternalFloat>::round_count(determinant * _ray.tMax)
+			  << std::endl;
+	// Measured 8, 9 rounds
+#endif
+#if 0
 	if (scaled_hit_distance > (determinant * _ray.tMax) ||
-		scaled_hit_distance < static_cast<InternalFloat>(0._d))
+		scaled_hit_distance < 0._d)
 		return false;
+#else
+	InternalFloat const scaled_tMax = determinant * _ray.tMax;
+	if (maths::candidate::DefensiveLessThan(
+			static_cast<maths::Decimal>(scaled_tMax), 9u,
+			static_cast<maths::Decimal>(scaled_hit_distance), 8u) ||
+		maths::candidate::DefensiveLessThan(
+			static_cast<maths::Decimal>(scaled_hit_distance), 8u,
+			0._d, 0u))
+		return false;
+#endif
 
 	{
 		InternalVec3 const barycentric{ uvw / determinant };
@@ -798,17 +904,13 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 										static_cast<maths::Decimal>(ref_hit.z) };
 
 		maths::Vec3f error_bounds{ 0._d, 0._d, 0._d };
-#if 0
-		{
-			maths::Vec3f const max_bounds{ std::max(std::abs(ref_hit.x.value - ref_hit.x.high_bound),
-													std::abs(ref_hit.x.value - ref_hit.x.low_bound)),
-										   std::max(std::abs(ref_hit.y.value - ref_hit.y.high_bound),
-													std::abs(ref_hit.y.value - ref_hit.y.low_bound)),
-										   std::max(std::abs(ref_hit.z.value - ref_hit.z.high_bound),
-													std::abs(ref_hit.z.value - ref_hit.z.low_bound))
-			};
-			error_bounds = max_bounds;
-		}
+#ifdef WATERTIGHT_PRINT_ROUND_COUNTS
+		std::cout << "Point D round count "
+				  << DebugTraits<InternalFloat>::round_count(ref_hit.x) << ", "
+				  << DebugTraits<InternalFloat>::round_count(ref_hit.y) << ", "
+				  << DebugTraits<InternalFloat>::round_count(ref_hit.z)
+				  << std::endl;
+		// Measured 11, 11, 11 rounds
 #endif
 		{
 			maths::Vec3f const gamma_bounds{ maths::Vec3f{ static_cast<maths::Decimal>(ref_hit.x),

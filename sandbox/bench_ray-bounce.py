@@ -1,7 +1,9 @@
+import argparse
 import os
 import subprocess
 import sys
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 class RunData:
@@ -13,18 +15,39 @@ class RunData:
         self.outward_fail = []
         self.max_bound = []
 
-exec_path = os.path.abspath(sys.argv[1])
-print(exec_path)
 methods = ["baseline", "exp_single", "exp_double", "exp_redecimal"]
-selected_methods = [methods[1]]
+
+args_parser = argparse.ArgumentParser(description='Benchmarking utility for "test_ray-bounce.cc"')
+args_parser.add_argument('exec_path', type=str)
+args_parser.add_argument('methods', type=str, nargs='+', choices=methods)
+args_parser.add_argument('--range', '-r', type=int, nargs=2, default=[0, 25])
+args_parser.add_argument('--subdiv', '-s', type=int, default=1)
+
+print("begin parse")
+args = args_parser.parse_args()
+print("end parse")
+
+#if sys.argv[1] == "--help" or sys.argv[1] == "-h":
+#    print("benchmarking utility for \"test_ray-bounce.cc\"")
+#    sys.exit()
+
+exec_path = os.path.abspath(args.exec_path)
+selected_methods = args.methods
+test_range = args.range
+subdiv_count = args.subdiv
+
 figs = []
+xticks = []
+
 for method_index, method in enumerate(selected_methods):
     command = [exec_path, "--short-output", "--method", method]
-    subdiv_count = 2
 
     run_data = RunData()
-    for i in range(127 * subdiv_count):
-        offsets = pow(2, i / subdiv_count)
+    for i in range(test_range[0] * subdiv_count, test_range[1] * subdiv_count):
+        tick = pow(2, i / subdiv_count)
+        xticks.append(tick)
+
+        offsets = tick
         if offsets.is_integer():
             offsets = int(offsets)
         offset_option = ["--target-offset", str(offsets)+"x"+str(offsets)+"x1.0"]
@@ -32,6 +55,7 @@ for method_index, method in enumerate(selected_methods):
         command_out = subprocess.run(command + offset_option, stdout=subprocess.PIPE, text=True)
         print(command_out.stdout)
         split_output = command_out.stdout.split(' ')
+
         run_data.run_count = int(split_output[0])
         run_data.target_offset.append(offsets)
         run_data.primary_fail.append(int(split_output[1]))
