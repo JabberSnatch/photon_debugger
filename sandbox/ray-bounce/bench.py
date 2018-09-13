@@ -3,7 +3,6 @@ import os
 import subprocess
 import sys
 
-import matplotlib
 import matplotlib.pyplot as plt
 
 class RunData:
@@ -17,7 +16,7 @@ class RunData:
 
 methods = ["baseline", "exp_single", "exp_double", "exp_redecimal"]
 
-args_parser = argparse.ArgumentParser(description='Benchmarking utility for "test_ray-bounce.cc"')
+args_parser = argparse.ArgumentParser(description='Benchmarking utility for the ray-bounce test case')
 args_parser.add_argument('exec_path', type=str)
 args_parser.add_argument('methods', type=str, nargs='+', choices=methods)
 args_parser.add_argument('--range', '-r', type=int, nargs=2, default=[0, 25])
@@ -26,10 +25,6 @@ args_parser.add_argument('--subdiv', '-s', type=int, default=1)
 print("begin parse")
 args = args_parser.parse_args()
 print("end parse")
-
-#if sys.argv[1] == "--help" or sys.argv[1] == "-h":
-#    print("benchmarking utility for \"test_ray-bounce.cc\"")
-#    sys.exit()
 
 exec_path = os.path.abspath(args.exec_path)
 selected_methods = args.methods
@@ -40,7 +35,7 @@ figs = []
 xticks = []
 
 for method_index, method in enumerate(selected_methods):
-    command = [exec_path, "--short-output", "--method", method]
+    command = [exec_path, "--short-output", "--method", method, "--origin-extents", "90x45"]
 
     run_data = RunData()
     for i in range(test_range[0] * subdiv_count, test_range[1] * subdiv_count):

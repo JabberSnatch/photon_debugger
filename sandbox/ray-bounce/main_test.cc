@@ -253,6 +253,7 @@ constexpr int				kExecCount = kThetaSubdiv * kPhiSubdiv * kXSubdiv * kYSubdiv;
 struct TestContext
 {
 	bool					short_output{ false };
+	bool					dry_run{ false };
 
 	maths::Decimal			tMax{ ktMax };
 	maths::Decimal			time{ kTime };
@@ -286,6 +287,10 @@ public:
 	using ResultsContainer_t = std::vector<TestResults>;
 	ResultsContainer_t RunTest();
 	void PrintResults(ResultsContainer_t const &_results_container) const;
+public:
+	using Point3fContainer_t = std::vector<maths::Point3f>;
+	Point3fContainer_t GenerateOrigins() const;
+	Point3fContainer_t GenerateTargets() const;
 private:
 	template <typename ShapeType>
 	ResultsContainer_t RunTest_impl(ShapeType const &_shape) const;
@@ -340,6 +345,9 @@ int main(int argc, char **argv)
 			("short-output",
 			 bpo::value(&test_context.short_output)->default_value(test_context.short_output)->implicit_value(true),
 			 "bool")
+			("dry-run",
+			 bpo::value(&test_context.dry_run)->default_value(test_context.dry_run)->implicit_value(true),
+			 "bool")
 			;
 
 		bpo::variables_map vm{};
@@ -372,6 +380,23 @@ int main(int argc, char **argv)
 			std::cout << test_context.method << std::endl;
 			std::cout << std::endl;
 		}
+	}
+
+	if (test_context.dry_run)
+	{
+		TestContext::Point3fContainer_t const origins = test_context.GenerateOrigins();
+		TestContext::Point3fContainer_t const targets = test_context.GenerateTargets();
+		std::cout << "ORIGINS" << std::endl;
+		for (maths::Point3f const& origin : origins)
+		{
+			std::cout << static_cast<maths::Vec3f>(origin) << std::endl;
+		}
+		std::cout << "TARGETS" << std::endl;
+		for (maths::Point3f const& target : targets)
+		{
+			std::cout << static_cast<maths::Vec3f>(target) << std::endl;
+		}
+		return 0;
 	}
 
 	using StdChrono = std::chrono::high_resolution_clock;
@@ -472,17 +497,13 @@ TestContext::RunTest()
 		return ResultsContainer_t{};
 }
 
-template <typename ShapeType>
-TestContext::ResultsContainer_t
-TestContext::RunTest_impl(ShapeType const &_shape) const
+TestContext::Point3fContainer_t
+TestContext::GenerateOrigins() const
 {
-	ResultsContainer_t results_container{};
-	results_container.reserve(exec_count());
+	Point3fContainer_t result{};
+	result.reserve(maths::FoldProduct(origin_subdiv));
 
 	maths::Vec2f const origin_step_size_cache = origin_step_size();
-	maths::Vec2f const target_step_size_cache = target_step_size();
-	maths::Vec2f const target_abs_bounds_cache = target_abs_bounds();
-
 	for (int theta_step = 0; theta_step < origin_subdiv.x; ++theta_step)
 	{
 		maths::Decimal const theta = maths::Radians(theta_step * origin_step_size_cache.x);
@@ -490,55 +511,75 @@ TestContext::RunTest_impl(ShapeType const &_shape) const
 		for (int phi_step = 0; phi_step < origin_subdiv.y; ++phi_step)
 		{
 			maths::Decimal const phi = maths::Radians(phi_step * origin_step_size_cache.y);
-			maths::Point3f const origin = PointFromSpherical(theta, phi, origin_distance) + target_offset;
+			result.emplace_back(PointFromSpherical(theta, phi, origin_distance) + target_offset);
+		}
+	}
+
+	return result;
+}
+
+TestContext::Point3fContainer_t
+TestContext::GenerateTargets() const
+{
+	Point3fContainer_t result{};
+	result.reserve(maths::FoldProduct(target_subdiv));
+
+	maths::Vec2f const target_step_size_cache = target_step_size();
+	maths::Vec2f const target_abs_bounds_cache = target_abs_bounds();
+	for (int x_step = 0; x_step < target_subdiv.x; ++x_step)
+	{
+		maths::Decimal const x_target =
+			-target_abs_bounds_cache.x +
+			target_step_size_cache.x * x_step +
+			target_step_size_cache.x * .5_d;
+
+		for (int y_step = 0; y_step < target_subdiv.y; ++y_step)
+		{
+			maths::Decimal const y_target =
+				-target_abs_bounds_cache.y +
+				target_step_size_cache.y * y_step +
+				target_step_size_cache.y * .5_d;
+			result.emplace_back(maths::Point3f{ x_target, y_target, 0._d } + target_offset);
+		}
+	}
+
+	return result;
+}
+
+template <typename ShapeType>
+TestContext::ResultsContainer_t
+TestContext::RunTest_impl(ShapeType const &_shape) const
+{
+	ResultsContainer_t results_container{};
+	results_container.reserve(exec_count());
+
+	TestContext::Point3fContainer_t const origins = GenerateOrigins();
+	TestContext::Point3fContainer_t const targets = GenerateTargets();
+	for (maths::Point3f const &origin : origins)
+	{
+		for (maths::Point3f const &target : targets)
+		{
+			maths::Vec3f const direction{ maths::Normalized(target - origin) };
+#ifdef TESTROUTINE_LOGGING
+			std::cout << origin.e << std::endl;
+			std::cout << target.e << std::endl;
+			std::cout << direction.e << std::endl;
+#endif
 
 			{
 				globals::logger.EnableChannel(tools::kChannelGeneral, true);
 				std::stringstream message{ "" };
-				message << std::endl << "NEW ORIGIN";
+				message << std::endl << "NEW RAY";
 				LOG_INFO(tools::kChannelGeneral, message.str());
 				globals::logger.EnableChannel(tools::kChannelGeneral, false);
 			}
-			for (int x_step = 0; x_step < target_subdiv.x; ++x_step)
-			{
-				maths::Decimal const x_target =
-					-target_abs_bounds_cache.x +
-					target_step_size_cache.x * x_step +
-					target_step_size_cache.x * .5_d;
 
-				for (int y_step = 0; y_step < target_subdiv.y; ++y_step)
-				{
-					maths::Decimal const y_target =
-						-target_abs_bounds_cache.y +
-						target_step_size_cache.y * y_step +
-						target_step_size_cache.y * .5_d;
-					maths::Point3f const target{
-						maths::Point3f{ x_target, y_target, 0._d } + target_offset
-					};
-					maths::Vec3f const direction{ maths::Normalized(target - origin) };
-#ifdef TESTROUTINE_LOGGING
-					std::cout << origin.e << std::endl;
-					std::cout << target.e << std::endl;
-					std::cout << direction.e << std::endl;
-#endif
-
-
-					{
-						globals::logger.EnableChannel(tools::kChannelGeneral, true);
-						std::stringstream message{ "" };
-						message << std::endl << "NEW RAY";
-						LOG_INFO(tools::kChannelGeneral, message.str());
-						globals::logger.EnableChannel(tools::kChannelGeneral, false);
-					}
-
-					maths::Ray const primary_ray{ origin, direction, ktMax, kTime };
-					results_container.emplace_back(TestRoutine(_shape, primary_ray));
+			maths::Ray const primary_ray{ origin, direction, ktMax, kTime };
+			results_container.emplace_back(TestRoutine(_shape, primary_ray));
 
 #ifdef TESTROUTINE_LOGGING
-					std::cout << std::endl;
+			std::cout << std::endl;
 #endif
-				}
-			}
 		}
 	}
 
@@ -829,7 +870,7 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 			  << std::endl;
 	// Measured 5, 5, 5 rounds
 #endif
-#if 0
+#ifndef WATERTIGHT_DEFENSIVE_COMPARISONS
 	if (uvw.x < 0._d || uvw.y < 0._d || uvw.z < 0._d)
 		return false;
 #else
@@ -849,7 +890,7 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 			  << std::endl;
 	// Measured 8 rounds
 #endif
-#if 0
+#ifndef WATERTIGHT_DEFENSIVE_COMPARISONS
 	if (determinant == 0._d)
 		return false;
 #else
@@ -871,7 +912,7 @@ bool Triangle<InternalFloat>::Intersect(maths::Ray const &_ray,
 			  << std::endl;
 	// Measured 8, 9 rounds
 #endif
-#if 0
+#ifndef WATERTIGHT_DEFENSIVE_COMPARISONS
 	if (scaled_hit_distance > (determinant * _ray.tMax) ||
 		scaled_hit_distance < 0._d)
 		return false;

@@ -1,5 +1,5 @@
 
-option(WATERTIGHT_PRINT_ROUND_COUNTS "Activates round counts printing in test_ray-bounce" OFF)
+option(WATERTIGHT_PRINT_ROUND_COUNTS "Activates round counts printing in ray-bounce" OFF)
 
 # ==============================================================================
 
@@ -12,14 +12,14 @@ target_link_libraries( sampler_gnuplot
 
 # ==============================================================================
 
-project(test_ray-bounce)
+project(ray-bounce)
 
 if (WATERTIGHT_PRINT_ROUND_COUNTS)
 add_definitions(-DWATERTIGHT_PRINT_ROUND_COUNTS)
 endif(WATERTIGHT_PRINT_ROUND_COUNTS)
 
-add_executable(test_ray-bounce test_ray-bounce.cc)
-target_link_libraries( test_ray-bounce
+add_executable(ray-bounce ray-bounce/main_test.cc)
+target_link_libraries( ray-bounce
 					   PRIVATE
 					   raytracer
 					   )
